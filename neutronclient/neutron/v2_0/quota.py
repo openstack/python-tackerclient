@@ -17,7 +17,6 @@
 from __future__ import print_function
 
 import argparse
-import logging
 
 from cliff import lister
 from cliff import show
@@ -38,7 +37,6 @@ class DeleteQuota(neutronV20.NeutronCommand):
 
     api = 'network'
     resource = 'quota'
-    log = logging.getLogger(__name__ + '.DeleteQuota')
 
     def get_parser(self, prog_name):
         parser = super(DeleteQuota, self).get_parser(prog_name)
@@ -71,7 +69,6 @@ class ListQuota(neutronV20.NeutronCommand, lister.Lister):
 
     api = 'network'
     resource = 'quota'
-    log = logging.getLogger(__name__ + '.ListQuota')
 
     def get_parser(self, prog_name):
         parser = super(ListQuota, self).get_parser(prog_name)
@@ -101,7 +98,6 @@ class ShowQuota(neutronV20.NeutronCommand, show.ShowOne):
     """
     api = 'network'
     resource = "quota"
-    log = logging.getLogger(__name__ + '.ShowQuota')
 
     def get_parser(self, prog_name):
         parser = super(ShowQuota, self).get_parser(prog_name)
@@ -146,7 +142,6 @@ class UpdateQuota(neutronV20.NeutronCommand, show.ShowOne):
     """Define tenant's quotas not to use defaults."""
 
     resource = 'quota'
-    log = logging.getLogger(__name__ + '.UpdateQuota')
 
     def get_parser(self, prog_name):
         parser = super(UpdateQuota, self).get_parser(prog_name)

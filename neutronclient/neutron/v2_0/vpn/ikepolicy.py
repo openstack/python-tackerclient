@@ -16,8 +16,6 @@
 # @author: Swaminathan Vasudevan, Hewlett-Packard.
 #
 
-import logging
-
 from neutronclient.common import utils
 from neutronclient.neutron import v2_0 as neutronv20
 from neutronclient.neutron.v2_0.vpn import utils as vpn_utils
@@ -28,7 +26,6 @@ class ListIKEPolicy(neutronv20.ListCommand):
     """List IKEPolicies that belong to a tenant."""
 
     resource = 'ikepolicy'
-    log = logging.getLogger(__name__ + '.ListIKEPolicy')
     list_columns = ['id', 'name', 'auth_algorithm',
                     'encryption_algorithm', 'ike_version', 'pfs']
     _formatters = {}
@@ -40,14 +37,12 @@ class ShowIKEPolicy(neutronv20.ShowCommand):
     """Show information of a given IKEPolicy."""
 
     resource = 'ikepolicy'
-    log = logging.getLogger(__name__ + '.ShowIKEPolicy')
 
 
 class CreateIKEPolicy(neutronv20.CreateCommand):
     """Create an IKEPolicy."""
 
     resource = 'ikepolicy'
-    log = logging.getLogger(__name__ + '.CreateIKEPolicy')
 
     def add_known_arguments(self, parser):
         parser.add_argument(
@@ -111,7 +106,6 @@ class UpdateIKEPolicy(neutronv20.UpdateCommand):
     """Update a given IKE Policy."""
 
     resource = 'ikepolicy'
-    log = logging.getLogger(__name__ + '.UpdateIKEPolicy')
 
     def add_known_arguments(self, parser):
         parser.add_argument(
@@ -134,4 +128,3 @@ class DeleteIKEPolicy(neutronv20.DeleteCommand):
     """Delete a given IKE Policy."""
 
     resource = 'ikepolicy'
-    log = logging.getLogger(__name__ + '.DeleteIKEPolicy')
