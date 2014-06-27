@@ -1,1 +1,1 @@
-This is the client API library for Neutron.
+This is the client API library for Tacker.

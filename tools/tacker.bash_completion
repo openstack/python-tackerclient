@@ -1,0 +1,27 @@
+_tacker_opts="" # lazy init
+_tacker_flags="" # lazy init
+_tacker_opts_exp="" # lazy init
+_tacker()
+{
+	local cur prev nbc cflags
+	COMPREPLY=()
+	cur="${COMP_WORDS[COMP_CWORD]}"
+	prev="${COMP_WORDS[COMP_CWORD-1]}"
+
+	if [ "x$_tacker_opts" == "x" ] ; then
+		nbc="`tacker bash-completion`"
+		_tacker_opts="`echo "$nbc" | sed -e "s/--[a-z0-9_-]*//g" -e "s/\s\s*/ /g"`"
+		_tacker_flags="`echo " $nbc" | sed -e "s/ [^-][^-][a-z0-9_-]*//g" -e "s/\s\s*/ /g"`"
+		_tacker_opts_exp="`echo "$_tacker_opts" | sed -e "s/\s/|/g"`"
+	fi
+
+	if [[ " ${COMP_WORDS[@]} " =~ " "($_tacker_opts_exp)" " && "$prev" != "help" ]] ; then
+		COMPLETION_CACHE=~/.tackerclient/*/*-cache
+		cflags="$_tacker_flags "$(cat $COMPLETION_CACHE 2> /dev/null | tr '\n' ' ')
+		COMPREPLY=($(compgen -W "${cflags}" -- ${cur}))
+	else
+		COMPREPLY=($(compgen -W "${_tacker_opts}" -- ${cur}))
+	fi
+	return 0
+}
+complete -F _tacker tacker

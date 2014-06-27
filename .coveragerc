@@ -1,7 +1,7 @@
 [run]
 branch = True
-source = neutronclient
-omit = neutronclient/openstack/*,neutronclient/tests/*
+source = tackerclient
+omit = tackerclient/openstack/*,tackerclient/tests/*
 
 [report]
 ignore-errors = True
