@@ -15,7 +15,7 @@
 #
 
 """
-Command-line interface to the Neutron APIs
+Command-line interface to the Tacker APIs
 """
 
 from __future__ import print_function
@@ -28,46 +28,20 @@ import sys
 from cliff import app
 from cliff import commandmanager
 
-from neutronclient.common import clientmanager
-from neutronclient.common import exceptions as exc
-from neutronclient.common import utils
-from neutronclient.neutron.v2_0 import agent
-from neutronclient.neutron.v2_0 import agentscheduler
-from neutronclient.neutron.v2_0 import credential
-from neutronclient.neutron.v2_0 import extension
-from neutronclient.neutron.v2_0 import floatingip
-from neutronclient.neutron.v2_0.fw import firewall
-from neutronclient.neutron.v2_0.fw import firewallpolicy
-from neutronclient.neutron.v2_0.fw import firewallrule
-from neutronclient.neutron.v2_0.lb import healthmonitor as lb_healthmonitor
-from neutronclient.neutron.v2_0.lb import member as lb_member
-from neutronclient.neutron.v2_0.lb import pool as lb_pool
-from neutronclient.neutron.v2_0.lb import vip as lb_vip
-from neutronclient.neutron.v2_0 import metering
-from neutronclient.neutron.v2_0.nec import packetfilter
-from neutronclient.neutron.v2_0 import netpartition
-from neutronclient.neutron.v2_0 import network
-from neutronclient.neutron.v2_0 import networkprofile
-from neutronclient.neutron.v2_0.nsx import networkgateway
-from neutronclient.neutron.v2_0.nsx import qos_queue
-from neutronclient.neutron.v2_0 import policyprofile
-from neutronclient.neutron.v2_0 import port
-from neutronclient.neutron.v2_0 import quota
-from neutronclient.neutron.v2_0 import router
-from neutronclient.neutron.v2_0 import securitygroup
-from neutronclient.neutron.v2_0 import servicetype
-from neutronclient.neutron.v2_0 import subnet
-from neutronclient.neutron.v2_0.vpn import ikepolicy
-from neutronclient.neutron.v2_0.vpn import ipsec_site_connection
-from neutronclient.neutron.v2_0.vpn import ipsecpolicy
-from neutronclient.neutron.v2_0.vpn import vpnservice
-from neutronclient.openstack.common.gettextutils import _
-from neutronclient.openstack.common import strutils
-from neutronclient.version import __version__
+from tackerclient.common import clientmanager
+from tackerclient.common import exceptions as exc
+from tackerclient.common import utils
+from tackerclient.openstack.common.gettextutils import _
+from tackerclient.openstack.common import strutils
+from tackerclient.tacker.v1_0 import extension
+from tackerclient.tacker.v1_0.vm import device
+from tackerclient.tacker.v1_0.vm import device_template
+from tackerclient.tacker.v1_0.vm import service_instance
+from tackerclient.version import __version__
 
 
-VERSION = '2.0'
-NEUTRON_API_VERSION = '2.0'
+VERSION = '1.0'
+TACKER_API_VERSION = '1.0'
 
 
 def run_command(cmd, cmd_parser, sub_argv):
@@ -97,189 +71,27 @@ def env(*_vars, **kwargs):
     return kwargs.get('default', '')
 
 
-COMMAND_V2 = {
-    'net-list': network.ListNetwork,
-    'net-external-list': network.ListExternalNetwork,
-    'net-show': network.ShowNetwork,
-    'net-create': network.CreateNetwork,
-    'net-delete': network.DeleteNetwork,
-    'net-update': network.UpdateNetwork,
-    'subnet-list': subnet.ListSubnet,
-    'subnet-show': subnet.ShowSubnet,
-    'subnet-create': subnet.CreateSubnet,
-    'subnet-delete': subnet.DeleteSubnet,
-    'subnet-update': subnet.UpdateSubnet,
-    'port-list': port.ListPort,
-    'port-show': port.ShowPort,
-    'port-create': port.CreatePort,
-    'port-delete': port.DeletePort,
-    'port-update': port.UpdatePort,
-    'quota-list': quota.ListQuota,
-    'quota-show': quota.ShowQuota,
-    'quota-delete': quota.DeleteQuota,
-    'quota-update': quota.UpdateQuota,
+COMMAND_V1 = {
     'ext-list': extension.ListExt,
     'ext-show': extension.ShowExt,
-    'router-list': router.ListRouter,
-    'router-port-list': port.ListRouterPort,
-    'router-show': router.ShowRouter,
-    'router-create': router.CreateRouter,
-    'router-delete': router.DeleteRouter,
-    'router-update': router.UpdateRouter,
-    'router-interface-add': router.AddInterfaceRouter,
-    'router-interface-delete': router.RemoveInterfaceRouter,
-    'router-gateway-set': router.SetGatewayRouter,
-    'router-gateway-clear': router.RemoveGatewayRouter,
-    'floatingip-list': floatingip.ListFloatingIP,
-    'floatingip-show': floatingip.ShowFloatingIP,
-    'floatingip-create': floatingip.CreateFloatingIP,
-    'floatingip-delete': floatingip.DeleteFloatingIP,
-    'floatingip-associate': floatingip.AssociateFloatingIP,
-    'floatingip-disassociate': floatingip.DisassociateFloatingIP,
-    'security-group-list': securitygroup.ListSecurityGroup,
-    'security-group-show': securitygroup.ShowSecurityGroup,
-    'security-group-create': securitygroup.CreateSecurityGroup,
-    'security-group-delete': securitygroup.DeleteSecurityGroup,
-    'security-group-update': securitygroup.UpdateSecurityGroup,
-    'security-group-rule-list': securitygroup.ListSecurityGroupRule,
-    'security-group-rule-show': securitygroup.ShowSecurityGroupRule,
-    'security-group-rule-create': securitygroup.CreateSecurityGroupRule,
-    'security-group-rule-delete': securitygroup.DeleteSecurityGroupRule,
-    'lb-vip-list': lb_vip.ListVip,
-    'lb-vip-show': lb_vip.ShowVip,
-    'lb-vip-create': lb_vip.CreateVip,
-    'lb-vip-update': lb_vip.UpdateVip,
-    'lb-vip-delete': lb_vip.DeleteVip,
-    'lb-pool-list': lb_pool.ListPool,
-    'lb-pool-show': lb_pool.ShowPool,
-    'lb-pool-create': lb_pool.CreatePool,
-    'lb-pool-update': lb_pool.UpdatePool,
-    'lb-pool-delete': lb_pool.DeletePool,
-    'lb-pool-stats': lb_pool.RetrievePoolStats,
-    'lb-member-list': lb_member.ListMember,
-    'lb-member-show': lb_member.ShowMember,
-    'lb-member-create': lb_member.CreateMember,
-    'lb-member-update': lb_member.UpdateMember,
-    'lb-member-delete': lb_member.DeleteMember,
-    'lb-healthmonitor-list': lb_healthmonitor.ListHealthMonitor,
-    'lb-healthmonitor-show': lb_healthmonitor.ShowHealthMonitor,
-    'lb-healthmonitor-create': lb_healthmonitor.CreateHealthMonitor,
-    'lb-healthmonitor-update': lb_healthmonitor.UpdateHealthMonitor,
-    'lb-healthmonitor-delete': lb_healthmonitor.DeleteHealthMonitor,
-    'lb-healthmonitor-associate': lb_healthmonitor.AssociateHealthMonitor,
-    'lb-healthmonitor-disassociate': (
-        lb_healthmonitor.DisassociateHealthMonitor
-    ),
-    'queue-create': qos_queue.CreateQoSQueue,
-    'queue-delete': qos_queue.DeleteQoSQueue,
-    'queue-show': qos_queue.ShowQoSQueue,
-    'queue-list': qos_queue.ListQoSQueue,
-    'agent-list': agent.ListAgent,
-    'agent-show': agent.ShowAgent,
-    'agent-delete': agent.DeleteAgent,
-    'agent-update': agent.UpdateAgent,
-    'net-gateway-create': networkgateway.CreateNetworkGateway,
-    'net-gateway-update': networkgateway.UpdateNetworkGateway,
-    'net-gateway-delete': networkgateway.DeleteNetworkGateway,
-    'net-gateway-show': networkgateway.ShowNetworkGateway,
-    'net-gateway-list': networkgateway.ListNetworkGateway,
-    'net-gateway-connect': networkgateway.ConnectNetworkGateway,
-    'net-gateway-disconnect': networkgateway.DisconnectNetworkGateway,
-    'gateway-device-create': networkgateway.CreateGatewayDevice,
-    'gateway-device-update': networkgateway.UpdateGatewayDevice,
-    'gateway-device-delete': networkgateway.DeleteGatewayDevice,
-    'gateway-device-show': networkgateway.ShowGatewayDevice,
-    'gateway-device-list': networkgateway.ListGatewayDevice,
-    'dhcp-agent-network-add': agentscheduler.AddNetworkToDhcpAgent,
-    'dhcp-agent-network-remove': agentscheduler.RemoveNetworkFromDhcpAgent,
-    'net-list-on-dhcp-agent': agentscheduler.ListNetworksOnDhcpAgent,
-    'dhcp-agent-list-hosting-net': agentscheduler.ListDhcpAgentsHostingNetwork,
-    'l3-agent-router-add': agentscheduler.AddRouterToL3Agent,
-    'l3-agent-router-remove': agentscheduler.RemoveRouterFromL3Agent,
-    'router-list-on-l3-agent': agentscheduler.ListRoutersOnL3Agent,
-    'l3-agent-list-hosting-router': agentscheduler.ListL3AgentsHostingRouter,
-    'lb-pool-list-on-agent': agentscheduler.ListPoolsOnLbaasAgent,
-    'lb-agent-hosting-pool': agentscheduler.GetLbaasAgentHostingPool,
-    'service-provider-list': servicetype.ListServiceProvider,
-    'firewall-rule-list': firewallrule.ListFirewallRule,
-    'firewall-rule-show': firewallrule.ShowFirewallRule,
-    'firewall-rule-create': firewallrule.CreateFirewallRule,
-    'firewall-rule-update': firewallrule.UpdateFirewallRule,
-    'firewall-rule-delete': firewallrule.DeleteFirewallRule,
-    'firewall-policy-list': firewallpolicy.ListFirewallPolicy,
-    'firewall-policy-show': firewallpolicy.ShowFirewallPolicy,
-    'firewall-policy-create': firewallpolicy.CreateFirewallPolicy,
-    'firewall-policy-update': firewallpolicy.UpdateFirewallPolicy,
-    'firewall-policy-delete': firewallpolicy.DeleteFirewallPolicy,
-    'firewall-policy-insert-rule': firewallpolicy.FirewallPolicyInsertRule,
-    'firewall-policy-remove-rule': firewallpolicy.FirewallPolicyRemoveRule,
-    'firewall-list': firewall.ListFirewall,
-    'firewall-show': firewall.ShowFirewall,
-    'firewall-create': firewall.CreateFirewall,
-    'firewall-update': firewall.UpdateFirewall,
-    'firewall-delete': firewall.DeleteFirewall,
-    'cisco-credential-list': credential.ListCredential,
-    'cisco-credential-show': credential.ShowCredential,
-    'cisco-credential-create': credential.CreateCredential,
-    'cisco-credential-delete': credential.DeleteCredential,
-    'cisco-network-profile-list': networkprofile.ListNetworkProfile,
-    'cisco-network-profile-show': networkprofile.ShowNetworkProfile,
-    'cisco-network-profile-create': networkprofile.CreateNetworkProfile,
-    'cisco-network-profile-delete': networkprofile.DeleteNetworkProfile,
-    'cisco-network-profile-update': networkprofile.UpdateNetworkProfile,
-    'cisco-policy-profile-list': policyprofile.ListPolicyProfile,
-    'cisco-policy-profile-show': policyprofile.ShowPolicyProfile,
-    'cisco-policy-profile-update': policyprofile.UpdatePolicyProfile,
-    'ipsec-site-connection-list': (
-        ipsec_site_connection.ListIPsecSiteConnection
-    ),
-    'ipsec-site-connection-show': (
-        ipsec_site_connection.ShowIPsecSiteConnection
-    ),
-    'ipsec-site-connection-create': (
-        ipsec_site_connection.CreateIPsecSiteConnection
-    ),
-    'ipsec-site-connection-update': (
-        ipsec_site_connection.UpdateIPsecSiteConnection
-    ),
-    'ipsec-site-connection-delete': (
-        ipsec_site_connection.DeleteIPsecSiteConnection
-    ),
-    'vpn-service-list': vpnservice.ListVPNService,
-    'vpn-service-show': vpnservice.ShowVPNService,
-    'vpn-service-create': vpnservice.CreateVPNService,
-    'vpn-service-update': vpnservice.UpdateVPNService,
-    'vpn-service-delete': vpnservice.DeleteVPNService,
-    'vpn-ipsecpolicy-list': ipsecpolicy.ListIPsecPolicy,
-    'vpn-ipsecpolicy-show': ipsecpolicy.ShowIPsecPolicy,
-    'vpn-ipsecpolicy-create': ipsecpolicy.CreateIPsecPolicy,
-    'vpn-ipsecpolicy-update': ipsecpolicy.UpdateIPsecPolicy,
-    'vpn-ipsecpolicy-delete': ipsecpolicy.DeleteIPsecPolicy,
-    'vpn-ikepolicy-list': ikepolicy.ListIKEPolicy,
-    'vpn-ikepolicy-show': ikepolicy.ShowIKEPolicy,
-    'vpn-ikepolicy-create': ikepolicy.CreateIKEPolicy,
-    'vpn-ikepolicy-update': ikepolicy.UpdateIKEPolicy,
-    'vpn-ikepolicy-delete': ikepolicy.DeleteIKEPolicy,
-    'meter-label-create': metering.CreateMeteringLabel,
-    'meter-label-list': metering.ListMeteringLabel,
-    'meter-label-show': metering.ShowMeteringLabel,
-    'meter-label-delete': metering.DeleteMeteringLabel,
-    'meter-label-rule-create': metering.CreateMeteringLabelRule,
-    'meter-label-rule-list': metering.ListMeteringLabelRule,
-    'meter-label-rule-show': metering.ShowMeteringLabelRule,
-    'meter-label-rule-delete': metering.DeleteMeteringLabelRule,
-    'nuage-netpartition-list': netpartition.ListNetPartition,
-    'nuage-netpartition-show': netpartition.ShowNetPartition,
-    'nuage-netpartition-create': netpartition.CreateNetPartition,
-    'nuage-netpartition-delete': netpartition.DeleteNetPartition,
-    'nec-packet-filter-list': packetfilter.ListPacketFilter,
-    'nec-packet-filter-show': packetfilter.ShowPacketFilter,
-    'nec-packet-filter-create': packetfilter.CreatePacketFilter,
-    'nec-packet-filter-update': packetfilter.UpdatePacketFilter,
-    'nec-packet-filter-delete': packetfilter.DeletePacketFilter,
+    'device-template-create': device_template.CreateDeviceTemplate,
+    'device-template-list': device_template.ListDeviceTemplate,
+    'device-template-show': device_template.ShowDeviceTemplate,
+    'device-template-update': device_template.UpdateDeviceTemplate,
+    'device-template-delete': device_template.DeleteDeviceTemplate,
+    'service-instance-create': service_instance.CreateServiceInstance,
+    'service-instance-list': service_instance.ListServiceInstance,
+    'service-instance-show': service_instance.ShowServiceInstance,
+    'service-instance-update': service_instance.UpdateServiceInstance,
+    'service-instance-delete': service_instance.DeleteServiceInstance,
+    'device-create': device.CreateDevice,
+    'device-list': device.ListDevice,
+    'device-show': device.ShowDevice,
+    'device-update': device.UpdateDevice,
+    'device-delete': device.DeleteDevice,
 }
 
-COMMANDS = {'2.0': COMMAND_V2}
+COMMANDS = {'1.0': COMMAND_V1}
 
 
 class HelpAction(argparse.Action):
@@ -307,7 +119,7 @@ class HelpAction(argparse.Action):
         sys.exit(0)
 
 
-class NeutronShell(app.App):
+class TackerShell(app.App):
 
     # verbose logging levels
     WARNING_LEVEL = 0
@@ -318,10 +130,10 @@ class NeutronShell(app.App):
     log = logging.getLogger(__name__)
 
     def __init__(self, apiversion):
-        super(NeutronShell, self).__init__(
+        super(TackerShell, self).__init__(
             description=__doc__.strip(),
             version=VERSION,
-            command_manager=commandmanager.CommandManager('neutron.cli'), )
+            command_manager=commandmanager.CommandManager('tacker.cli'), )
         self.commands = COMMANDS
         for k, v in self.commands[apiversion].items():
             self.command_manager.add_command(k, v)
@@ -373,8 +185,8 @@ class NeutronShell(app.App):
             '--os-auth-strategy', metavar='<auth-strategy>',
             default=env('OS_AUTH_STRATEGY', default='keystone'),
             help=_('Authentication strategy (Env: OS_AUTH_STRATEGY'
-            ', default keystone). For now, any other value will'
-            ' disable the authentication'))
+                   ', default keystone). For now, any other value will'
+                   ' disable the authentication'))
         parser.add_argument(
             '--os_auth_strategy',
             help=argparse.SUPPRESS)
@@ -466,8 +278,8 @@ class NeutronShell(app.App):
         parser.add_argument(
             '--insecure',
             action='store_true',
-            default=env('NEUTRONCLIENT_INSECURE', default=False),
-            help=_("Explicitly allow neutronclient to perform \"insecure\" "
+            default=env('TACKERCLIENT_INSECURE', default=False),
+            help=_("Explicitly allow tackerclient to perform \"insecure\" "
                    "SSL (https) requests. The server's certificate will "
                    "not be verified against any certificate authorities. "
                    "This option should be used with caution."))
@@ -650,7 +462,7 @@ class NeutronShell(app.App):
         * validate authentication info
         """
 
-        super(NeutronShell, self).initialize_app(argv)
+        super(TackerShell, self).initialize_app(argv)
 
         self.api_version = {'network': self.api_version}
 
@@ -693,9 +505,9 @@ class NeutronShell(app.App):
 
 def main(argv=sys.argv[1:]):
     try:
-        return NeutronShell(NEUTRON_API_VERSION).run(map(strutils.safe_decode,
-                                                         argv))
-    except exc.NeutronClientException:
+        return TackerShell(TACKER_API_VERSION).run(map(strutils.safe_decode,
+                                                   argv))
+    except exc.TackerClientException:
         return 1
     except Exception as e:
         print(unicode(e))
