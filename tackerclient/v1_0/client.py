@@ -148,8 +148,6 @@ class Client(object):
 
     device_templates_path = '/device-templates'
     device_template_path = '/device-templates/%s'
-    service_instances_path = '/service-instances'
-    service_instance_path = '/service-instances/%s'
     devices_path = '/devices'
     device_path = '/devices/%s'
 
@@ -201,29 +199,6 @@ class Client(object):
     @APIParamsCall
     def delete_device_template(self, device_template):
         return self.delete(self.device_template_path % device_template)
-
-    @APIParamsCall
-    def list_service_instances(self, retrieve_all=True, **_params):
-        return self.list('service_instances', self.service_instances_path,
-                         retrieve_all, **_params)
-
-    @APIParamsCall
-    def show_service_instance(self, service_instance, **_params):
-        return self.get(self.service_instance_path % service_instance,
-                        params=_params)
-
-    @APIParamsCall
-    def update_service_instance(self, service_instance, body=None):
-        return self.put(self.service_instance_path % service_instance,
-                        body=body)
-
-    @APIParamsCall
-    def create_service_instance(self, body=None):
-        return self.post(self.service_instances_path, body=body)
-
-    @APIParamsCall
-    def delete_service_instance(self, service_instance):
-        return self.delete(self.service_instance_path % service_instance)
 
     @APIParamsCall
     def list_devices(self, retrieve_all=True, **_params):
