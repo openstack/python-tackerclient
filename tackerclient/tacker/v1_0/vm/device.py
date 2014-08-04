@@ -19,6 +19,9 @@
 #
 # @author: Isaku Yamahata, Intel
 
+import abc
+import six
+
 from tackerclient.common import exceptions
 from tackerclient.openstack.common.gettextutils import _
 from tackerclient.tacker import v1_0 as tackerV10
@@ -135,3 +138,45 @@ class DeleteDevice(tackerV10.DeleteCommand):
     """Delete a given Device."""
 
     resource = _DEVICE
+
+
+@six.add_metaclass(abc.ABCMeta)
+class _XtachInterface(tackerV10.UpdateCommand):
+    resource = _DEVICE
+
+    @abc.abstractmethod
+    def call_api(self, tacker_client, device_id, body):
+        pass
+
+    def args2body(self, parsed_args):
+        body = {
+            'port_id': parsed_args.port_id,
+        }
+        tackerV10.update_dict(parsed_args, body, [])
+        return body
+
+    def get_parser(self, prog_name):
+        parser = super(AttachInterface, self).get_parser(prog_name)
+        parser.add_argument('port_id', metavar='PORT',
+                            help=_('port to attach/detach'))
+        self.add_known_arguments(parser)
+        return parser
+
+    def run(self, parsed_args):
+        tacker_client = self.get_client()
+        tacker_client.format = parsed_args.request_format
+        body = self.args2body(parsed_args)
+        _id = tackerV10.find_resourceid_by_name_or_id(tacker_client,
+                                                      self.resource,
+                                                      parsed_args.id)
+        self.call_api(tacker_client, _id, body)
+
+
+class AttachInterface(_XtachInterface):
+    def call_api(self, tacker_client, device_id, body):
+        return tacker_client.attach_interface(device_id, body)
+
+
+class DetachInterface(_XtachInterface):
+    def call_api(self, tacker_client, device_id, body):
+        return tacker_client.detach_interface(device_id, body)

@@ -83,6 +83,8 @@ COMMAND_V1 = {
     'device-show': device.ShowDevice,
     'device-update': device.UpdateDevice,
     'device-delete': device.DeleteDevice,
+    'interface-attach': device.AttachInterface,
+    'interface-detach': device.DetachInterface,
 }
 
 COMMANDS = {'1.0': COMMAND_V1}

@@ -150,6 +150,8 @@ class Client(object):
     device_template_path = '/device-templates/%s'
     devices_path = '/devices'
     device_path = '/devices/%s'
+    interface_attach_path = '/devices/%s/attach_interface'
+    interface_detach_path = '/devices/%s/detach_interface'
 
     # API has no way to report plurals, so we have to hard code them
     EXTED_PLURALS = {}
@@ -219,6 +221,14 @@ class Client(object):
     @APIParamsCall
     def delete_device(self, device):
         return self.delete(self.device_path % device)
+
+    @APIParamsCall
+    def attach_interface(self, device, body=None):
+        return self.put(self.attach_interface_path % device, body)
+
+    @APIParamsCall
+    def detach_interface(self, device, body=None):
+        return self.put(self.detach_interface_path % device, body)
 
     def __init__(self, **kwargs):
         """Initialize a new client for the Tacker v1.0 API."""
