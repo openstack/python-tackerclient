@@ -53,10 +53,10 @@ class CreateDevice(tackerV10.CreateCommand):
             required=True,
             help='device template id to create device based on')
         parser.add_argument(
-            '--kwargs',
+            '--attributes',
             metavar='<key>=<value>',
             action='append',
-            dest='kwargs',
+            dest='attributes',
             default=[],
             help='instance specific argument')
         parser.add_argument(
@@ -75,16 +75,16 @@ class CreateDevice(tackerV10.CreateCommand):
                 'template_id': parsed_args.device_template_id,
             }
         }
-        if parsed_args.kwargs:
+        if parsed_args.attributes:
             try:
-                kwargs = dict(key_value.split('=', 1)
-                              for key_value in parsed_args.kwargs)
+                attributes = dict(key_value.split('=', 1)
+                                  for key_value in parsed_args.attributes)
             except ValueError:
-                msg = (_('invalid argument for --kwargs %s') %
-                       parsed_args.kwargs)
+                msg = (_('invalid argument for --attributes %s') %
+                       parsed_args.attributes)
                 raise exceptions.TackerCLIError(msg)
-            if kwargs:
-                body[self.resource]['kwargs'] = kwargs
+            if attributes:
+                body[self.resource]['attributes'] = attributes
         if parsed_args.service_context:
             try:
                 service_context = [dict(
@@ -111,25 +111,25 @@ class UpdateDevice(tackerV10.UpdateCommand):
 
     def add_known_arguments(self, parser):
         parser.add_argument(
-            '--kwargs',
+            '--attributes',
             metavar='<key>=<value>',
             action='append',
-            dest='kwargs',
+            dest='attributes',
             default=[],
             help='instance specific argument')
 
     def args2body(self, parsed_args):
         body = {self.resource: {}}
-        if parsed_args.kwargs:
+        if parsed_args.attributes:
             try:
-                kwargs = dict(key_value.split('=', 1)
-                              for key_value in parsed_args.kwargs)
+                attributes = dict(key_value.split('=', 1)
+                                  for key_value in parsed_args.attributes)
             except ValueError:
-                msg = (_('invalid argument for --kwargs %s') %
-                       parsed_args.kwargs)
+                msg = (_('invalid argument for --attributes %s') %
+                       parsed_args.attributes)
                 raise exceptions.TackerCLIError(msg)
-            if kwargs:
-                body[self.resource]['kwargs'] = kwargs
+            if attributes:
+                body[self.resource]['attributes'] = attributes
         tackerV10.update_dict(parsed_args, body[self.resource], ['tenant_id'])
         return body
 
