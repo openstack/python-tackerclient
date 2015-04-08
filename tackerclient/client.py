@@ -53,7 +53,7 @@ class HTTPClient(object):
                  endpoint_url=None, insecure=False,
                  endpoint_type='publicURL',
                  auth_strategy='keystone', ca_cert=None, log_credentials=False,
-                 service_type='network',
+                 service_type='servicevm',
                  **kwargs):
 
         self.username = username
@@ -249,7 +249,7 @@ class HTTPClient(object):
 
         body = json.loads(body)
         for endpoint in body.get('endpoints', []):
-            if (endpoint['type'] == 'network' and
+            if (endpoint['type'] == 'servicevm' and
                 endpoint.get('region') == self.region_name):
                 if self.endpoint_type not in endpoint:
                     raise exceptions.EndpointTypeNotFound(

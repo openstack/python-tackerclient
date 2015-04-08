@@ -118,7 +118,7 @@ class TestSSL(testtools.TestCase):
         )
         self.mox.ReplayAll()
 
-        version = {'network': '1.0'}
+        version = {'servicevm': '1.0'}
         ClientManager(ca_cert=CA_CERT,
                       api_version=version,
                       url=END_URL,

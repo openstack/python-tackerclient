@@ -247,8 +247,8 @@ class TackerShell(app.App):
 
         parser.add_argument(
             '--service-type', metavar='<service-type>',
-            default=env('OS_NETWORK_SERVICE_TYPE', default='network'),
-            help=_('Defaults to env[OS_NETWORK_SERVICE_TYPE] or network.'))
+            default=env('OS_SERVICEVM_SERVICE_TYPE', default='servicevm'),
+            help=_('Defaults to env[OS_SERVICEVM_SERVICE_TYPE] or servicevm.'))
 
         parser.add_argument(
             '--endpoint-type', metavar='<endpoint-type>',
@@ -460,7 +460,7 @@ class TackerShell(app.App):
 
         super(TackerShell, self).initialize_app(argv)
 
-        self.api_version = {'network': self.api_version}
+        self.api_version = {'servicevm': self.api_version}
 
         # If the user is not asking for help, make sure they
         # have given us auth.

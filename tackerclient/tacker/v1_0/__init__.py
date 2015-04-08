@@ -352,7 +352,7 @@ class TackerCommandMeta(abc.ABCMeta):
 @six.add_metaclass(TackerCommandMeta)
 class TackerCommand(command.OpenStackCommand):
 
-    api = 'network'
+    api = 'servicevm'
     values_specs = []
     json_indent = None
 
@@ -408,7 +408,7 @@ class CreateCommand(TackerCommand, show.ShowOne):
 
     """
 
-    api = 'network'
+    api = 'servicevm'
     resource = None
     log = None
 
@@ -450,7 +450,7 @@ class UpdateCommand(TackerCommand):
     """Update resource's information
     """
 
-    api = 'network'
+    api = 'servicevm'
     resource = None
     log = None
     allow_names = True
@@ -498,7 +498,7 @@ class DeleteCommand(TackerCommand):
 
     """
 
-    api = 'network'
+    api = 'servicevm'
     resource = None
     log = None
     allow_names = True
@@ -538,7 +538,7 @@ class ListCommand(TackerCommand, lister.Lister):
 
     """
 
-    api = 'network'
+    api = 'servicevm'
     resource = None
     log = None
     _formatters = {}
@@ -637,7 +637,7 @@ class ShowCommand(TackerCommand, show.ShowOne):
 
     """
 
-    api = 'network'
+    api = 'servicevm'
     resource = None
     log = None
     allow_names = True

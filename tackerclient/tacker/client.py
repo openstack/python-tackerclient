@@ -19,7 +19,7 @@ from tackerclient.common import utils
 from tackerclient.openstack.common.gettextutils import _
 
 
-API_NAME = 'network'
+API_NAME = 'servicevm'
 API_VERSIONS = {
     '1.0': 'tackerclient.v1_0.client.Client',
 }
