@@ -242,7 +242,7 @@ class ClientBase(object):
         ns = dict([(ext['alias'], ext['namespace']) for ext in exts])
         self.EXTED_PLURALS.update(constants.PLURALS)
         return {'plurals': self.EXTED_PLURALS,
-                'xmlns': constants.XML_NS_V20,
+                'xmlns': constants.XML_NS_V10,
                 constants.EXT_NS: ns}
 
     def content_type(self, _format=None):
