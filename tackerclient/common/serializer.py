@@ -12,22 +12,22 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-#
-###
-### Codes from tacker wsgi
-###
 
 import logging
-
 from xml.etree import ElementTree as etree
 from xml.parsers import expat
 
+from oslo.serialization import jsonutils
+import six
+
 from tackerclient.common import constants
 from tackerclient.common import exceptions as exception
-from tackerclient.openstack.common.gettextutils import _
-from tackerclient.openstack.common import jsonutils
+from tackerclient.i18n import _
 
 LOG = logging.getLogger(__name__)
+
+if six.PY3:
+    long = int
 
 
 class ActionDispatcher(object):
@@ -58,7 +58,7 @@ class JSONDictSerializer(DictSerializer):
 
     def default(self, data):
         def sanitizer(obj):
-            return unicode(obj)
+            return six.text_type(obj)
         return jsonutils.dumps(data, default=sanitizer)
 
 
@@ -67,16 +67,16 @@ class XMLDictSerializer(DictSerializer):
     def __init__(self, metadata=None, xmlns=None):
         """XMLDictSerializer constructor.
 
-        :param metadata: information needed to deserialize xml into
+        :param metadata: information needed to deserialize XML into
                          a dictionary.
-        :param xmlns: XML namespace to include with serialized xml
+        :param xmlns: XML namespace to include with serialized XML
         """
         super(XMLDictSerializer, self).__init__()
         self.metadata = metadata or {}
         if not xmlns:
             xmlns = self.metadata.get('xmlns')
         if not xmlns:
-            xmlns = constants.XML_NS_V10
+            xmlns = constants.XML_NS_V20
         self.xmlns = xmlns
 
     def default(self, data):
@@ -93,13 +93,13 @@ class XMLDictSerializer(DictSerializer):
                 root_key = constants.VIRTUAL_ROOT_KEY
                 root_value = None
             else:
-                link_keys = [k for k in data.iterkeys() or []
+                link_keys = [k for k in six.iterkeys(data) or []
                              if k.endswith('_links')]
                 if link_keys:
                     links = data.pop(link_keys[0], None)
                     has_atom = True
                 root_key = (len(data) == 1 and
-                            data.keys()[0] or constants.VIRTUAL_ROOT_KEY)
+                            list(data.keys())[0] or constants.VIRTUAL_ROOT_KEY)
                 root_value = data.get(root_key, data)
             doc = etree.Element("_temp_root")
             used_prefixes = []
@@ -122,8 +122,8 @@ class XMLDictSerializer(DictSerializer):
         self._add_xmlns(node, used_prefixes, has_atom)
         return etree.tostring(node, encoding='UTF-8')
 
-    #NOTE (ameade): the has_atom should be removed after all of the
-    # xml serializers and view builders have been updated to the current
+    # NOTE(ameade): the has_atom should be removed after all of the
+    # XML serializers and view builders have been updated to the current
     # spec that required all responses include the xmlns:atom, the has_atom
     # flag is to prevent current tests from breaking
     def _add_xmlns(self, node, used_prefixes, has_atom=False):
@@ -142,7 +142,7 @@ class XMLDictSerializer(DictSerializer):
         result = etree.SubElement(parent, nodename)
         if ":" in nodename:
             used_prefixes.append(nodename.split(":", 1)[0])
-        #TODO(bcwaldon): accomplish this without a type-check
+        # TODO(bcwaldon): accomplish this without a type-check
         if isinstance(data, list):
             if not data:
                 result.set(
@@ -158,7 +158,7 @@ class XMLDictSerializer(DictSerializer):
             for item in data:
                 self._to_xml_node(result, metadata, singular, item,
                                   used_prefixes)
-        #TODO(bcwaldon): accomplish this without a type-check
+        # TODO(bcwaldon): accomplish this without a type-check
         elif isinstance(data, dict):
             if not data:
                 result.set(
@@ -191,13 +191,10 @@ class XMLDictSerializer(DictSerializer):
                 result.set(
                     constants.TYPE_ATTR,
                     constants.TYPE_FLOAT)
-            LOG.debug(_("Data %(data)s type is %(type)s"),
+            LOG.debug("Data %(data)s type is %(type)s",
                       {'data': data,
                        'type': type(data)})
-            if isinstance(data, str):
-                result.text = unicode(data, 'utf-8')
-            else:
-                result.text = unicode(data)
+            result.text = six.text_type(data)
         return result
 
     def _create_link_nodes(self, xml_doc, links):
@@ -235,14 +232,14 @@ class XMLDeserializer(TextDeserializer):
     def __init__(self, metadata=None):
         """XMLDeserializer constructor.
 
-        :param metadata: information needed to deserialize xml into
+        :param metadata: information needed to deserialize XML into
                          a dictionary.
         """
         super(XMLDeserializer, self).__init__()
         self.metadata = metadata or {}
         xmlns = self.metadata.get('xmlns')
         if not xmlns:
-            xmlns = constants.XML_NS_V10
+            xmlns = constants.XML_NS_V20
         self.xmlns = xmlns
 
     def _get_key(self, tag):
@@ -290,7 +287,7 @@ class XMLDeserializer(TextDeserializer):
             parseError = False
             # Python2.7
             if (hasattr(etree, 'ParseError') and
-                isinstance(e, getattr(etree, 'ParseError'))):
+                    isinstance(e, getattr(etree, 'ParseError'))):
                 parseError = True
             # Python2.6
             elif isinstance(e, expat.ExpatError):
@@ -340,9 +337,9 @@ class XMLDeserializer(TextDeserializer):
             result = dict()
             for attr in node.keys():
                 if (attr == 'xmlns' or
-                    attr.startswith('xmlns:') or
-                    attr == constants.XSI_ATTR or
-                    attr == constants.TYPE_ATTR):
+                        attr.startswith('xmlns:') or
+                        attr == constants.XSI_ATTR or
+                        attr == constants.TYPE_ATTR):
                     continue
                 result[self._get_key(attr)] = node.get(attr)
             children = list(node)
@@ -392,7 +389,6 @@ class Serializer(object):
         """Deserialize a string to a dictionary.
 
         The string must be in the format of a supported MIME type.
-
         """
         return self.get_deserialize_handler(content_type).deserialize(
             datastring)

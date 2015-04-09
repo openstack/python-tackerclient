@@ -22,11 +22,12 @@ import logging
 import os
 
 from keystoneclient import access
+from keystoneclient import adapter
 import requests
 
 from tackerclient.common import exceptions
 from tackerclient.common import utils
-from tackerclient.openstack.common.gettextutils import _
+from tackerclient.i18n import _
 
 _logger = logging.getLogger(__name__)
 
@@ -39,12 +40,14 @@ else:
     _requests_log_level = logging.WARNING
 
 logging.getLogger("requests").setLevel(_requests_log_level)
+MAX_URI_LEN = 8192
 
 
 class HTTPClient(object):
     """Handles the REST calls and responses, include authn."""
 
     USER_AGENT = 'python-tackerclient'
+    CONTENT_TYPE = 'application/json'
 
     def __init__(self, username=None, user_id=None,
                  tenant_name=None, tenant_id=None,
@@ -69,7 +72,6 @@ class HTTPClient(object):
         self.auth_token = token
         self.auth_tenant_id = None
         self.auth_user_id = None
-        self.content_type = 'application/json'
         self.endpoint_url = endpoint_url
         self.auth_strategy = auth_strategy
         self.log_credentials = log_credentials
@@ -83,17 +85,8 @@ class HTTPClient(object):
         kargs.setdefault('headers', kwargs.get('headers', {}))
         kargs['headers']['User-Agent'] = self.USER_AGENT
 
-        if 'content_type' in kwargs:
-            kargs['headers']['Content-Type'] = kwargs['content_type']
-            kargs['headers']['Accept'] = kwargs['content_type']
-        else:
-            kargs['headers']['Content-Type'] = self.content_type
-            kargs['headers']['Accept'] = self.content_type
-
         if 'body' in kwargs:
             kargs['body'] = kwargs['body']
-        args = utils.safe_encode_list(args)
-        kargs = utils.safe_encode_dict(kargs)
 
         if self.log_credentials:
             log_kargs = kargs
@@ -112,8 +105,7 @@ class HTTPClient(object):
             _logger.debug("throwing ConnectionFailed : %s", e)
             raise exceptions.ConnectionFailed(reason=e)
         utils.http_log_resp(_logger, resp, body)
-        status_code = self.get_status_code(resp)
-        if status_code == 401:
+        if resp.status_code == 401:
             raise exceptions.Unauthorized(message=body)
         return resp, body
 
@@ -132,24 +124,40 @@ class HTTPClient(object):
         elif not self.endpoint_url:
             self.endpoint_url = self._get_endpoint_url()
 
-    def request(self, url, method, **kwargs):
-        kwargs.setdefault('headers', kwargs.get('headers', {}))
-        kwargs['headers']['User-Agent'] = self.USER_AGENT
-        kwargs['headers']['Accept'] = 'application/json'
-        if 'body' in kwargs:
-            kwargs['headers']['Content-Type'] = 'application/json'
-            kwargs['data'] = kwargs['body']
-            del kwargs['body']
+    def request(self, url, method, body=None, headers=None, **kwargs):
+        """Request without authentication."""
+
+        content_type = kwargs.pop('content_type', None) or 'application/json'
+        headers = headers or {}
+        headers.setdefault('Accept', content_type)
+
+        if body:
+            headers.setdefault('Content-Type', content_type)
+
+        headers['User-Agent'] = self.USER_AGENT
+
         resp = requests.request(
             method,
             url,
+            data=body,
+            headers=headers,
             verify=self.verify_cert,
+            timeout=self.timeout,
             **kwargs)
 
         return resp, resp.text
 
+    def _check_uri_length(self, action):
+        uri_len = len(self.endpoint_url) + len(action)
+        if uri_len > MAX_URI_LEN:
+            raise exceptions.RequestURITooLong(
+                excess=uri_len - MAX_URI_LEN)
+
     def do_request(self, url, method, **kwargs):
+        # Ensure client always has correct uri - do not guesstimate anything
         self.authenticate_and_fetch_endpoint_url()
+        self._check_uri_length(url)
+
         # Perform the request once. If we get a 401 back then it
         # might be because the auth token expired, so try to
         # re-authenticate and try again. If it still fails, bail.
@@ -206,8 +214,7 @@ class HTTPClient(object):
                                            body=json.dumps(body),
                                            content_type="application/json",
                                            allow_redirects=True)
-        status_code = self.get_status_code(resp)
-        if status_code != 200:
+        if resp.status_code != 200:
             raise exceptions.Unauthorized(message=resp_body)
         if resp_body:
             try:
@@ -250,7 +257,7 @@ class HTTPClient(object):
         body = json.loads(body)
         for endpoint in body.get('endpoints', []):
             if (endpoint['type'] == 'servicevm' and
-                endpoint.get('region') == self.region_name):
+                    endpoint.get('region') == self.region_name):
                 if self.endpoint_type not in endpoint:
                     raise exceptions.EndpointTypeNotFound(
                         type_=self.endpoint_type)
@@ -264,13 +271,122 @@ class HTTPClient(object):
                 'auth_user_id': self.auth_user_id,
                 'endpoint_url': self.endpoint_url}
 
-    def get_status_code(self, response):
-        """Returns the integer status code from the response.
 
-        Either a Webob.Response (used in testing) or requests.Response
-        is returned.
-        """
-        if hasattr(response, 'status_int'):
-            return response.status_int
+class SessionClient(adapter.Adapter):
+
+    def request(self, *args, **kwargs):
+        kwargs.setdefault('authenticated', False)
+        kwargs.setdefault('raise_exc', False)
+
+        content_type = kwargs.pop('content_type', None) or 'application/json'
+
+        headers = kwargs.setdefault('headers', {})
+        headers.setdefault('Accept', content_type)
+
+        try:
+            kwargs.setdefault('data', kwargs.pop('body'))
+        except KeyError:
+            pass
+
+        if kwargs.get('data'):
+            headers.setdefault('Content-Type', content_type)
+
+        resp = super(SessionClient, self).request(*args, **kwargs)
+        return resp, resp.text
+
+    def _check_uri_length(self, url):
+        uri_len = len(self.endpoint_url) + len(url)
+        if uri_len > MAX_URI_LEN:
+            raise exceptions.RequestURITooLong(
+                excess=uri_len - MAX_URI_LEN)
+
+    def do_request(self, url, method, **kwargs):
+        kwargs.setdefault('authenticated', True)
+        self._check_uri_length(url)
+        return self.request(url, method, **kwargs)
+
+    @property
+    def endpoint_url(self):
+        # NOTE(jamielennox): This is used purely by the CLI and should be
+        # removed when the CLI gets smarter.
+        return self.get_endpoint()
+
+    @property
+    def auth_token(self):
+        # NOTE(jamielennox): This is used purely by the CLI and should be
+        # removed when the CLI gets smarter.
+        return self.get_token()
+
+    def authenticate(self):
+        # NOTE(jamielennox): This is used purely by the CLI and should be
+        # removed when the CLI gets smarter.
+        self.get_token()
+
+    def get_auth_info(self):
+        auth_info = {'auth_token': self.auth_token,
+                     'endpoint_url': self.endpoint_url}
+
+        # NOTE(jamielennox): This is the best we can do here. It will work
+        # with identity plugins which is the primary case but we should
+        # deprecate it's usage as much as possible.
+        try:
+            get_access = (self.auth or self.session.auth).get_access
+        except AttributeError:
+            pass
         else:
-            return response.status_code
+            auth_ref = get_access(self.session)
+
+            auth_info['auth_tenant_id'] = auth_ref.project_id
+            auth_info['auth_user_id'] = auth_ref.user_id
+
+        return auth_info
+
+
+# FIXME(bklei): Should refactor this to use kwargs and only
+# explicitly list arguments that are not None.
+def construct_http_client(username=None,
+                          user_id=None,
+                          tenant_name=None,
+                          tenant_id=None,
+                          password=None,
+                          auth_url=None,
+                          token=None,
+                          region_name=None,
+                          timeout=None,
+                          endpoint_url=None,
+                          insecure=False,
+                          endpoint_type='publicURL',
+                          log_credentials=None,
+                          auth_strategy='keystone',
+                          ca_cert=None,
+                          service_type='servicevm',
+                          session=None,
+                          **kwargs):
+
+    if session:
+        kwargs.setdefault('user_agent', 'python-tackerclient')
+        kwargs.setdefault('interface', endpoint_type)
+        return SessionClient(session=session,
+                             service_type=service_type,
+                             region_name=region_name,
+                             **kwargs)
+    else:
+        # FIXME(bklei): username and password are now optional. Need
+        # to test that they were provided in this mode.  Should also
+        # refactor to use kwargs.
+        return HTTPClient(username=username,
+                          password=password,
+                          tenant_id=tenant_id,
+                          tenant_name=tenant_name,
+                          user_id=user_id,
+                          auth_url=auth_url,
+                          token=token,
+                          endpoint_url=endpoint_url,
+                          insecure=insecure,
+                          timeout=timeout,
+                          region_name=region_name,
+                          endpoint_type=endpoint_type,
+                          service_type=service_type,
+                          ca_cert=ca_cert,
+                          log_credentials=log_credentials,
+                          auth_strategy=auth_strategy)

@@ -43,10 +43,15 @@ def make_client(instance):
                                region_name=instance._region_name,
                                auth_url=instance._auth_url,
                                endpoint_url=url,
+                               endpoint_type=instance._endpoint_type,
                                token=instance._token,
                                auth_strategy=instance._auth_strategy,
                                insecure=instance._insecure,
-                               ca_cert=instance._ca_cert)
+                               ca_cert=instance._ca_cert,
+                               retries=instance._retries,
+                               raise_errors=instance._raise_errors,
+                               session=instance._session,
+                               auth=instance._auth)
         return client
     else:
         raise exceptions.UnsupportedVersion(_("API version %s is not "

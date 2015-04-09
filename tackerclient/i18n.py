@@ -1,6 +1,3 @@
-# Copyright 2012 OpenStack Foundation.
-# All Rights Reserved
-#
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
 #    a copy of the License at
@@ -12,24 +9,20 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+
+from oslo import i18n
+
+_translators = i18n.TranslatorFactory(domain='tackerclient')
+
+# The primary translation function using the well-known name "_"
+_ = _translators.primary
+
+# Translators for log levels.
 #
-
-from cliff import command
-
-
-class OpenStackCommand(command.Command):
-    """Base class for OpenStack commands."""
-
-    api = None
-
-    def run(self, parsed_args):
-        if not self.api:
-            return
-        else:
-            return super(OpenStackCommand, self).run(parsed_args)
-
-    def get_data(self, parsed_args):
-        pass
-
-    def take_action(self, parsed_args):
-        return self.get_data(parsed_args)
+# The abbreviated names are meant to reflect the usual use of a short
+# name like '_'. The "L" is for "log" and the other letter comes from
+# the level.
+_LI = _translators.log_info
+_LW = _translators.log_warning
+_LE = _translators.log_error
+_LC = _translators.log_critical

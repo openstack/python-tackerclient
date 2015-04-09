@@ -21,18 +21,30 @@ Command-line interface to the Tacker APIs
 from __future__ import print_function
 
 import argparse
+import getpass
+import inspect
+import itertools
 import logging
 import os
 import sys
+
+from keystoneclient.auth.identity import v2 as v2_auth
+from keystoneclient.auth.identity import v3 as v3_auth
+from keystoneclient import discover
+from keystoneclient.openstack.common.apiclient import exceptions as ks_exc
+from keystoneclient import session
+from oslo.utils import encodeutils
+import six.moves.urllib.parse as urlparse
 
 from cliff import app
 from cliff import commandmanager
 
 from tackerclient.common import clientmanager
+from tackerclient.common import command as openstack_command
 from tackerclient.common import exceptions as exc
+from tackerclient.common import extension as client_extension
 from tackerclient.common import utils
-from tackerclient.openstack.common.gettextutils import _
-from tackerclient.openstack.common import strutils
+from tackerclient.i18n import _
 from tackerclient.tacker.v1_0 import extension
 from tackerclient.tacker.v1_0.vm import device
 from tackerclient.tacker.v1_0.vm import device_template
@@ -70,7 +82,23 @@ def env(*_vars, **kwargs):
     return kwargs.get('default', '')
 
 
+def check_non_negative_int(value):
+    try:
+        value = int(value)
+    except ValueError:
+        raise argparse.ArgumentTypeError(_("invalid int value: %r") % value)
+    if value < 0:
+        raise argparse.ArgumentTypeError(_("input value %d is negative") %
+                                         value)
+    return value
+
+
+class BashCompletionCommand(openstack_command.OpenStackCommand):
+    """Prints all of the commands and options for bash-completion."""
+    resource = "bash_completion"
+
 COMMAND_V1 = {
+    'bash-completion': BashCompletionCommand,
     'ext-list': extension.ListExt,
     'ext-show': extension.ShowExt,
     'device-template-create': device_template.CreateDeviceTemplate,
@@ -134,6 +162,11 @@ class TackerShell(app.App):
         for k, v in self.commands[apiversion].items():
             self.command_manager.add_command(k, v)
 
+        self._register_extensions(VERSION)
+
+        # Pop the 'complete' to correct the outputs of 'tacker help'.
+        self.command_manager.commands.pop('complete')
+
         # This is instantiated in initialize_app() only when using
         # password flow auth
         self.auth_client = None
@@ -169,20 +202,64 @@ class TackerShell(app.App):
             action='store_const',
             dest='verbose_level',
             const=0,
-            help=_('Suppress output except warnings and errors'))
+            help=_('Suppress output except warnings and errors.'))
         parser.add_argument(
             '-h', '--help',
             action=HelpAction,
             nargs=0,
             default=self,  # tricky
-            help=_("Show this help message and exit"))
-        # Global arguments
+            help=_("Show this help message and exit."))
+        parser.add_argument(
+            '-r', '--retries',
+            metavar="NUM",
+            type=check_non_negative_int,
+            default=0,
+            help=_("How many times the request to the Tacker server should "
+                   "be retried if it fails."))
+        # FIXME(bklei): this method should come from python-keystoneclient
+        self._append_global_identity_args(parser)
+
+        return parser
+
+    def _append_global_identity_args(self, parser):
+        # FIXME(bklei): these are global identity (Keystone) arguments which
+        # should be consistent and shared by all service clients. Therefore,
+        # they should be provided by python-keystoneclient. We will need to
+        # refactor this code once this functionality is available in
+        # python-keystoneclient.
+        #
+        # Note: At that time we'll need to decide if we can just abandon
+        #       the deprecated args (--service-type and --endpoint-type).
+
+        parser.add_argument(
+            '--os-service-type', metavar='<os-service-type>',
+            default=env('OS_SERVICEVM_SERVICE_TYPE', default='servicevm'),
+            help=_('Defaults to env[OS_SERVICEVM_SERVICE_TYPE] or servicevm.'))
+
+        parser.add_argument(
+            '--os-endpoint-type', metavar='<os-endpoint-type>',
+            default=env('OS_ENDPOINT_TYPE', default='publicURL'),
+            help=_('Defaults to env[OS_ENDPOINT_TYPE] or publicURL.'))
+
+        # FIXME(bklei): --service-type is deprecated but kept in for
+        # backward compatibility.
+        parser.add_argument(
+            '--service-type', metavar='<service-type>',
+            default=env('OS_SERVICEVM_SERVICE_TYPE', default='servicevm'),
+            help=_('DEPRECATED! Use --os-service-type.'))
+
+        # FIXME(bklei): --endpoint-type is deprecated but kept in for
+        # backward compatibility.
+        parser.add_argument(
+            '--endpoint-type', metavar='<endpoint-type>',
+            default=env('OS_ENDPOINT_TYPE', default='publicURL'),
+            help=_('DEPRECATED! Use --os-endpoint-type.'))
+
         parser.add_argument(
             '--os-auth-strategy', metavar='<auth-strategy>',
             default=env('OS_AUTH_STRATEGY', default='keystone'),
-            help=_('Authentication strategy (Env: OS_AUTH_STRATEGY'
-                   ', default keystone). For now, any other value will'
-                   ' disable the authentication'))
+            help=_('DEPRECATED! Only keystone is supported.'))
+
         parser.add_argument(
             '--os_auth_strategy',
             help=argparse.SUPPRESS)
@@ -190,28 +267,49 @@ class TackerShell(app.App):
         parser.add_argument(
             '--os-auth-url', metavar='<auth-url>',
             default=env('OS_AUTH_URL'),
-            help=_('Authentication URL (Env: OS_AUTH_URL)'))
+            help=_('Authentication URL, defaults to env[OS_AUTH_URL].'))
         parser.add_argument(
             '--os_auth_url',
             help=argparse.SUPPRESS)
 
-        parser.add_argument(
+        project_name_group = parser.add_mutually_exclusive_group()
+        project_name_group.add_argument(
             '--os-tenant-name', metavar='<auth-tenant-name>',
             default=env('OS_TENANT_NAME'),
-            help=_('Authentication tenant name (Env: OS_TENANT_NAME)'))
+            help=_('Authentication tenant name, defaults to '
+                   'env[OS_TENANT_NAME].'))
+        project_name_group.add_argument(
+            '--os-project-name',
+            metavar='<auth-project-name>',
+            default=utils.env('OS_PROJECT_NAME'),
+            help='Another way to specify tenant name. '
+                 'This option is mutually exclusive with '
+                 ' --os-tenant-name. '
+                 'Defaults to env[OS_PROJECT_NAME].')
+
         parser.add_argument(
             '--os_tenant_name',
             help=argparse.SUPPRESS)
 
-        parser.add_argument(
+        project_id_group = parser.add_mutually_exclusive_group()
+        project_id_group.add_argument(
             '--os-tenant-id', metavar='<auth-tenant-id>',
             default=env('OS_TENANT_ID'),
-            help=_('Authentication tenant ID (Env: OS_TENANT_ID)'))
+            help=_('Authentication tenant ID, defaults to '
+                   'env[OS_TENANT_ID].'))
+        project_id_group.add_argument(
+            '--os-project-id',
+            metavar='<auth-project-id>',
+            default=utils.env('OS_PROJECT_ID'),
+            help='Another way to specify tenant ID. '
+            'This option is mutually exclusive with '
+            ' --os-tenant-id. '
+            'Defaults to env[OS_PROJECT_ID].')
 
         parser.add_argument(
             '--os-username', metavar='<auth-username>',
             default=utils.env('OS_USERNAME'),
-            help=_('Authentication username (Env: OS_USERNAME)'))
+            help=_('Authentication username, defaults to env[OS_USERNAME].'))
         parser.add_argument(
             '--os_username',
             help=argparse.SUPPRESS)
@@ -222,46 +320,59 @@ class TackerShell(app.App):
             help=_('Authentication user ID (Env: OS_USER_ID)'))
 
         parser.add_argument(
-            '--os-password', metavar='<auth-password>',
-            default=utils.env('OS_PASSWORD'),
-            help=_('Authentication password (Env: OS_PASSWORD)'))
-        parser.add_argument(
-            '--os_password',
+            '--os_user_id',
             help=argparse.SUPPRESS)
 
         parser.add_argument(
-            '--os-region-name', metavar='<auth-region-name>',
-            default=env('OS_REGION_NAME'),
-            help=_('Authentication region name (Env: OS_REGION_NAME)'))
+            '--os-user-domain-id',
+            metavar='<auth-user-domain-id>',
+            default=utils.env('OS_USER_DOMAIN_ID'),
+            help='OpenStack user domain ID. '
+            'Defaults to env[OS_USER_DOMAIN_ID].')
+
         parser.add_argument(
-            '--os_region_name',
+            '--os_user_domain_id',
             help=argparse.SUPPRESS)
 
         parser.add_argument(
-            '--os-token', metavar='<token>',
-            default=env('OS_TOKEN'),
-            help=_('Defaults to env[OS_TOKEN]'))
+            '--os-user-domain-name',
+            metavar='<auth-user-domain-name>',
+            default=utils.env('OS_USER_DOMAIN_NAME'),
+            help='OpenStack user domain name. '
+                 'Defaults to env[OS_USER_DOMAIN_NAME].')
+
         parser.add_argument(
-            '--os_token',
+            '--os_user_domain_name',
             help=argparse.SUPPRESS)
 
         parser.add_argument(
-            '--service-type', metavar='<service-type>',
-            default=env('OS_SERVICEVM_SERVICE_TYPE', default='servicevm'),
-            help=_('Defaults to env[OS_SERVICEVM_SERVICE_TYPE] or servicevm.'))
-
-        parser.add_argument(
-            '--endpoint-type', metavar='<endpoint-type>',
-            default=env('OS_ENDPOINT_TYPE', default='publicURL'),
-            help=_('Defaults to env[OS_ENDPOINT_TYPE] or publicURL.'))
-
-        parser.add_argument(
-            '--os-url', metavar='<url>',
-            default=env('OS_URL'),
-            help=_('Defaults to env[OS_URL]'))
-        parser.add_argument(
-            '--os_url',
+            '--os_project_id',
             help=argparse.SUPPRESS)
+
+        parser.add_argument(
+            '--os_project_name',
+            help=argparse.SUPPRESS)
+
+        parser.add_argument(
+            '--os-project-domain-id',
+            metavar='<auth-project-domain-id>',
+            default=utils.env('OS_PROJECT_DOMAIN_ID'),
+            help='Defaults to env[OS_PROJECT_DOMAIN_ID].')
+
+        parser.add_argument(
+            '--os-project-domain-name',
+            metavar='<auth-project-domain-name>',
+            default=utils.env('OS_PROJECT_DOMAIN_NAME'),
+            help='Defaults to env[OS_PROJECT_DOMAIN_NAME].')
+
+        parser.add_argument(
+            '--os-cert',
+            metavar='<certificate>',
+            default=utils.env('OS_CERT'),
+            help=_("Path of certificate file to use in SSL "
+                   "connection. This file can optionally be "
+                   "prepended with the private key. Defaults "
+                   "to env[OS_CERT]."))
 
         parser.add_argument(
             '--os-cacert',
@@ -269,7 +380,55 @@ class TackerShell(app.App):
             default=env('OS_CACERT', default=None),
             help=_("Specify a CA bundle file to use in "
                    "verifying a TLS (https) server certificate. "
-                   "Defaults to env[OS_CACERT]"))
+                   "Defaults to env[OS_CACERT]."))
+
+        parser.add_argument(
+            '--os-key',
+            metavar='<key>',
+            default=utils.env('OS_KEY'),
+            help=_("Path of client key to use in SSL "
+                   "connection. This option is not necessary "
+                   "if your key is prepended to your certificate "
+                   "file. Defaults to env[OS_KEY]."))
+
+        parser.add_argument(
+            '--os-password', metavar='<auth-password>',
+            default=utils.env('OS_PASSWORD'),
+            help=_('Authentication password, defaults to env[OS_PASSWORD].'))
+        parser.add_argument(
+            '--os_password',
+            help=argparse.SUPPRESS)
+
+        parser.add_argument(
+            '--os-region-name', metavar='<auth-region-name>',
+            default=env('OS_REGION_NAME'),
+            help=_('Authentication region name, defaults to '
+                   'env[OS_REGION_NAME].'))
+        parser.add_argument(
+            '--os_region_name',
+            help=argparse.SUPPRESS)
+
+        parser.add_argument(
+            '--os-token', metavar='<token>',
+            default=env('OS_TOKEN'),
+            help=_('Authentication token, defaults to env[OS_TOKEN].'))
+        parser.add_argument(
+            '--os_token',
+            help=argparse.SUPPRESS)
+
+        parser.add_argument(
+            '--http-timeout', metavar='<seconds>',
+            default=env('OS_NETWORK_TIMEOUT', default=None), type=float,
+            help=_('Timeout in seconds to wait for an HTTP response. Defaults '
+                   'to env[OS_NETWORK_TIMEOUT] or None if not specified.'))
+
+        parser.add_argument(
+            '--os-url', metavar='<url>',
+            default=env('OS_URL'),
+            help=_('Defaults to env[OS_URL].'))
+        parser.add_argument(
+            '--os_url',
+            help=argparse.SUPPRESS)
 
         parser.add_argument(
             '--insecure',
@@ -279,8 +438,6 @@ class TackerShell(app.App):
                    "SSL (https) requests. The server's certificate will "
                    "not be verified against any certificate authorities. "
                    "This option should be used with caution."))
-
-        return parser
 
     def _bash_completion(self):
         """Prints all of the commands and options for bash-completion."""
@@ -297,6 +454,26 @@ class TackerShell(app.App):
                 options.add(option)
         print(' '.join(commands | options))
 
+    def _register_extensions(self, version):
+        for name, module in itertools.chain(
+                client_extension._discover_via_entry_points()):
+            self._extend_shell_commands(module, version)
+
+    def _extend_shell_commands(self, module, version):
+        classes = inspect.getmembers(module, inspect.isclass)
+        for cls_name, cls in classes:
+            if (issubclass(cls, client_extension.TackerClientExtension) and
+                    hasattr(cls, 'shell_command')):
+                cmd = cls.shell_command
+                if hasattr(cls, 'versions'):
+                    if version not in cls.versions:
+                        continue
+                try:
+                    self.command_manager.add_command(cmd, cls)
+                    self.commands[version][cmd] = cls
+                except TypeError:
+                    pass
+
     def run(self, argv):
         """Equivalent to the main program for the application.
 
@@ -309,7 +486,7 @@ class TackerShell(app.App):
             help_pos = -1
             help_command_pos = -1
             for arg in argv:
-                if arg == 'bash-completion':
+                if arg == 'bash-completion' and help_command_pos == -1:
                     self._bash_completion()
                     return 0
                 if arg in self.commands[self.api_version]:
@@ -331,27 +508,22 @@ class TackerShell(app.App):
             self.interactive_mode = not remainder
             self.initialize_app(remainder)
         except Exception as err:
-            if self.options.verbose_level == self.DEBUG_LEVEL:
-                self.log.exception(unicode(err))
+            if self.options.verbose_level >= self.DEBUG_LEVEL:
+                self.log.exception(err)
                 raise
             else:
-                self.log.error(unicode(err))
+                self.log.error(err)
             return 1
-        result = 1
         if self.interactive_mode:
             _argv = [sys.argv[0]]
             sys.argv = _argv
-            result = self.interact()
-        else:
-            result = self.run_subcommand(remainder)
-        return result
+            return self.interact()
+        return self.run_subcommand(remainder)
 
     def run_subcommand(self, argv):
         subcommand = self.command_manager.find_command(argv)
         cmd_factory, cmd_name, sub_argv = subcommand
         cmd = cmd_factory(self, self.options)
-        err = None
-        result = 1
         try:
             self.prepare_to_run_command(cmd)
             full_name = (cmd_name
@@ -360,29 +532,12 @@ class TackerShell(app.App):
                          )
             cmd_parser = cmd.get_parser(full_name)
             return run_command(cmd, cmd_parser, sub_argv)
-        except Exception as err:
-            if self.options.verbose_level == self.DEBUG_LEVEL:
-                self.log.exception(unicode(err))
-            else:
-                self.log.error(unicode(err))
-            try:
-                self.clean_up(cmd, result, err)
-            except Exception as err2:
-                if self.options.verbose_level == self.DEBUG_LEVEL:
-                    self.log.exception(unicode(err2))
-                else:
-                    self.log.error(_('Could not clean up: %s'), unicode(err2))
-            if self.options.verbose_level == self.DEBUG_LEVEL:
+        except Exception as e:
+            if self.options.verbose_level >= self.DEBUG_LEVEL:
+                self.log.exception("%s", e)
                 raise
-        else:
-            try:
-                self.clean_up(cmd, result, None)
-            except Exception as err3:
-                if self.options.verbose_level == self.DEBUG_LEVEL:
-                    self.log.exception(unicode(err3))
-                else:
-                    self.log.error(_('Could not clean up: %s'), unicode(err3))
-        return result
+            self.log.error("%s", e)
+        return 1
 
     def authenticate_user(self):
         """Make sure the user has provided all of the authentication
@@ -394,43 +549,74 @@ class TackerShell(app.App):
                 if not self.options.os_token:
                     raise exc.CommandError(
                         _("You must provide a token via"
-                          " either --os-token or env[OS_TOKEN]"))
+                          " either --os-token or env[OS_TOKEN]"
+                          " when providing a service URL"))
 
                 if not self.options.os_url:
                     raise exc.CommandError(
                         _("You must provide a service URL via"
-                          " either --os-url or env[OS_URL]"))
+                          " either --os-url or env[OS_URL]"
+                          " when providing a token"))
 
             else:
                 # Validate password flow auth
+                project_info = (self.options.os_tenant_name or
+                                self.options.os_tenant_id or
+                                (self.options.os_project_name and
+                                    (self.options.os_project_domain_name or
+                                     self.options.os_project_domain_id)) or
+                                self.options.os_project_id)
+
                 if (not self.options.os_username
-                    and not self.options.os_user_id):
+                        and not self.options.os_user_id):
                     raise exc.CommandError(
                         _("You must provide a username or user ID via"
                           "  --os-username, env[OS_USERNAME] or"
-                          "  --os-user_id, env[OS_USER_ID]"))
+                          "  --os-user-id, env[OS_USER_ID]"))
 
                 if not self.options.os_password:
-                    raise exc.CommandError(
-                        _("You must provide a password via"
-                          " either --os-password or env[OS_PASSWORD]"))
+                    # No password, If we've got a tty, try prompting for it
+                    if hasattr(sys.stdin, 'isatty') and sys.stdin.isatty():
+                        # Check for Ctl-D
+                        try:
+                            self.options.os_password = getpass.getpass(
+                                'OS Password: ')
+                        except EOFError:
+                            pass
+                    # No password because we didn't have a tty or the
+                    # user Ctl-D when prompted.
+                    if not self.options.os_password:
+                        raise exc.CommandError(
+                            _("You must provide a password via"
+                              " either --os-password or env[OS_PASSWORD]"))
 
-                if (not self.options.os_tenant_name
-                    and not self.options.os_tenant_id):
+                if (not project_info):
+                    # tenent is deprecated in Keystone v3. Use the latest
+                    # terminology instead.
                     raise exc.CommandError(
-                        _("You must provide a tenant_name or tenant_id via"
-                          "  --os-tenant-name, env[OS_TENANT_NAME]"
-                          "  --os-tenant-id, or via env[OS_TENANT_ID]"))
+                        _("You must provide a project_id or project_name ("
+                          "with project_domain_name or project_domain_id) "
+                          "via "
+                          "  --os-project-id (env[OS_PROJECT_ID])"
+                          "  --os-project-name (env[OS_PROJECT_NAME]),"
+                          "  --os-project-domain-id "
+                          "(env[OS_PROJECT_DOMAIN_ID])"
+                          "  --os-project-domain-name "
+                          "(env[OS_PROJECT_DOMAIN_NAME])"))
 
                 if not self.options.os_auth_url:
                     raise exc.CommandError(
                         _("You must provide an auth url via"
                           " either --os-auth-url or via env[OS_AUTH_URL]"))
+            auth_session = self._get_keystone_session()
+            auth = auth_session.auth
         else:   # not keystone
             if not self.options.os_url:
                 raise exc.CommandError(
                     _("You must provide a service URL via"
                       " either --os-url or env[OS_URL]"))
+            auth_session = None
+            auth = None
 
         self.client_manager = clientmanager.ClientManager(
             token=self.options.os_token,
@@ -444,10 +630,18 @@ class TackerShell(app.App):
             region_name=self.options.os_region_name,
             api_version=self.api_version,
             auth_strategy=self.options.os_auth_strategy,
-            service_type=self.options.service_type,
-            endpoint_type=self.options.endpoint_type,
+            # FIXME (bklei) honor deprecated service_type and
+            # endpoint type until they are removed
+            service_type=self.options.os_service_type or
+            self.options.service_type,
+            endpoint_type=self.options.os_endpoint_type or self.endpoint_type,
             insecure=self.options.insecure,
             ca_cert=self.options.os_cacert,
+            timeout=self.options.http_timeout,
+            retries=self.options.retries,
+            raise_errors=False,
+            session=auth_session,
+            auth=auth,
             log_credentials=True)
         return
 
@@ -471,11 +665,6 @@ class TackerShell(app.App):
         if self.interactive_mode or cmd_name != 'help':
             self.authenticate_user()
 
-    def clean_up(self, cmd, result, err):
-        self.log.debug('clean_up %s', cmd.__class__.__name__)
-        if err:
-            self.log.debug(_('Got an error: %s'), unicode(err))
-
     def configure_logging(self):
         """Create logging handlers for any log output."""
         root_logger = logging.getLogger('')
@@ -489,24 +678,118 @@ class TackerShell(app.App):
                          self.INFO_LEVEL: logging.INFO,
                          self.DEBUG_LEVEL: logging.DEBUG,
                          }.get(self.options.verbose_level, logging.DEBUG)
-        console.setLevel(console_level)
+        # The default log level is INFO, in this situation, set the
+        # log level of the console to WARNING, to avoid displaying
+        # useless messages. This equals using "--quiet"
+        if console_level == logging.INFO:
+            console.setLevel(logging.WARNING)
+        else:
+            console.setLevel(console_level)
         if logging.DEBUG == console_level:
             formatter = logging.Formatter(self.DEBUG_MESSAGE_FORMAT)
         else:
             formatter = logging.Formatter(self.CONSOLE_MESSAGE_FORMAT)
+        logging.getLogger('iso8601.iso8601').setLevel(logging.WARNING)
+        logging.getLogger('urllib3.connectionpool').setLevel(logging.WARNING)
         console.setFormatter(formatter)
         root_logger.addHandler(console)
         return
 
+    def get_v2_auth(self, v2_auth_url):
+        return v2_auth.Password(
+            v2_auth_url,
+            username=self.options.os_username,
+            password=self.options.os_password,
+            tenant_id=self.options.os_tenant_id,
+            tenant_name=self.options.os_tenant_name)
+
+    def get_v3_auth(self, v3_auth_url):
+        project_id = self.options.os_project_id or self.options.os_tenant_id
+        project_name = (self.options.os_project_name or
+                        self.options.os_tenant_name)
+
+        return v3_auth.Password(
+            v3_auth_url,
+            username=self.options.os_username,
+            password=self.options.os_password,
+            user_id=self.options.os_user_id,
+            user_domain_name=self.options.os_user_domain_name,
+            user_domain_id=self.options.os_user_domain_id,
+            project_id=project_id,
+            project_name=project_name,
+            project_domain_name=self.options.os_project_domain_name,
+            project_domain_id=self.options.os_project_domain_id
+        )
+
+    def _discover_auth_versions(self, session, auth_url):
+        # discover the API versions the server is supporting base on the
+        # given URL
+        try:
+            ks_discover = discover.Discover(session=session, auth_url=auth_url)
+            return (ks_discover.url_for('2.0'), ks_discover.url_for('3.0'))
+        except ks_exc.ClientException:
+            # Identity service may not support discover API version.
+            # Lets try to figure out the API version from the original URL.
+            url_parts = urlparse.urlparse(auth_url)
+            (scheme, netloc, path, params, query, fragment) = url_parts
+            path = path.lower()
+            if path.startswith('/v3'):
+                return (None, auth_url)
+            elif path.startswith('/v2'):
+                return (auth_url, None)
+            else:
+                # not enough information to determine the auth version
+                msg = _('Unable to determine the Keystone version '
+                        'to authenticate with using the given '
+                        'auth_url. Identity service may not support API '
+                        'version discovery. Please provide a versioned '
+                        'auth_url instead.')
+                raise exc.CommandError(msg)
+
+    def _get_keystone_session(self):
+        # first create a Keystone session
+        cacert = self.options.os_cacert or None
+        cert = self.options.os_cert or None
+        key = self.options.os_key or None
+        insecure = self.options.insecure or False
+        ks_session = session.Session.construct(dict(cacert=cacert,
+                                                    cert=cert,
+                                                    key=key,
+                                                    insecure=insecure))
+        # discover the supported keystone versions using the given url
+        (v2_auth_url, v3_auth_url) = self._discover_auth_versions(
+            session=ks_session,
+            auth_url=self.options.os_auth_url)
+
+        # Determine which authentication plugin to use. First inspect the
+        # auth_url to see the supported version. If both v3 and v2 are
+        # supported, then use the highest version if possible.
+        user_domain_name = self.options.os_user_domain_name or None
+        user_domain_id = self.options.os_user_domain_id or None
+        project_domain_name = self.options.os_project_domain_name or None
+        project_domain_id = self.options.os_project_domain_id or None
+        domain_info = (user_domain_name or user_domain_id or
+                       project_domain_name or project_domain_id)
+
+        if (v2_auth_url and not domain_info) or not v3_auth_url:
+            ks_session.auth = self.get_v2_auth(v2_auth_url)
+        else:
+            ks_session.auth = self.get_v3_auth(v3_auth_url)
+
+        return ks_session
+
 
 def main(argv=sys.argv[1:]):
     try:
-        return TackerShell(TACKER_API_VERSION).run(map(strutils.safe_decode,
-                                                   argv))
+        return TackerShell(TACKER_API_VERSION).run(
+            list(map(encodeutils.safe_decode, argv)))
+    except KeyboardInterrupt:
+        print("... terminating tacker client", file=sys.stderr)
+        return 130
     except exc.TackerClientException:
         return 1
     except Exception as e:
-        print(unicode(e))
+        print(e)
         return 1
 
 

@@ -13,7 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from tackerclient.common import _
+from tackerclient.i18n import _
 
 """
 Tacker base exception handling.
@@ -30,12 +30,11 @@ Exceptions are classified into three categories:
 
 
 class TackerException(Exception):
-    """Base Tacker Exception
+    """Base Tacker Exception.
 
     To correctly use this class, inherit from it and define
     a 'message' property. That message will get printf'd
     with the keyword arguments provided to the constructor.
-
     """
     message = _("An unknown exception occurred.")
 
@@ -59,6 +58,8 @@ class TackerClientException(TackerException):
     to allow client library users to handle server exceptions in try...except
     blocks. The actual error message is the one generated on the server side.
     """
+
+    status_code = 0
 
     def __init__(self, message=None, **kwargs):
         if 'status_code' in kwargs:
@@ -139,6 +140,10 @@ class IpAddressInUseClient(Conflict):
     pass
 
 
+class InvalidIpForNetworkClient(BadRequest):
+    pass
+
+
 class OverQuotaClient(Conflict):
     pass
 
@@ -150,6 +155,10 @@ class AlreadyAttachedClient(Conflict):
 
 
 class IpAddressGenerationFailureClient(Conflict):
+    pass
+
+
+class MacAddressInUseClient(Conflict):
     pass
 
 
@@ -212,8 +221,8 @@ class CommandError(TackerCLIError):
 
 
 class UnsupportedVersion(TackerCLIError):
-    """Indicates that the user is trying to use an unsupported
-       version of the API
+    """Indicates that the user is trying to use an unsupported version of
+    the API.
     """
     pass
 
