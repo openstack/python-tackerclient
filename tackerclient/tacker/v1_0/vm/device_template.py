@@ -54,8 +54,8 @@ class CreateDeviceTemplate(tackerV10.CreateCommand):
             action='append',
             help='Add a servicetype for the devicetemplate')
         parser.add_argument(
-            '--device-driver',
-            help='Set a device driver name for the devicetemplate')
+            '--infra-driver',
+            help='Set a infra driver name for the devicetemplate')
         parser.add_argument(
             '--mgmt-driver',
             help='Set a manegement driver name for the devicetemplate')
@@ -71,7 +71,7 @@ class CreateDeviceTemplate(tackerV10.CreateCommand):
                 'service_types': [
                     {'service_type': service_type}
                     for service_type in parsed_args.template_service_type],
-                'device_driver': parsed_args.device_driver,
+                'infra_driver': parsed_args.infra_driver,
                 'mgmt_driver': parsed_args.mgmt_driver,
             }
         }

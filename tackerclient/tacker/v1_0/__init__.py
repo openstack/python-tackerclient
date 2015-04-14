@@ -24,6 +24,7 @@ import re
 from cliff.formatters import table
 from cliff import lister
 from cliff import show
+from oslo.serialization import jsonutils
 import six
 
 from tackerclient.common import command
@@ -386,12 +387,12 @@ class TackerCommand(command.OpenStackCommand):
         if self.resource in data:
             for k, v in data[self.resource].iteritems():
                 if isinstance(v, list):
-                    value = '\n'.join(utils.dumps(
+                    value = '\n'.join(jsonutils.dumps(
                         i, indent=self.json_indent) if isinstance(i, dict)
                         else str(i) for i in v)
                     data[self.resource][k] = value
                 elif isinstance(v, dict):
-                    value = utils.dumps(v, indent=self.json_indent)
+                    value = jsonutils.dumps(v, indent=self.json_indent)
                     data[self.resource][k] = value
                 elif v is None:
                     data[self.resource][k] = ''

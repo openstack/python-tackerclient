@@ -87,7 +87,7 @@ class CreateDevice(tackerV10.CreateCommand):
                 body[self.resource]['attributes'] = attributes
         if parsed_args.service_context:
             try:
-                service_context = [dict(
+                service_contexts = [dict(
                     (k.replace('-', '_'), v)
                     for k, v in (key_value.split('=', 1)
                                  for key_value in entry_string.split(',')))
@@ -97,8 +97,8 @@ class CreateDevice(tackerV10.CreateCommand):
                        parsed_args.service_context)
                 raise exceptions.TackerCLIError(msg)
 
-            if service_context:
-                body[self.resource]['service_context'] = service_context
+            if service_contexts:
+                body[self.resource]['service_contexts'] = service_contexts
 
         tackerV10.update_dict(parsed_args, body[self.resource], ['tenant_id'])
         return body
