@@ -48,7 +48,6 @@ from tackerclient.i18n import _
 from tackerclient.tacker.v1_0 import extension
 from tackerclient.tacker.v1_0.vm import device
 from tackerclient.tacker.v1_0.vm import device_template
-from tackerclient.tacker.v1_0.vm import service_instance
 from tackerclient.version import __version__
 
 
@@ -107,11 +106,6 @@ COMMAND_V1 = {
     'device-template-show': device_template.ShowDeviceTemplate,
     'device-template-update': device_template.UpdateDeviceTemplate,
     'device-template-delete': device_template.DeleteDeviceTemplate,
-    'service-instance-create': service_instance.CreateServiceInstance,
-    'service-instance-list': service_instance.ListServiceInstance,
-    'service-instance-show': service_instance.ShowServiceInstance,
-    'service-instance-update': service_instance.UpdateServiceInstance,
-    'service-instance-delete': service_instance.DeleteServiceInstance,
     'device-create': device.CreateDevice,
     'device-list': device.ListDevice,
     'device-show': device.ShowDevice,

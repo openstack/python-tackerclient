@@ -339,8 +339,6 @@ class Client(ClientBase):
     device_path = '/devices/%s'
     interface_attach_path = '/devices/%s/attach_interface'
     interface_detach_path = '/devices/%s/detach_interface'
-    service_instances_path = '/service-instances'
-    service_instance_path = '/service-instances/%s'
 
     # API has no way to report plurals, so we have to hard code them
     # EXTED_PLURALS = {}
@@ -403,26 +401,3 @@ class Client(ClientBase):
     @APIParamsCall
     def detach_interface(self, device, body=None):
         return self.put(self.detach_interface_path % device, body)
-
-    @APIParamsCall
-    def list_service_instances(self, retrieve_all=True, **_params):
-        return self.list('service_instances', self.service_instances_path,
-                         retrieve_all, **_params)
-
-    @APIParamsCall
-    def show_service_instance(self, service_instance, **_params):
-        return self.get(self.service_instance_path % service_instance,
-                        params=_params)
-
-    @APIParamsCall
-    def update_service_instance(self, service_instance, body=None):
-        return self.put(self.service_instance_path % service_instance,
-                        body=body)
-
-    @APIParamsCall
-    def create_service_instance(self, body=None):
-        return self.post(self.service_instances_path, body=body)
-
-    @APIParamsCall
-    def delete_service_instance(self, service_instance):
-        return self.delete(self.service_instance_path % service_instance)
