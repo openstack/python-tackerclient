@@ -48,6 +48,7 @@ from tackerclient.i18n import _
 from tackerclient.tacker.v1_0 import extension
 from tackerclient.tacker.v1_0.vm import device
 from tackerclient.tacker.v1_0.vm import device_template
+from tackerclient.tacker.v1_0.vm import vnfd
 from tackerclient.version import __version__
 
 
@@ -113,6 +114,12 @@ COMMAND_V1 = {
     'device-delete': device.DeleteDevice,
     'interface-attach': device.AttachInterface,
     'interface-detach': device.DetachInterface,
+
+    # MANO lingo
+    'vnfd-create': vnfd.CreateVNFD,
+    'vnfd-delete': vnfd.DeleteVNFD,
+    'vnfd-list': vnfd.ListVNFD,
+    'vnfd-show': vnfd.ShowVNFD,
 }
 
 COMMANDS = {'1.0': COMMAND_V1}

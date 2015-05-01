@@ -1,0 +1,82 @@
+#
+# Copyright 2013 Intel
+# Copyright 2013 Isaku Yamahata <isaku.yamahata at intel com>
+#                               <isaku.yamahata at gmail com>
+# All Rights Reserved.
+#
+#
+#    Licensed under the Apache License, Version 2.0 (the "License"); you may
+#    not use this file except in compliance with the License. You may obtain
+#    a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+#    License for the specific language governing permissions and limitations
+#    under the License.
+#
+# @author: Isaku Yamahata, Intel
+
+from tackerclient.tacker import v1_0 as tackerV10
+
+
+_DEVICE_TEMPLATE = "device_template"
+
+
+class ListVNFD(tackerV10.ListCommand):
+    """List VNFD that belong to a given tenant."""
+
+    resource = _DEVICE_TEMPLATE
+
+
+class ShowVNFD(tackerV10.ShowCommand):
+    """show information of a given VNFD."""
+
+    resource = _DEVICE_TEMPLATE
+
+
+class CreateVNFD(tackerV10.CreateCommand):
+    """create a VNFD."""
+
+    resource = _DEVICE_TEMPLATE
+
+    def add_known_arguments(self, parser):
+        parser.add_argument(
+            '--name',
+            help='Set a name for the vnfd')
+        parser.add_argument(
+            '--description',
+            help='Set a description for the vnfd')
+        parser.add_argument(
+            '--vnfd-file',
+            action='append',
+            help='specify vnfd file')
+        parser.add_argument(
+            '--vnfd',
+            action='append',
+            help='specify vnfd')
+
+    def args2body(self, parsed_args):
+        body = {
+            self.resource: {
+                'service_types': [{'service_type': 'vnfd'}],
+                'infra_driver': 'heat',
+                'mgmt_driver': 'noop',
+            }
+        }
+        if parsed_args.vnfd_file:
+            with open(parsed_args.vnfd_file[0]) as f:
+                vnfd = f.read()
+        if parsed_args.vnfd:
+            vnfd = parsed_args.vnfd
+        body[self.resource]['attributes'] = {'vnfd': vnfd}
+        tackerV10.update_dict(parsed_args, body[self.resource],
+                              ['tenant_id', 'name', 'description'])
+        return body
+
+
+class DeleteVNFD(tackerV10.DeleteCommand):
+    """Delete a given VNFD."""
+    resource = _DEVICE_TEMPLATE
