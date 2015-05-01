@@ -48,6 +48,7 @@ from tackerclient.i18n import _
 from tackerclient.tacker.v1_0 import extension
 from tackerclient.tacker.v1_0.vm import device
 from tackerclient.tacker.v1_0.vm import device_template
+from tackerclient.tacker.v1_0.vm import vnf
 from tackerclient.tacker.v1_0.vm import vnfd
 from tackerclient.version import __version__
 
@@ -120,6 +121,13 @@ COMMAND_V1 = {
     'vnfd-delete': vnfd.DeleteVNFD,
     'vnfd-list': vnfd.ListVNFD,
     'vnfd-show': vnfd.ShowVNFD,
+
+    'vnf-create': vnf.CreateVNF,
+    'vnf-delete': vnf.DeleteVNF,
+    'vnf-list': vnf.ListVNF,
+    'vnf-show': vnf.ShowVNF,
+    # 'vnf-config-create'
+    # 'vnf-config-push'
 }
 
 COMMANDS = {'1.0': COMMAND_V1}
