@@ -459,9 +459,10 @@ class Client(ClientBase):
     def create_vnf(self, body=None):
         arg = body[self._VNF]
         arg_ = {
-            'tenant_id': arg['tenant_id'],
             'template_id': arg['vnfd_id'],
         }
+        if 'tenant_id' in arg:
+            arg_['tenant_id'] = arg['tenant_id']
         if 'config' in arg:
             arg_['attributes'] = {'config': arg['config']}
         body_ = {self._DEVICE: arg_}
