@@ -401,3 +401,83 @@ class Client(ClientBase):
     @APIParamsCall
     def detach_interface(self, device, body=None):
         return self.put(self.detach_interface_path % device, body)
+
+    # VNFD
+    _DEVICE_TEMPLATE = "device_template"
+    _VNFD = "vnfd"
+
+    @APIParamsCall
+    def list_vnfds(self, retrieve_all=True, **_params):
+        ret = self.list_device_templates(retrieve_all, **_params)
+        return {self._VNFD + 's': ret[self._DEVICE_TEMPLATE + 's']}
+
+    @APIParamsCall
+    def show_vnfd(self, vnfd, **_params):
+        ret = self.show_device_template(vnfd, **_params)
+        return {self._VNFD: ret[self._DEVICE_TEMPLATE]}
+
+    @APIParamsCall
+    def create_vnfd(self, body=None):
+        # e.g.
+        # body = {'vnfd': {'vnfd': 'yaml vnfd definition strings...'}}
+        if body is not None:
+            args = body[self._VNFD]
+
+            args_ = {
+                'service_types': [{'service_type': 'vnfd'}],
+                'infra_driver': 'heat',
+                'mgmt_driver': 'noop',
+            }
+            body_ = {self._DEVICE_TEMPLATE: args_}
+            if 'vnfd' in args:
+                args_['attributes'] = {'vnfd': args['vnfd']}
+        else:
+            body_ = None
+
+        ret = self.create_device_template(body_)
+        return {self._VNFD: ret[self._DEVICE_TEMPLATE]}
+
+    @APIParamsCall
+    def delete_vnfd(self, vnfd):
+        return self.delete_device_template(vnfd)
+
+    # vnf
+    _DEVICE = "device"
+    _VNF = "vnf"
+
+    @APIParamsCall
+    def list_vnfs(self, retrieve_all=True, **_params):
+        ret = self.list_devices(retrieve_all, **_params)
+        return {self._VNF + 's': ret[self._DEVICE + 's']}
+
+    @APIParamsCall
+    def show_vnf(self, vnf, **_params):
+        ret = self.show_device(vnf, **_params)
+        return {self._VNF: ret[self._DEVICE]}
+
+    @APIParamsCall
+    def create_vnf(self, body=None):
+        arg = body[self._VNF]
+        arg_ = {
+            'tenant_id': arg['tenant_id'],
+            'template_id': arg['vnfd_id'],
+        }
+        if 'config' in arg:
+            arg_['attributes'] = {'config': arg['config']}
+        body_ = {self._DEVICE: arg_}
+        ret = self.create_device(body_)
+        return {self._VNF: ret[self._DEVICE]}
+
+    @APIParamsCall
+    def delete_vnf(self, vnf):
+        return self.delete_device(vnf)
+
+    @APIParamsCall
+    def update_vnf(self, vnf, body=None):
+        args = body[self._VNF]
+        args_ = {'tenant_id': args['tenant_id']}
+        if 'configs' in args:
+            args_['attributes'] = args['configs']
+        body_ = {self._DEVICE: body[self._VNF]}
+        ret = self.update_device(vnf, body_)
+        return {self._VNF: ret[self._DEVICE]}

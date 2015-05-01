@@ -22,25 +22,25 @@
 from tackerclient.tacker import v1_0 as tackerV10
 
 
-_DEVICE_TEMPLATE = "device_template"
+_VNFD = "vnfd"
 
 
 class ListVNFD(tackerV10.ListCommand):
     """List VNFD that belong to a given tenant."""
 
-    resource = _DEVICE_TEMPLATE
+    resource = _VNFD
 
 
 class ShowVNFD(tackerV10.ShowCommand):
     """show information of a given VNFD."""
 
-    resource = _DEVICE_TEMPLATE
+    resource = _VNFD
 
 
 class CreateVNFD(tackerV10.CreateCommand):
     """create a VNFD."""
 
-    resource = _DEVICE_TEMPLATE
+    resource = _VNFD
 
     def add_known_arguments(self, parser):
         parser.add_argument(
@@ -57,19 +57,13 @@ class CreateVNFD(tackerV10.CreateCommand):
             help='specify vnfd')
 
     def args2body(self, parsed_args):
-        body = {
-            self.resource: {
-                'service_types': [{'service_type': 'vnfd'}],
-                'infra_driver': 'heat',
-                'mgmt_driver': 'noop',
-            }
-        }
+        body = {self.resource: {}}
         if parsed_args.vnfd_file:
             with open(parsed_args.vnfd_file) as f:
                 vnfd = f.read()
         if parsed_args.vnfd:
             vnfd = parsed_args.vnfd
-        body[self.resource]['attributes'] = {'vnfd': vnfd}
+        body[self.resource]['vnfd'] = vnfd
         tackerV10.update_dict(parsed_args, body[self.resource],
                               ['tenant_id', 'name', 'description'])
         return body
@@ -77,4 +71,4 @@ class CreateVNFD(tackerV10.CreateCommand):
 
 class DeleteVNFD(tackerV10.DeleteCommand):
     """Delete a given VNFD."""
-    resource = _DEVICE_TEMPLATE
+    resource = _VNFD
