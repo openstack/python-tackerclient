@@ -54,15 +54,10 @@ class CreateVNF(tackerV10.CreateCommand):
             help='vnfd id to instantiate vnf based on')
         parser.add_argument(
             '--config-file',
-            action='append',
             help='specify config yaml file')
         parser.add_argument(
             '--config',
-            metavar='<key>=<value>',
-            action='append',
-            dest='configs',
-            default=[],
-            help='vnf config')
+            help='specify config yaml file')
 
     def args2body(self, parsed_args):
         body = {
@@ -71,20 +66,11 @@ class CreateVNF(tackerV10.CreateCommand):
             }
         }
         if parsed_args.config_file:
-            with open(parsed_args.config_file[0]) as f:
+            with open(parsed_args.config_file) as f:
                 config_yaml = f.read()
             body[self.resource]['attributes'] = {'config': config_yaml}
-        if parsed_args.configs:
-            try:
-                configs = dict(key_value.split('=', 1)
-                               for key_value in parsed_args.configs)
-            except ValueError:
-                msg = (_('invalid argument for --config %s') %
-                       parsed_args.configs)
-                raise exceptions.TackerCLIError(msg)
-            if configs:
-                body[self.resource].setdefault(
-                    'attributes', {}).update(configs)
+        if parsed_args.config:
+            body[self.resource]['attributes'] = {'config': parsed_args.config}
 
         tackerV10.update_dict(parsed_args, body[self.resource], ['tenant_id'])
         return body

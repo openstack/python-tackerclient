@@ -51,11 +51,9 @@ class CreateVNFD(tackerV10.CreateCommand):
             help='Set a description for the vnfd')
         parser.add_argument(
             '--vnfd-file',
-            action='append',
             help='specify vnfd file')
         parser.add_argument(
             '--vnfd',
-            action='append',
             help='specify vnfd')
 
     def args2body(self, parsed_args):
@@ -67,7 +65,7 @@ class CreateVNFD(tackerV10.CreateCommand):
             }
         }
         if parsed_args.vnfd_file:
-            with open(parsed_args.vnfd_file[0]) as f:
+            with open(parsed_args.vnfd_file) as f:
                 vnfd = f.read()
         if parsed_args.vnfd:
             vnfd = parsed_args.vnfd
