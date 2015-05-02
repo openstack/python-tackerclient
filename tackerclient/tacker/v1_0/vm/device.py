@@ -49,6 +49,9 @@ class CreateDevice(tackerV10.CreateCommand):
 
     def add_known_arguments(self, parser):
         parser.add_argument(
+            '--name',
+            help='Set a name for the devicef')
+        parser.add_argument(
             '--device-template-id',
             required=True,
             help='device template id to create device based on')

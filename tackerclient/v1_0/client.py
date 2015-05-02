@@ -461,8 +461,9 @@ class Client(ClientBase):
         arg_ = {
             'template_id': arg['vnfd_id'],
         }
-        if 'tenant_id' in arg:
-            arg_['tenant_id'] = arg['tenant_id']
+        for key in ('tenant_id', 'name'):
+            if key in arg:
+                arg_[key] = arg[key]
         if 'config' in arg:
             arg_['attributes'] = {'config': arg['config']}
         body_ = {self._DEVICE: arg_}

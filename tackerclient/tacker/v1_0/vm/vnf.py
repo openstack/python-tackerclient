@@ -46,6 +46,9 @@ class CreateVNF(tackerV10.CreateCommand):
 
     def add_known_arguments(self, parser):
         parser.add_argument(
+            '--name',
+            help='Set a name for the vnf')
+        parser.add_argument(
             '--vnfd-id',
             required=True,
             help='vnfd id to instantiate vnf based on')
@@ -66,7 +69,7 @@ class CreateVNF(tackerV10.CreateCommand):
             body[self.resource]['config'] = parsed_args.config
 
         tackerV10.update_dict(parsed_args, body[self.resource],
-                              ['tenant_id', 'vnfd_id'])
+                              ['tenant_id', 'name', 'vnfd_id'])
         return body
 
 
