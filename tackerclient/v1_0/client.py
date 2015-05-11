@@ -428,6 +428,9 @@ class Client(ClientBase):
                 'infra_driver': 'heat',
                 'mgmt_driver': 'noop',
             }
+            KEY_LIST = ('name', 'description')
+            args_.update(dict((key, args[key])
+                              for key in KEY_LIST if key in args))
             body_ = {self._DEVICE_TEMPLATE: args_}
             if 'vnfd' in args:
                 args_['attributes'] = {'vnfd': args['vnfd']}
