@@ -480,9 +480,9 @@ class Client(ClientBase):
     @APIParamsCall
     def update_vnf(self, vnf, body=None):
         args = body[self._VNF]
-        args_ = {'tenant_id': args['tenant_id']}
-        if 'configs' in args:
-            args_['attributes'] = args['configs']
-        body_ = {self._DEVICE: body[self._VNF]}
+        args_ = {}
+        if 'config' in args:
+            args_['attributes'] = {'config': args['config']}
+        body_ = {self._DEVICE: args_}
         ret = self.update_device(vnf, body_)
         return {self._VNF: ret[self._DEVICE]}

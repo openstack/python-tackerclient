@@ -123,6 +123,7 @@ COMMAND_V1 = {
     'vnfd-show': vnfd.ShowVNFD,
 
     'vnf-create': vnf.CreateVNF,
+    'vnf-update': vnf.UpdateVNF,
     'vnf-delete': vnf.DeleteVNF,
     'vnf-list': vnf.ListVNF,
     'vnf-show': vnf.ShowVNF,

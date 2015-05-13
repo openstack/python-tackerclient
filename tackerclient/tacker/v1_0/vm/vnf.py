@@ -19,8 +19,6 @@
 #
 # @author: Isaku Yamahata, Intel
 
-from tackerclient.common import exceptions
-from tackerclient.openstack.common.gettextutils import _
 from tackerclient.tacker import v1_0 as tackerV10
 
 
@@ -80,25 +78,20 @@ class UpdateVNF(tackerV10.UpdateCommand):
 
     def add_known_arguments(self, parser):
         parser.add_argument(
-            '--configs',
-            metavar='<key>=<value>',
-            action='append',
-            dest='configs',
-            default=[],
-            help='vnf specific config')
+            '--config-file',
+            help='specify config yaml file')
+        parser.add_argument(
+            '--config',
+            help='specify config yaml file')
 
     def args2body(self, parsed_args):
         body = {self.resource: {}}
-        if parsed_args.configs:
-            try:
-                configs = dict(key_value.split('=', 1)
-                               for key_value in parsed_args.attributes)
-            except ValueError:
-                msg = (_('invalid argument for --configs %s') %
-                       parsed_args.configs)
-                raise exceptions.TackerCLIError(msg)
-            if configs:
-                body[self.resource]['configs'] = configs
+        if parsed_args.config_file:
+            with open(parsed_args.config_file) as f:
+                config_yaml = f.read()
+            body[self.resource]['config'] = config_yaml
+        if parsed_args.config:
+            body[self.resource]['config'] = parsed_args.config
         tackerV10.update_dict(parsed_args, body[self.resource], ['tenant_id'])
         return body
 
