@@ -159,7 +159,7 @@ class _XtachInterface(tackerV10.UpdateCommand):
         return body
 
     def get_parser(self, prog_name):
-        parser = super(AttachInterface, self).get_parser(prog_name)
+        parser = super(_XtachInterface, self).get_parser(prog_name)
         parser.add_argument('port_id', metavar='PORT',
                             help=_('port to attach/detach'))
         self.add_known_arguments(parser)
