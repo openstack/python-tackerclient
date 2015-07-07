@@ -34,6 +34,7 @@ class ListDevice(tackerV10.ListCommand):
     """List device that belong to a given tenant."""
 
     resource = _DEVICE
+    list_columns = ['id', 'name', 'description', 'mgmt_url', 'status']
 
 
 class ShowDevice(tackerV10.ShowCommand):
