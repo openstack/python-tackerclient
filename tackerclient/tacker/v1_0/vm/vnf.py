@@ -29,6 +29,7 @@ class ListVNF(tackerV10.ListCommand):
     """List device that belong to a given tenant."""
 
     resource = _VNF
+    list_columns = ['id', 'name', 'description', 'mgmt_url', 'status']
 
 
 class ShowVNF(tackerV10.ShowCommand):
