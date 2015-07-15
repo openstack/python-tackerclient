@@ -47,10 +47,13 @@ class CreateVNF(tackerV10.CreateCommand):
         parser.add_argument(
             '--name',
             help='Set a name for the vnf')
-        parser.add_argument(
+        group = parser.add_mutually_exclusive_group(required=True)
+        group.add_argument(
             '--vnfd-id',
-            required=True,
-            help='vnfd id to instantiate vnf based on')
+            help='VNFD ID to use as template to create VNF')
+        group.add_argument(
+            '--vnfd-name',
+            help='VNFD Name to use as template to create VNF')
         parser.add_argument(
             '--config-file',
             help='specify config yaml file')
@@ -66,6 +69,15 @@ class CreateVNF(tackerV10.CreateCommand):
             body[self.resource]['config'] = config_yaml
         if parsed_args.config:
             body[self.resource]['config'] = parsed_args.config
+        if parsed_args.vnfd_name:
+            tacker_client = self.get_client()
+            tacker_client.format = parsed_args.request_format
+
+            _id = tackerV10.find_resourceid_by_name_or_id(
+                tacker_client, 'vnfd',
+                parsed_args.vnfd_name)
+
+            parsed_args.vnfd_id = _id
 
         tackerV10.update_dict(parsed_args, body[self.resource],
                               ['tenant_id', 'name', 'vnfd_id'])
