@@ -177,10 +177,14 @@ class _XtachInterface(tackerV10.UpdateCommand):
 
 
 class AttachInterface(_XtachInterface):
+    """Attach a network interface to a server."""
+
     def call_api(self, tacker_client, device_id, body):
         return tacker_client.attach_interface(device_id, body)
 
 
 class DetachInterface(_XtachInterface):
+    """Detach a network interface from a server."""
+
     def call_api(self, tacker_client, device_id, body):
         return tacker_client.detach_interface(device_id, body)
