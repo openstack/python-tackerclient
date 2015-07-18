@@ -42,6 +42,7 @@ class CreateVNFD(tackerV10.CreateCommand):
     """create a VNFD."""
 
     resource = _VNFD
+    remove_output_fields = ["attributes"]
 
     def add_known_arguments(self, parser):
         parser.add_argument(
