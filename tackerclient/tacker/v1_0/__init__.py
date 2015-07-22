@@ -412,6 +412,7 @@ class CreateCommand(TackerCommand, show.ShowOne):
     api = 'servicevm'
     resource = None
     log = None
+    remove_output_fields = []
 
     def get_parser(self, prog_name):
         parser = super(CreateCommand, self).get_parser(prog_name)
@@ -442,6 +443,9 @@ class CreateCommand(TackerCommand, show.ShowOne):
         if info:
             print(_('Created a new %s:') % self.resource,
                   file=self.app.stdout)
+            for f in self.remove_output_fields:
+                if f in info:
+                    info.pop(f)
         else:
             info = {'': ''}
         return zip(*sorted(info.iteritems()))
