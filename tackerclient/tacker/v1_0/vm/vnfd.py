@@ -45,18 +45,15 @@ class CreateVNFD(tackerV10.CreateCommand):
     remove_output_fields = ["attributes"]
 
     def add_known_arguments(self, parser):
+        group = parser.add_mutually_exclusive_group(required=True)
+        group.add_argument('--vnfd-file', help='specify vnfd file')
+        group.add_argument('--vnfd', help='specify vnfd')
         parser.add_argument(
             '--name',
             help='Set a name for the vnfd')
         parser.add_argument(
             '--description',
             help='Set a description for the vnfd')
-        parser.add_argument(
-            '--vnfd-file',
-            help='specify vnfd file')
-        parser.add_argument(
-            '--vnfd',
-            help='specify vnfd')
 
     def args2body(self, parsed_args):
         body = {self.resource: {}}
