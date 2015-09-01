@@ -21,8 +21,8 @@ import argparse
 import logging
 import os
 
-from oslo.utils import encodeutils
-from oslo.utils import importutils
+from oslo_utils import encodeutils
+from oslo_utils import importutils
 import six
 
 from tackerclient.common import exceptions
