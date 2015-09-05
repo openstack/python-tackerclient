@@ -61,6 +61,10 @@ class CreateVNF(tackerV10.CreateCommand):
         parser.add_argument(
             '--config',
             help='specify config yaml file')
+        parser.add_argument(
+            '--param-file',
+            help='specify parameter yaml file'
+        )
 
     def args2body(self, parsed_args):
         body = {self.resource: {}}
@@ -79,6 +83,10 @@ class CreateVNF(tackerV10.CreateCommand):
                 parsed_args.vnfd_name)
 
             parsed_args.vnfd_id = _id
+        if parsed_args.param_file:
+            with open(parsed_args.param_file) as f:
+                param_yaml = f.read()
+            body[self.resource]['param_values'] = param_yaml
 
         tackerV10.update_dict(parsed_args, body[self.resource],
                               ['tenant_id', 'name', 'vnfd_id'])

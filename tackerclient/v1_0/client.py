@@ -469,6 +469,8 @@ class Client(ClientBase):
                 arg_[key] = arg[key]
         if 'config' in arg:
             arg_['attributes'] = {'config': arg['config']}
+        if 'param_values' in arg:
+            arg_['attributes'] = {'param_values': arg['param_values']}
         body_ = {self._DEVICE: arg_}
         ret = self.create_device(body_)
         return {self._VNF: ret[self._DEVICE]}
