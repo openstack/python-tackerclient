@@ -4,4 +4,4 @@ source = tackerclient
 omit = tackerclient/openstack/*,tackerclient/tests/*
 
 [report]
-ignore-errors = True
+ignore_errors = True
