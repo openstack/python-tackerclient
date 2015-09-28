@@ -60,9 +60,10 @@ class CreateVNFD(tackerV10.CreateCommand):
         if parsed_args.vnfd_file:
             with open(parsed_args.vnfd_file) as f:
                 vnfd = f.read()
+                body[self.resource]['attributes'] = {'vnfd': vnfd}
         if parsed_args.vnfd:
-            vnfd = parsed_args.vnfd
-        body[self.resource]['vnfd'] = vnfd
+                body[self.resource]['attributes'] = {'vnfd': parsed_args.vnfd}
+
         tackerV10.update_dict(parsed_args, body[self.resource],
                               ['tenant_id', 'name', 'description'])
         return body

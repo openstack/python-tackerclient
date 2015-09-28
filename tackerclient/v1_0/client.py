@@ -340,6 +340,11 @@ class Client(ClientBase):
     interface_attach_path = '/devices/%s/attach_interface'
     interface_detach_path = '/devices/%s/detach_interface'
 
+    vnfds_path = '/vnfds'
+    vnfd_path = '/vnfds/%s'
+    vnfs_path = '/vnfs'
+    vnf_path = '/vnfs/%s'
+
     # API has no way to report plurals, so we have to hard code them
     # EXTED_PLURALS = {}
 
@@ -402,90 +407,50 @@ class Client(ClientBase):
     def detach_interface(self, device, body=None):
         return self.put(self.detach_interface_path % device, body)
 
-    # VNFD
-    _DEVICE_TEMPLATE = "device_template"
     _VNFD = "vnfd"
 
     @APIParamsCall
     def list_vnfds(self, retrieve_all=True, **_params):
-        ret = self.list_device_templates(retrieve_all, **_params)
-        return {self._VNFD + 's': ret[self._DEVICE_TEMPLATE + 's']}
+        return self.list(self._VNFD + 's',
+                         self.vnfds_path,
+                         retrieve_all,
+                         **_params)
 
     @APIParamsCall
     def show_vnfd(self, vnfd, **_params):
-        ret = self.show_device_template(vnfd, **_params)
-        return {self._VNFD: ret[self._DEVICE_TEMPLATE]}
+        return self.get(self.vnfd_path % vnfd,
+                        params=_params)
 
     @APIParamsCall
     def create_vnfd(self, body=None):
-        # e.g.
-        # body = {'vnfd': {'vnfd': 'yaml vnfd definition strings...'}}
         if body is not None:
-            args = body[self._VNFD]
-
-            args_ = {
-                'service_types': [{'service_type': 'vnfd'}],
-                'infra_driver': 'heat',
-                'mgmt_driver': 'noop',
-            }
-            KEY_LIST = ('name', 'description')
-            args_.update(dict((key, args[key])
-                              for key in KEY_LIST if key in args))
-            body_ = {self._DEVICE_TEMPLATE: args_}
-            if 'vnfd' in args:
-                args_['attributes'] = {'vnfd': args['vnfd']}
+            body[self._VNFD]['service_types'] = [{'service_type': 'vnfd'}]
+            body[self._VNFD]['infra_driver'] = 'heat'
+            body[self._VNFD]['mgmt_driver'] = 'noop'
         else:
-            body_ = None
-
-        ret = self.create_device_template(body_)
-        return {self._VNFD: ret[self._DEVICE_TEMPLATE]}
+            body = None
+        return self.post(self.vnfds_path, body)
 
     @APIParamsCall
     def delete_vnfd(self, vnfd):
-        return self.delete_device_template(vnfd)
-
-    # vnf
-    _DEVICE = "device"
-    _VNF = "vnf"
+        return self.delete(self.vnfd_path % vnfd)
 
     @APIParamsCall
     def list_vnfs(self, retrieve_all=True, **_params):
-        ret = self.list_devices(retrieve_all, **_params)
-        return {self._VNF + 's': ret[self._DEVICE + 's']}
+        return self.list('vnfs', self.vnfs_path, retrieve_all, **_params)
 
     @APIParamsCall
     def show_vnf(self, vnf, **_params):
-        ret = self.show_device(vnf, **_params)
-        return {self._VNF: ret[self._DEVICE]}
+        return self.get(self.vnf_path % vnf, params=_params)
 
     @APIParamsCall
     def create_vnf(self, body=None):
-        arg = body[self._VNF]
-        arg_ = {
-            'template_id': arg['vnfd_id'],
-        }
-        for key in ('tenant_id', 'name'):
-            if key in arg:
-                arg_[key] = arg[key]
-        arg_['attributes'] = {}
-        if 'config' in arg:
-            arg_['attributes']['config'] = arg['config']
-        if 'param_values' in arg:
-            arg_['attributes']['param_values'] = arg['param_values']
-        body_ = {self._DEVICE: arg_}
-        ret = self.create_device(body_)
-        return {self._VNF: ret[self._DEVICE]}
+        return self.post(self.vnfs_path, body=body)
 
     @APIParamsCall
     def delete_vnf(self, vnf):
-        return self.delete_device(vnf)
+        return self.delete(self.vnf_path % vnf)
 
     @APIParamsCall
     def update_vnf(self, vnf, body=None):
-        args = body[self._VNF]
-        args_ = {}
-        if 'config' in args:
-            args_['attributes'] = {'config': args['config']}
-        body_ = {self._DEVICE: args_}
-        ret = self.update_device(vnf, body_)
-        return {self._VNF: ret[self._DEVICE]}
+        return self.put(self.vnf_path % vnf, body=body)
