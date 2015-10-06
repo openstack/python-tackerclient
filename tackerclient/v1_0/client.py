@@ -30,6 +30,7 @@ from tackerclient.i18n import _
 
 
 _logger = logging.getLogger(__name__)
+DEFAULT_DESC_LENGTH = 25
 
 
 def exception_handler_v10(status_code, error_content):
@@ -411,10 +412,15 @@ class Client(ClientBase):
 
     @APIParamsCall
     def list_vnfds(self, retrieve_all=True, **_params):
-        return self.list(self._VNFD + 's',
-                         self.vnfds_path,
-                         retrieve_all,
-                         **_params)
+        vnfds_dict = self.list(self._VNFD + 's',
+                               self.vnfds_path,
+                               retrieve_all,
+                               **_params)
+        for vnfd in vnfds_dict['vnfds']:
+            if len(vnfd['description']) > DEFAULT_DESC_LENGTH:
+                vnfd['description'] = vnfd['description'][:DEFAULT_DESC_LENGTH]
+                vnfd['description'] += '...'
+        return vnfds_dict
 
     @APIParamsCall
     def show_vnfd(self, vnfd, **_params):
