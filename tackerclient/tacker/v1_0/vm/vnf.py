@@ -75,6 +75,7 @@ class CreateVNF(tackerV10.CreateCommand):
                 config_yaml = f.read()
             args['attributes']['config'] = config_yaml
         if parsed_args.config:
+            parsed_args.config = parsed_args.config.decode('unicode_escape')
             args['attributes']['config'] = parsed_args.config
 
         if parsed_args.vnfd_name:
@@ -116,6 +117,7 @@ class UpdateVNF(tackerV10.UpdateCommand):
                 config_yaml = f.read()
             body[self.resource]['attributes'] = {'config': config_yaml}
         if parsed_args.config:
+            parsed_args.config = parsed_args.config.decode('unicode_escape')
             body[self.resource]['attributes'] = {'config': parsed_args.config}
         tackerV10.update_dict(parsed_args, body[self.resource], ['tenant_id'])
         return body
