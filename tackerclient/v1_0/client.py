@@ -417,7 +417,8 @@ class Client(ClientBase):
                                retrieve_all,
                                **_params)
         for vnfd in vnfds_dict['vnfds']:
-            if len(vnfd['description']) > DEFAULT_DESC_LENGTH:
+            if 'description' in vnfd.keys() and \
+                len(vnfd['description']) > DEFAULT_DESC_LENGTH:
                 vnfd['description'] = vnfd['description'][:DEFAULT_DESC_LENGTH]
                 vnfd['description'] += '...'
         return vnfds_dict
