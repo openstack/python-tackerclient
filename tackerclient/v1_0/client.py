@@ -338,8 +338,6 @@ class Client(ClientBase):
     device_template_path = '/device-templates/%s'
     devices_path = '/devices'
     device_path = '/devices/%s'
-    interface_attach_path = '/devices/%s/attach_interface'
-    interface_detach_path = '/devices/%s/detach_interface'
 
     vnfds_path = '/vnfds'
     vnfd_path = '/vnfds/%s'
@@ -399,14 +397,6 @@ class Client(ClientBase):
     @APIParamsCall
     def delete_device(self, device):
         return self.delete(self.device_path % device)
-
-    @APIParamsCall
-    def attach_interface(self, device, body=None):
-        return self.put(self.attach_interface_path % device, body)
-
-    @APIParamsCall
-    def detach_interface(self, device, body=None):
-        return self.put(self.detach_interface_path % device, body)
 
     _VNFD = "vnfd"
 
