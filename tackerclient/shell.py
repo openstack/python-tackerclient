@@ -121,6 +121,7 @@ COMMAND_V1 = {
     'vnfd-delete': vnfd.DeleteVNFD,
     'vnfd-list': vnfd.ListVNFD,
     'vnfd-show': vnfd.ShowVNFD,
+    'vnfd-template-show': vnfd.ShowTemplateVNFD,
 
     'vnf-create': vnf.CreateVNF,
     'vnf-update': vnf.UpdateVNF,

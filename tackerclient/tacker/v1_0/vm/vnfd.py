@@ -19,6 +19,11 @@
 #
 # @author: Isaku Yamahata, Intel
 
+from __future__ import print_function
+
+from oslo_serialization import jsonutils
+
+from tackerclient.i18n import _
 from tackerclient.tacker import v1_0 as tackerV10
 
 
@@ -72,3 +77,21 @@ class CreateVNFD(tackerV10.CreateCommand):
 class DeleteVNFD(tackerV10.DeleteCommand):
     """Delete a given VNFD."""
     resource = _VNFD
+
+
+class ShowTemplateVNFD(tackerV10.ShowCommand):
+    """Show template of a given VNFD."""
+
+    resource = _VNFD
+
+    def run(self, parsed_args):
+        self.log.debug('run(%s)', parsed_args)
+        template = None
+        data = self.get_data(parsed_args)
+        try:
+            attributes_index = data[0].index('attributes')
+            attributes_json = data[1][attributes_index]
+            template = jsonutils.loads(attributes_json).get('vnfd', None)
+        except (IndexError, TypeError, ValueError) as e:
+            self.log.debug('Data handling error: %s', str(e))
+        print(template or _('Unable to display VNFD template!'))
