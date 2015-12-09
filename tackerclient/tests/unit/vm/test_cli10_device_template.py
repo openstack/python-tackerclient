@@ -43,6 +43,7 @@ class CLITestV10VmDeviceTemplateJSON(test_cli10.CLITestV10Base):
         service_type = 'MY-SERVICE'
         device_driver = 'device-driver'
         mgmt_driver = 'mgmt-driver'
+        infra_driver = 'infra-driver'
         attr_key = 'attr-key'
         attr_val = 'attr-val'
         args = [
@@ -51,11 +52,14 @@ class CLITestV10VmDeviceTemplateJSON(test_cli10.CLITestV10Base):
             '--template-service-type', service_type,
             '--device-driver', device_driver,
             '--mgmt-driver', mgmt_driver,
+            '--infra-driver', infra_driver,
             '--attribute', attr_key, attr_val,
         ]
         position_names = ['name', 'description',
-                          'device_driver', 'mgmt_driver']
-        position_values = [name, description, device_driver, mgmt_driver]
+                          'device_driver', 'mgmt_driver',
+                          'infra_driver']
+        position_values = [name, description, device_driver,
+                           mgmt_driver, infra_driver]
         extra_body = {
             'service_types': [{'service_type': service_type}],
             'attributes': {attr_key: attr_val},
@@ -71,13 +75,15 @@ class CLITestV10VmDeviceTemplateJSON(test_cli10.CLITestV10Base):
         service_type = 'MY-SERVICE'
         device_driver = 'device-driver'
         mgmt_driver = 'mgmt-driver'
+        infra_driver = 'infra-driver'
         args = [
             '--template-service-type', service_type,
             '--device-driver', device_driver,
             '--mgmt-driver', mgmt_driver,
+            '--infra-driver', infra_driver,
         ]
-        position_names = ['device_driver', 'mgmt_driver']
-        position_values = [device_driver, mgmt_driver]
+        position_names = ['device_driver', 'mgmt_driver', 'infra_driver']
+        position_values = [device_driver, mgmt_driver, infra_driver]
         extra_body = {
             'service_types': [{'service_type': service_type}],
         }
@@ -126,7 +132,3 @@ class CLITestV10VmDeviceTemplateJSON(test_cli10.CLITestV10Base):
         my_id = 'my-id'
         args = [my_id]
         self._test_delete_resource(self._RESOURCE, cmd, my_id, args)
-
-
-class CLITestV10VmDeviceTemplateXML(CLITestV10VmDeviceTemplateJSON):
-    format = 'xml'
