@@ -35,5 +35,4 @@ TYPE_DICT = "dict"
 
 
 PLURALS = {'templates': 'template',
-           'devices': 'device',
-           'services': 'service'}
+           'devices': 'device'}

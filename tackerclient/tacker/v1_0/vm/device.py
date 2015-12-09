@@ -63,15 +63,6 @@ class CreateDevice(tackerV10.CreateCommand):
             dest='attributes',
             default=[],
             help='instance specific argument')
-        parser.add_argument(
-            '--service-context',
-            metavar='<network-id=network-uuid,subnet-id=subnet-uuid,'
-            'port-id=port-uuid,router-id=router-uuid,'
-            'role=role-string,index=int>',
-            action='append',
-            dest='service_context',
-            default=[],
-            help='service context to insert service')
 
     def args2body(self, parsed_args):
         body = {
@@ -89,20 +80,6 @@ class CreateDevice(tackerV10.CreateCommand):
                 raise exceptions.TackerCLIError(msg)
             if attributes:
                 body[self.resource]['attributes'] = attributes
-        if parsed_args.service_context:
-            try:
-                service_contexts = [dict(
-                    (k.replace('-', '_'), v)
-                    for k, v in (key_value.split('=', 1)
-                                 for key_value in entry_string.split(',')))
-                    for entry_string in parsed_args.service_context]
-            except ValueError:
-                msg = (_('invalid argument for --service-context %s') %
-                       parsed_args.service_context)
-                raise exceptions.TackerCLIError(msg)
-
-            if service_contexts:
-                body[self.resource]['service_contexts'] = service_contexts
 
         tackerV10.update_dict(parsed_args, body[self.resource], ['tenant_id'])
         return body
