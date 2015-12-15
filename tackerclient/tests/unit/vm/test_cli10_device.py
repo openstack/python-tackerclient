@@ -40,36 +40,13 @@ class CLITestV10VmDeviceJSON(test_cli10.CLITestV10Base):
         template_id = 'template_id'
         key = 'key'
         value = 'value'
-        network_id = 'network_id'
-        subnet_id = 'subnet_id'
-        port_id = 'port_id'
-        router_id = 'router_id'
-        role = 'role'
-        index = 1
 
         args = [
             '--device-template-id', template_id,
-            '--kwargs', '%s=%s' % (key, value),
-            '--service-context',
-            ('network-id=%s,subnet-id=%s,port-id=%s,router-id=%s,'
-             'role=%s,index=%s' % (network_id, subnet_id, port_id, router_id,
-                                   role, index))
-        ]
+            '--%s' % key, value]
         position_names = ['template_id']
         position_values = [template_id]
-        extra_body = {
-            'kwargs': {
-                key: value
-            },
-            'service_context': [{
-                'network_id': network_id,
-                'subnet_id': subnet_id,
-                'port_id': port_id,
-                'router_id': router_id,
-                'role': role,
-                'index': str(index),
-            }],
-        }
+        extra_body = {key: value}
         self._test_create_resource(self._RESOURCE, cmd, None, my_id,
                                    args, position_names, position_values,
                                    extra_body=extra_body)
@@ -109,18 +86,14 @@ class CLITestV10VmDeviceJSON(test_cli10.CLITestV10Base):
     def test_update_device(self):
         cmd = device.UpdateDevice(test_cli10.MyApp(sys.stdout), None)
         my_id = 'my-id'
-        key = 'new-key'
+        key = 'new_key'
         value = 'new-value'
         self._test_update_resource(self._RESOURCE, cmd, my_id,
-                                   [my_id, '--kwargs', '%s=%s' % (key, value)],
-                                   {'kwargs': {key: value}})
+                                   [my_id, '--%s' % key, value],
+                                   {key: value})
 
     def test_delete_device(self):
         cmd = device.DeleteDevice(test_cli10.MyApp(sys.stdout), None)
         my_id = 'my-id'
         args = [my_id]
         self._test_delete_resource(self._RESOURCE, cmd, my_id, args)
-
-
-class CLITestV10VmDeviceXML(CLITestV10VmDeviceJSON):
-    format = 'xml'
