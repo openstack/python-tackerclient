@@ -353,7 +353,7 @@ class TackerCommandMeta(abc.ABCMeta):
 @six.add_metaclass(TackerCommandMeta)
 class TackerCommand(command.OpenStackCommand):
 
-    api = 'servicevm'
+    api = 'nfv-orchestration'
     values_specs = []
     json_indent = None
 
@@ -409,7 +409,7 @@ class CreateCommand(TackerCommand, show.ShowOne):
 
     """
 
-    api = 'servicevm'
+    api = 'nfv-orchestration'
     resource = None
     log = None
     remove_output_fields = []
@@ -455,7 +455,7 @@ class UpdateCommand(TackerCommand):
     """Update resource's information
     """
 
-    api = 'servicevm'
+    api = 'nfv-orchestration'
     resource = None
     log = None
     allow_names = True
@@ -503,7 +503,7 @@ class DeleteCommand(TackerCommand):
 
     """
 
-    api = 'servicevm'
+    api = 'nfv-orchestration'
     resource = None
     log = None
     allow_names = True
@@ -543,7 +543,7 @@ class ListCommand(TackerCommand, lister.Lister):
 
     """
 
-    api = 'servicevm'
+    api = 'nfv-orchestration'
     resource = None
     log = None
     _formatters = {}
@@ -642,7 +642,7 @@ class ShowCommand(TackerCommand, show.ShowOne):
 
     """
 
-    api = 'servicevm'
+    api = 'nfv-orchestration'
     resource = None
     log = None
     allow_names = True

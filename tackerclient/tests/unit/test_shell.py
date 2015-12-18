@@ -127,8 +127,10 @@ class ShellTest(testtools.TestCase):
             token='', url='', auth_url='http://127.0.0.1:5000/',
             tenant_name='test', tenant_id='tenant_id',
             username='test', user_id='',
-            password='test', region_name='', api_version={'servicevm': '1.0'},
-            auth_strategy='keystone', service_type='servicevm',
+            password='test', region_name='',
+            api_version={'nfv-orchestration': '1.0'},
+            auth_strategy='keystone',
+            service_type='nfv-orchestration',
             endpoint_type='publicURL', insecure=False, ca_cert=None,
             log_credentials=True)
         tacker_shell.run_subcommand(['device-template-list'])
