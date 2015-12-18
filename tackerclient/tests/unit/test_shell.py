@@ -118,7 +118,7 @@ class ShellTest(testtools.TestCase):
                          'either --os-url or env[OS_URL]', stderr.strip())
 
     def test_auth(self):
-        #import pdb; pdb.set_trace()
+        # import pdb; pdb.set_trace()
         tacker_shell = openstack_shell.TackerShell('1.0')
         self.addCleanup(self.mox.UnsetStubs)
         self.mox.StubOutWithMock(clientmanager.ClientManager, '__init__')
