@@ -17,7 +17,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
-# @author: Isaku Yamahata, Intel
 
 from tackerclient.tacker import v1_0 as tackerV10
 

@@ -14,7 +14,6 @@
 #    under the License.
 #
 # vim: tabstop=4 shiftwidth=4 softtabstop=4
-# @author: Carl Baldwin, Hewlett-Packard
 
 import pbr.version
 
