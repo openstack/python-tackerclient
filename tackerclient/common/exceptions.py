@@ -221,7 +221,9 @@ class CommandError(TackerCLIError):
 
 
 class UnsupportedVersion(TackerCLIError):
-    """Indicates that the user is trying to use an unsupported version of
+    """Unsupported Version.
+
+    Indicates that the user is trying to use an unsupported version of
     the API.
     """
     pass

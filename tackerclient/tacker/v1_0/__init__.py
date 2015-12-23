@@ -452,8 +452,7 @@ class CreateCommand(TackerCommand, show.ShowOne):
 
 
 class UpdateCommand(TackerCommand):
-    """Update resource's information
-    """
+    """Update resource's information."""
 
     api = 'servicevm'
     resource = None

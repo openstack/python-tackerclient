@@ -127,8 +127,10 @@ class CLITestAuthKeystone(testtools.TestCase):
         self.addCleanup(self.mox.UnsetStubs)
 
     def test_reused_token_get_auth_info(self):
-        """Test that Client.get_auth_info() works even if client was
-           instantiated with predefined token.
+        """Test Client.get_auth_info().
+
+        Test that Client.get_auth_info() works even if client was
+        instantiated with predefined token.
         """
         client_ = client.HTTPClient(username=USERNAME,
                                     tenant_name=TENANT_NAME,

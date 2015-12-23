@@ -134,11 +134,12 @@ COMMANDS = {'1.0': COMMAND_V1}
 
 
 class HelpAction(argparse.Action):
-    """Provide a custom action so the -h and --help options
-    to the main app will print a list of the commands.
+    """Provides a custom action for the -h and --help options.
 
     The commands are determined by checking the CommandManager
     instance, passed in as the "default" value for the action.
+
+    :returns: a list of the commands
     """
     def __call__(self, parser, namespace, values, option_string=None):
         outputs = []
@@ -555,7 +556,9 @@ class TackerShell(app.App):
         return 1
 
     def authenticate_user(self):
-        """Make sure the user has provided all of the authentication
+        """Authentication validation.
+
+        Make sure the user has provided all of the authentication
         info we need.
         """
         if self.options.os_auth_strategy == 'keystone':
