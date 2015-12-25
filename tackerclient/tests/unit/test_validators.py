@@ -19,7 +19,7 @@ from tackerclient.common import exceptions
 from tackerclient.common import validators
 
 
-class FakeParsedArgs():
+class FakeParsedArgs(object):
     pass
 
 
