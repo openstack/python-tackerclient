@@ -56,7 +56,7 @@ class HTTPClient(object):
                  endpoint_url=None, insecure=False,
                  endpoint_type='publicURL',
                  auth_strategy='keystone', ca_cert=None, log_credentials=False,
-                 service_type='servicevm',
+                 service_type='nfv-orchestration',
                  **kwargs):
 
         self.username = username
@@ -256,7 +256,7 @@ class HTTPClient(object):
 
         body = json.loads(body)
         for endpoint in body.get('endpoints', []):
-            if (endpoint['type'] == 'servicevm' and
+            if (endpoint['type'] == 'nfv-orchestration' and
                     endpoint.get('region') == self.region_name):
                 if self.endpoint_type not in endpoint:
                     raise exceptions.EndpointTypeNotFound(
@@ -359,7 +359,7 @@ def construct_http_client(username=None,
                           log_credentials=None,
                           auth_strategy='keystone',
                           ca_cert=None,
-                          service_type='servicevm',
+                          service_type='nfv-orchestration',
                           session=None,
                           **kwargs):
 

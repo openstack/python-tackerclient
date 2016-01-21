@@ -19,7 +19,7 @@ from tackerclient.common import utils
 from tackerclient.openstack.common.gettextutils import _
 
 
-API_NAME = 'servicevm'
+API_NAME = 'nfv-orchestration'
 API_VERSIONS = {
     '1.0': 'tackerclient.v1_0.client.Client',
 }

@@ -249,8 +249,10 @@ class TackerShell(app.App):
 
         parser.add_argument(
             '--os-service-type', metavar='<os-service-type>',
-            default=env('OS_SERVICEVM_SERVICE_TYPE', default='servicevm'),
-            help=_('Defaults to env[OS_SERVICEVM_SERVICE_TYPE] or servicevm.'))
+            default=env('OS_TACKER_SERVICE_TYPE',
+                        default='nfv-orchestration'),
+            help=_('Defaults to env[OS_TACKER_SERVICE_TYPE] or \
+                    nfv-orchestration.'))
 
         parser.add_argument(
             '--os-endpoint-type', metavar='<os-endpoint-type>',
@@ -261,7 +263,8 @@ class TackerShell(app.App):
         # backward compatibility.
         parser.add_argument(
             '--service-type', metavar='<service-type>',
-            default=env('OS_SERVICEVM_SERVICE_TYPE', default='servicevm'),
+            default=env('OS_TACKER_SERVICE_TYPE',
+                        default='nfv-orchestration'),
             help=_('DEPRECATED! Use --os-service-type.'))
 
         # FIXME(bklei): --endpoint-type is deprecated but kept in for
@@ -672,7 +675,8 @@ class TackerShell(app.App):
 
         super(TackerShell, self).initialize_app(argv)
 
-        self.api_version = {'servicevm': self.api_version}
+        self.api_version = {'nfv-orchestration':
+                            self.api_version}
 
         # If the user is not asking for help, make sure they
         # have given us auth.

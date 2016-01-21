@@ -52,7 +52,7 @@ KS_TOKEN_RESULT = {
                             'internalURL': ENDPOINT_URL,
                             'publicURL': ENDPOINT_URL,
                             'region': REGION}],
-             'type': 'servicevm',
+             'type': 'nfv-orchestration',
              'name': 'Tacker Service'}
         ]
     }
@@ -60,7 +60,7 @@ KS_TOKEN_RESULT = {
 
 ENDPOINTS_RESULT = {
     'endpoints': [{
-        'type': 'servicevm',
+        'type': 'nfv-orchestration',
         'name': 'Tacker Service',
         'region': REGION,
         'adminURL': ENDPOINT_URL,
