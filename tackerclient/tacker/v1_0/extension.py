@@ -32,7 +32,7 @@ class ShowExt(cmd_base.ShowCommand):
     allow_names = False
 
     def get_parser(self, prog_name):
-        parser = super(cmd_base.ShowCommand, self).get_parser(prog_name)
+        parser = super(ShowExt, self).get_parser(prog_name)
         cmd_base.add_show_list_common_argument(parser)
         parser.add_argument(
             'id', metavar='EXT-ALIAS',
