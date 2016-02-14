@@ -359,44 +359,54 @@ class Client(ClientBase):
         """Fetch a list of all exts on server side."""
         return self.get(self.extension_path % ext_alias, params=_params)
 
+    @utils.deprecated('list_device_templates')
     def list_device_templates(self, retrieve_all=True, **_params):
         return self.list('device_templates', self.device_templates_path,
                          retrieve_all, **_params)
 
     @APIParamsCall
+    @utils.deprecated('show_device_template')
     def show_device_template(self, device_template, **_params):
         return self.get(self.device_template_path % device_template,
                         params=_params)
 
     @APIParamsCall
+    @utils.deprecated('update_device_template')
     def update_device_template(self, device_template, body=None):
         return self.put(self.device_template_path % device_template, body=body)
 
     @APIParamsCall
+    @utils.deprecated('create_device_template')
     def create_device_template(self, body=None):
         return self.post(self.device_templates_path, body=body)
 
     @APIParamsCall
+    @utils.deprecated('delete_device_template')
     def delete_device_template(self, device_template):
         return self.delete(self.device_template_path % device_template)
 
     @APIParamsCall
+    @utils.deprecated('list_devices')
     def list_devices(self, retrieve_all=True, **_params):
         return self.list('devices', self.devices_path, retrieve_all, **_params)
 
     @APIParamsCall
+    @utils.deprecated('show_device')
     def show_device(self, device, **_params):
         return self.get(self.device_path % device, params=_params)
 
     @APIParamsCall
+    @utils.deprecated('update_device')
     def update_device(self, device, body=None):
         return self.put(self.device_path % device, body=body)
 
     @APIParamsCall
+    @utils.deprecated('create_device')
     def create_device(self, body=None):
         return self.post(self.devices_path, body=body)
 
     @APIParamsCall
+    @utils.deprecated('delete_device')
     def delete_device(self, device):
         return self.delete(self.device_path % device)
 
