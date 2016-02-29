@@ -28,7 +28,6 @@ from tackerclient.common import serializer
 from tackerclient.common import utils
 from tackerclient.i18n import _
 
-
 _logger = logging.getLogger(__name__)
 DEFAULT_DESC_LENGTH = 25
 
@@ -339,6 +338,9 @@ class Client(ClientBase):
     vnfs_path = '/vnfs'
     vnf_path = '/vnfs/%s'
 
+    vims_path = '/vims'
+    vim_path = '/vims/%s'
+
     # API has no way to report plurals, so we have to hard code them
     # EXTED_PLURALS = {}
 
@@ -405,3 +407,25 @@ class Client(ClientBase):
     @APIParamsCall
     def update_vnf(self, vnf, body=None):
         return self.put(self.vnf_path % vnf, body=body)
+
+    @APIParamsCall
+    def show_vim(self, vim, **_params):
+        return self.get(self.vim_path % vim, params=_params)
+
+    _VIM = "vim"
+
+    @APIParamsCall
+    def create_vim(self, body=None):
+        return self.post(self.vims_path, body=body)
+
+    @APIParamsCall
+    def delete_vim(self, vim):
+        return self.delete(self.vim_path % vim)
+
+    @APIParamsCall
+    def update_vim(self, vim, body=None):
+        return self.put(self.vim_path % vim, body=body)
+
+    @APIParamsCall
+    def list_vims(self, retrieve_all=True, **_params):
+        return self.list('vims', self.vims_path, retrieve_all, **_params)

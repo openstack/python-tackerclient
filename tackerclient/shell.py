@@ -46,6 +46,7 @@ from tackerclient.common import extension as client_extension
 from tackerclient.common import utils
 from tackerclient.i18n import _
 from tackerclient.tacker.v1_0 import extension
+from tackerclient.tacker.v1_0.nfvo import vim
 from tackerclient.tacker.v1_0.vm import vnf
 from tackerclient.tacker.v1_0.vm import vnfd
 from tackerclient.version import __version__
@@ -116,6 +117,12 @@ COMMAND_V1 = {
     'vnf-show': vnf.ShowVNF,
     # 'vnf-config-create'
     # 'vnf-config-push'
+
+    'vim-register': vim.CreateVIM,
+    'vim-update': vim.UpdateVIM,
+    'vim-delete': vim.DeleteVIM,
+    'vim-list': vim.ListVIM,
+    'vim-show': vim.ShowVIM,
 }
 
 COMMANDS = {'1.0': COMMAND_V1}

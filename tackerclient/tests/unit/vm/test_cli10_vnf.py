@@ -17,6 +17,7 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+
 import mox
 
 import sys
@@ -96,15 +97,20 @@ class CLITestV10VmVNFJSON(test_cli10.CLITestV10Base):
         cmd = vnf.CreateVNF(test_cli10.MyApp(sys.stdout), None)
         my_id = 'my-id'
         vnfd_id = 'vnfd'
+        vim_id = 'vim_id'
+        region_name = 'region'
         key = 'key'
         value = 'value'
 
         args = [
             '--vnfd-id', vnfd_id,
+            '--vim-id', vim_id,
+            '--vim-region-name', region_name,
             '--%s' % key, value]
-        position_names = ['vnfd_id', 'attributes']
-        position_values = [vnfd_id, {}]
-        extra_body = {key: value}
+        position_names = ['vnfd_id', 'vim_id', 'attributes']
+        position_values = [vnfd_id, vim_id, {}]
+        extra_body = {key: value, 'placement_attr': {'region_name':
+                                                     region_name}}
         self._test_create_resource(self._RESOURCE, cmd, None, my_id,
                                    args, position_names, position_values,
                                    extra_body=extra_body)
