@@ -19,24 +19,28 @@
 #
 # @author: Isaku Yamahata, Intel
 
+from tackerclient.common.utils import deprecated
 from tackerclient.tacker import v1_0 as tackerV10
 
 
 _DEVICE_TEMPLATE = "device_template"
 
 
+@deprecated('device-template-list')
 class ListDeviceTemplate(tackerV10.ListCommand):
     """List device template that belong to a given tenant."""
 
     resource = _DEVICE_TEMPLATE
 
 
+@deprecated('device-template-show')
 class ShowDeviceTemplate(tackerV10.ShowCommand):
     """show information of a given DeviceTemplate."""
 
     resource = _DEVICE_TEMPLATE
 
 
+@deprecated('device-template-create')
 class CreateDeviceTemplate(tackerV10.CreateCommand):
     """create a DeviceTemplate."""
 
@@ -82,6 +86,7 @@ class CreateDeviceTemplate(tackerV10.CreateCommand):
         return body
 
 
+@deprecated('device-template-update')
 class UpdateDeviceTemplate(tackerV10.UpdateCommand):
     """Update a given DeviceTemplate."""
 
@@ -89,6 +94,7 @@ class UpdateDeviceTemplate(tackerV10.UpdateCommand):
     allow_names = False
 
 
+@deprecated('device-template-delete')
 class DeleteDeviceTemplate(tackerV10.DeleteCommand):
     """Delete a given DeviceTemplate."""
     resource = _DEVICE_TEMPLATE

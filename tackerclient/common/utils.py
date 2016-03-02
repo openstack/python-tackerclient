@@ -18,8 +18,10 @@
 """Utilities and helper functions."""
 
 import argparse
+import functools
 import logging
 import os
+import warnings
 
 from oslo_utils import encodeutils
 from oslo_utils import importutils
@@ -171,3 +173,16 @@ def add_boolean_argument(parser, name, **kwargs):
         choices=['True', 'true', 'False', 'false'],
         default=default,
         **kwargs)
+
+
+def deprecated(name):
+    """This decorator can be used to mark a call as deprecated."""
+    def _deprecate(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            warnings.simplefilter('always', DeprecationWarning)
+            warnings.warn("Call to %s deprecated, avoid its usage." % name,
+                          category=DeprecationWarning)
+            return func(*args, **kwargs)
+        return wrapper
+    return _deprecate

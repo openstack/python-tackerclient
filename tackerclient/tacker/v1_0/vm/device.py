@@ -23,6 +23,7 @@ import abc
 import six
 
 from tackerclient.common import exceptions
+from tackerclient.common.utils import deprecated
 from tackerclient.openstack.common.gettextutils import _
 from tackerclient.tacker import v1_0 as tackerV10
 
@@ -30,6 +31,7 @@ from tackerclient.tacker import v1_0 as tackerV10
 _DEVICE = 'device'
 
 
+@deprecated('device-list')
 class ListDevice(tackerV10.ListCommand):
     """List device that belong to a given tenant."""
 
@@ -37,12 +39,14 @@ class ListDevice(tackerV10.ListCommand):
     list_columns = ['id', 'name', 'description', 'mgmt_url', 'status']
 
 
+@deprecated('device-show')
 class ShowDevice(tackerV10.ShowCommand):
     """show information of a given Device."""
 
     resource = _DEVICE
 
 
+@deprecated('device-create')
 class CreateDevice(tackerV10.CreateCommand):
     """create a Device."""
 
@@ -85,6 +89,7 @@ class CreateDevice(tackerV10.CreateCommand):
         return body
 
 
+@deprecated('device-update')
 class UpdateDevice(tackerV10.UpdateCommand):
     """Update a given Device."""
 
@@ -115,6 +120,7 @@ class UpdateDevice(tackerV10.UpdateCommand):
         return body
 
 
+@deprecated('device-delete')
 class DeleteDevice(tackerV10.DeleteCommand):
     """Delete a given Device."""
 
