@@ -171,8 +171,6 @@ class HTTPClient(object):
             return resp, body
         except exceptions.Unauthorized:
             self.authenticate()
-            kwargs.setdefault('headers', {})
-            kwargs['headers']['X-Auth-Token'] = self.auth_token
             resp, body = self._cs_request(
                 self.endpoint_url + url, method, **kwargs)
             return resp, body
