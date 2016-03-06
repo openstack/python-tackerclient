@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 
-project = 'python-neutronclient'
+project = 'python-tackerclient'
 
 # -- General configuration ---------------------------------------------
 

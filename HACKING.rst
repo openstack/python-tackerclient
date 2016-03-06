@@ -1,4 +1,4 @@
-Neutron Style Commandments
+Tacker Style Commandments
 ================================
 
 - Step 1: Read the OpenStack Style Commandments
