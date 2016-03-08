@@ -46,8 +46,6 @@ from tackerclient.common import extension as client_extension
 from tackerclient.common import utils
 from tackerclient.i18n import _
 from tackerclient.tacker.v1_0 import extension
-from tackerclient.tacker.v1_0.vm import device
-from tackerclient.tacker.v1_0.vm import device_template
 from tackerclient.tacker.v1_0.vm import vnf
 from tackerclient.tacker.v1_0.vm import vnfd
 from tackerclient.version import __version__
@@ -103,16 +101,6 @@ COMMAND_V1 = {
     'bash-completion': BashCompletionCommand,
     'ext-list': extension.ListExt,
     'ext-show': extension.ShowExt,
-    'device-template-create': device_template.CreateDeviceTemplate,
-    'device-template-list': device_template.ListDeviceTemplate,
-    'device-template-show': device_template.ShowDeviceTemplate,
-    'device-template-update': device_template.UpdateDeviceTemplate,
-    'device-template-delete': device_template.DeleteDeviceTemplate,
-    'device-create': device.CreateDevice,
-    'device-list': device.ListDevice,
-    'device-show': device.ShowDevice,
-    'device-update': device.UpdateDevice,
-    'device-delete': device.DeleteDevice,
 
     # MANO lingo
     'vnfd-create': vnfd.CreateVNFD,

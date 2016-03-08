@@ -93,8 +93,8 @@ class ShellTest(testtools.TestCase):
 
     def test_help_on_subcommand(self):
         required = [
-            '.*?^usage: .* device-template-list']
-        stdout, stderr = self.shell('help device-template-list')
+            '.*?^usage: .* vnfd-list']
+        stdout, stderr = self.shell('help vnfd-list')
         for r in required:
             self.assertThat(
                 stdout,
@@ -112,7 +112,7 @@ class ShellTest(testtools.TestCase):
     def test_unknown_auth_strategy(self):
         self.useFixture(fixtures.FakeLogger(level=logging.DEBUG))
         stdout, stderr = self.shell('--os-auth-strategy fake '
-                                    'device-template-list')
+                                    'vnfd-list')
         self.assertFalse(stdout)
         self.assertEqual('You must provide a service URL via '
                          'either --os-url or env[OS_URL]', stderr.strip())
@@ -133,13 +133,13 @@ class ShellTest(testtools.TestCase):
             service_type='nfv-orchestration',
             endpoint_type='publicURL', insecure=False, ca_cert=None,
             log_credentials=True)
-        tacker_shell.run_subcommand(['device-template-list'])
+        tacker_shell.run_subcommand(['vnfd-list'])
         self.mox.ReplayAll()
         cmdline = ('--os-username test '
                    '--os-password test '
                    '--os-tenant-name test '
                    '--os-auth-url http://127.0.0.1:5000/ '
-                   '--os-auth-strategy keystone device-template-list')
+                   '--os-auth-strategy keystone vnfd-list')
         tacker_shell.run(cmdline.split())
         self.mox.VerifyAll()
 
