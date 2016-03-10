@@ -334,11 +334,6 @@ class Client(ClientBase):
     extensions_path = "/extensions"
     extension_path = "/extensions/%s"
 
-    device_templates_path = '/device-templates'
-    device_template_path = '/device-templates/%s'
-    devices_path = '/devices'
-    device_path = '/devices/%s'
-
     vnfds_path = '/vnfds'
     vnfd_path = '/vnfds/%s'
     vnfs_path = '/vnfs'
