@@ -14,7 +14,7 @@
 #    under the License.
 #
 
-from tackerclient.openstack.common.gettextutils import _
+from tackerclient.common._i18n import _
 from tackerclient.tacker import v1_0 as cmd_base
 
 

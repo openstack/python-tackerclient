@@ -14,9 +14,9 @@
 #    under the License.
 #
 
+from tackerclient.common._i18n import _
 from tackerclient.common import exceptions
 from tackerclient.common import utils
-from tackerclient.openstack.common.gettextutils import _
 
 
 API_NAME = 'nfv-orchestration'

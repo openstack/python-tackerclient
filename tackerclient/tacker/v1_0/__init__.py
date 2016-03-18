@@ -27,10 +27,10 @@ from cliff import show
 from oslo_serialization import jsonutils
 import six
 
+from tackerclient.common._i18n import _
 from tackerclient.common import command
 from tackerclient.common import exceptions
 from tackerclient.common import utils
-from tackerclient.openstack.common.gettextutils import _
 
 HEX_ELEM = '[0-9A-Fa-f]'
 UUID_PATTERN = '-'.join([HEX_ELEM + '{8}', HEX_ELEM + '{4}',
