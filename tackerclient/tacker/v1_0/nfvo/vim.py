@@ -28,8 +28,9 @@ class ListVIM(tackerV10.ListCommand):
     """List VIMs that belong to a given tenant."""
 
     resource = _VIM
-    list_columns = ['id', 'name', 'type', 'description', 'auth_url',
-                    'placement_attr', 'auth_cred']
+
+    list_columns = ['id', 'tenant_id', 'name', 'type', 'description',
+                    'auth_url', 'placement_attr', 'auth_cred']
 
 
 class ShowVIM(tackerV10.ShowCommand):
@@ -73,6 +74,7 @@ class CreateVIM(tackerV10.CreateCommand):
                                                            'specified',
                                                    status_code=404)
         vim_obj['auth_url'] = utils.validate_url(auth_url).geturl()
+        vim_obj['type'] = config_param.pop('type', 'openstack')
         vim_utils.args2body_vim(config_param, vim_obj)
         tackerV10.update_dict(parsed_args, body[self.resource],
                               ['tenant_id', 'name', 'description'])
@@ -103,6 +105,10 @@ class UpdateVIM(tackerV10.UpdateCommand):
         if parsed_args.config:
             parsed_args.config = parsed_args.config.decode('unicode_escape')
             config_param = yaml.load(parsed_args.config)
+        if 'auth_url' in config_param:
+            raise exceptions.TackerClientException(message='Auth URL cannot '
+                                                           'be updated',
+                                                   status_code=404)
         vim_obj = body[self.resource]
         vim_utils.args2body_vim(config_param, vim_obj)
         tackerV10.update_dict(parsed_args, body[self.resource], ['tenant_id'])

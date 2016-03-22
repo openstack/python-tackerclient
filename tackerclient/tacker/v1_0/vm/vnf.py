@@ -97,7 +97,7 @@ class CreateVNF(tackerV10.CreateCommand):
                 _id = tackerV10.find_resourceid_by_name_or_id(tacker_client,
                                                               'vim',
                                                               parsed_args.
-                                                              vim_id)
+                                                              vim_name)
                 parsed_args.vim_id = _id
         if parsed_args.vnfd_name:
                 _id = tackerV10.find_resourceid_by_name_or_id(tacker_client,

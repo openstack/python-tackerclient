@@ -95,8 +95,8 @@ class CLITestV10VIMJSON(test_cli10.CLITestV10Base):
         my_id = 'my-id'
         key = 'config'
         value = str(update_config)
-        extra_fields = {'type': 'openstack', 'vim_project':
-                        self.vim_project, 'auth_cred': self.auth_cred}
+        extra_fields = {'vim_project': self.vim_project, 'auth_cred':
+                        self.auth_cred}
         self._test_update_resource(self._RESOURCE, cmd, my_id, [my_id,
                                                                 '--%s' %
                                                                 key, value],

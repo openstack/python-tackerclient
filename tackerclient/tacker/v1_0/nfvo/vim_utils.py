@@ -30,7 +30,6 @@ def args2body_vim(config_param, vim):
         raise exceptions.TackerClientException(message='Project Id or name '
                                                        'must be specified',
                                                status_code=404)
-    vim['type'] = config_param.pop('type', 'openstack')
     vim['auth_cred'] = {'username': config_param.pop('username', ''),
                         'password': config_param.pop('password', ''),
                         'user_id': config_param.pop('user_id', '')}
