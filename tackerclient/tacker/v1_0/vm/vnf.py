@@ -1,7 +1,5 @@
 #
-# Copyright 2013 Intel
-# Copyright 2013 Isaku Yamahata <isaku.yamahata at intel com>
-#                               <isaku.yamahata at gmail com>
+# Copyright 2013 Intel Corporation
 # All Rights Reserved.
 #
 #
