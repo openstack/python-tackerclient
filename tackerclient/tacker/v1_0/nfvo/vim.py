@@ -14,6 +14,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo_utils import strutils
 import yaml
 
 from tackerclient.common import exceptions
@@ -28,9 +29,12 @@ class ListVIM(tackerV10.ListCommand):
     """List VIMs that belong to a given tenant."""
 
     resource = _VIM
-
     list_columns = ['id', 'tenant_id', 'name', 'type', 'description',
                     'auth_url', 'placement_attr', 'auth_cred']
+
+    def extend_list(self, data, parsed_args):
+        for index, value in enumerate(data):
+            data[index] = strutils.mask_dict_password(value)
 
 
 class ShowVIM(tackerV10.ShowCommand):
