@@ -20,6 +20,7 @@ import contextlib
 import cStringIO
 import fixtures
 import mox
+from six import iteritems
 import sys
 import testtools
 
@@ -111,7 +112,7 @@ class MyComparator(mox.Comparator):
     def _com_dict(self, lhs, rhs):
         if len(lhs) != len(rhs):
             return False
-        for key, value in lhs.iteritems():
+        for key, value in iteritems(lhs):
             if key not in rhs:
                 return False
             rhs_value = rhs[key]

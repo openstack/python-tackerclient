@@ -278,7 +278,7 @@ def parse_args_to_dict(values_specs):
 
     # populate the parser with arguments
     _parser = argparse.ArgumentParser(add_help=False)
-    for opt, optspec in _options.iteritems():
+    for opt, optspec in six.iteritems(_options):
         _parser.add_argument(opt, **optspec)
     _args = _parser.parse_args(_values_specs)
 
@@ -302,7 +302,7 @@ def _merge_args(qCmd, parsed_args, _extra_values, value_specs):
     @param values_specs: the unparsed unknown parts
     """
     temp_values = _extra_values.copy()
-    for key, value in temp_values.iteritems():
+    for key, value in six.iteritems(temp_values):
         if hasattr(parsed_args, key):
             arg_value = getattr(parsed_args, key)
             if arg_value is not None and value is not None:
@@ -388,7 +388,7 @@ class TackerCommand(command.OpenStackCommand):
         if self.resource in data:
             data[self.resource] = strutils.mask_dict_password(
                 data[self.resource])
-            for k, v in data[self.resource].iteritems():
+            for k, v in six.iteritems(data[self.resource]):
                 if isinstance(v, list):
                     value = '\n'.join(jsonutils.dumps(
                         i, indent=self.json_indent) if isinstance(i, dict)
@@ -451,7 +451,7 @@ class CreateCommand(TackerCommand, show.ShowOne):
                     info.pop(f)
         else:
             info = {'': ''}
-        return zip(*sorted(info.iteritems()))
+        return zip(*sorted(six.iteritems(info)))
 
 
 class UpdateCommand(TackerCommand):
@@ -682,6 +682,6 @@ class ShowCommand(TackerCommand, show.ShowOne):
         self.format_output_data(data)
         resource = data[self.resource]
         if self.resource in data:
-            return zip(*sorted(resource.iteritems()))
+            return zip(*sorted(six.iteritems(resource)))
         else:
             return None
