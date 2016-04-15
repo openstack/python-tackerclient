@@ -185,7 +185,7 @@ class HTTPClient(object):
 
         if not self.endpoint_url:
             self.endpoint_url = self.service_catalog.url_for(
-                attr='region', filter_value=self.region_name,
+                region_name=self.region_name,
                 service_type=self.service_type,
                 endpoint_type=self.endpoint_type)
 
