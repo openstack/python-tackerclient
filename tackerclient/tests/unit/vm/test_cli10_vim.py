@@ -16,6 +16,8 @@
 
 import sys
 
+import mox
+
 from tackerclient.tacker.v1_0.nfvo import vim
 from tackerclient.tests.unit import test_cli10
 
@@ -75,6 +77,39 @@ class CLITestV10VIMJSON(test_cli10.CLITestV10Base):
     def test_list_vims(self):
         cmd = vim.ListVIM(test_cli10.MyApp(sys.stdout), None)
         self._test_list_resources(self._RESOURCES, cmd, True)
+
+    def _test_list_vims_extend(self, data, expected_data, args=['-f', 'json']):
+        resp_str = self.client.serialize({self._RESOURCES: data})
+        resp = (test_cli10.MyResp(200), resp_str)
+        cmd = vim.ListVIM(
+            test_cli10.MyApp(sys.stdout), None)
+        self.mox.StubOutWithMock(cmd, "get_client")
+        self.mox.StubOutWithMock(self.client.httpclient, "request")
+
+        cmd.get_client().MultipleTimes().AndReturn(self.client)
+        path = getattr(self.client, self._RESOURCES + '_path')
+        self.client.httpclient.request(test_cli10.MyUrlComparator(
+            test_cli10.end_url(path, format=self.format), self.client),
+            'GET', body=None, headers=mox.ContainsKeyValue(
+                'X-Auth-Token', test_cli10.TOKEN)).AndReturn(resp)
+        self.mox.ReplayAll()
+        cmd_parser = cmd.get_parser("list_" + self._RESOURCES)
+        parsed_args = cmd_parser.parse_args(args)
+        result = cmd.take_action(parsed_args)
+        res_data = [res for res in result[1]]
+        self.mox.VerifyAll()
+        self.mox.UnsetStubs()
+        for res, exp in zip(res_data, expected_data):
+            self.assertEqual(len(exp), len(res))
+            self.assertEqual(exp, res)
+
+    def test_list_vims_extend(self):
+        vim_data = [{'id': 'my_id1', 'auth_cred': {'password':
+                     'encrypted_pw'}}, {'id': 'my_id2', 'auth_cred': {
+                                        'password': 'another_encrypted_pw'}}]
+        expected_data = [('my_id1', {'password': '***'}),
+                         ('my_id2', {'password': '***'})]
+        self._test_list_vims_extend(vim_data, expected_data)
 
     def test_show_vim_id(self):
         cmd = vim.ShowVIM(test_cli10.MyApp(sys.stdout), None)
