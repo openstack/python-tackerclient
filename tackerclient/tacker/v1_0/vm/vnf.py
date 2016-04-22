@@ -69,7 +69,7 @@ class CreateVNF(tackerV10.CreateCommand):
             help='specify config yaml file')
         parser.add_argument(
             '--config',
-            help='specify config yaml file')
+            help='specify config yaml data')
         parser.add_argument(
             '--param-file',
             help='specify parameter yaml file'
@@ -125,7 +125,7 @@ class UpdateVNF(tackerV10.UpdateCommand):
             help='specify config yaml file')
         parser.add_argument(
             '--config',
-            help='specify config yaml file')
+            help='specify config yaml data')
 
     def args2body(self, parsed_args):
         body = {self.resource: {}}
