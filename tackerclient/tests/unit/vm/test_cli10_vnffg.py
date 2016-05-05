@@ -50,7 +50,8 @@ class CLITestV10VmVNFFGJSON(test_cli10.CLITestV10Base):
         extra_body = {'name': vnffg_name}
         self._test_create_resource(self._RESOURCE, cmd, None, my_id,
                                    args, position_names, position_values,
-                                   extra_body=extra_body)
+                                   extra_body=extra_body,
+                                   get_client_called_count=2)
 
     def test_create_vnffg_with_mandatory_params(self):
         cmd = vnffg.CreateVNFFG(test_cli10.MyApp(sys.stdout), None)
@@ -66,7 +67,8 @@ class CLITestV10VmVNFFGJSON(test_cli10.CLITestV10Base):
         extra_body = {'name': vnffg_name}
         self._test_create_resource(self._RESOURCE, cmd, vnffg_name, my_id,
                                    args, position_names, position_values,
-                                   extra_body=extra_body)
+                                   extra_body=extra_body,
+                                   get_client_called_count=2)
 
     def test_list_vnffgs(self):
         cmd = vnffg.ListVNFFG(test_cli10.MyApp(sys.stdout), None)
@@ -95,7 +97,7 @@ class CLITestV10VmVNFFGJSON(test_cli10.CLITestV10Base):
         value = 'new-value'
         self._test_update_resource(self._RESOURCE, cmd, my_id,
                                    [my_id, '--%s' % key, value],
-                                   {key: value})
+                                   {key: value}, get_client_called_count=2)
 
     def test_delete_vnffg(self):
         cmd = vnffg.DeleteVNFFG(test_cli10.MyApp(sys.stdout), None)

@@ -13,13 +13,13 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-
-import mox
-
 import sys
+
+import mock
 
 from tackerclient import shell
 from tackerclient.tacker import v1_0 as tackerV1_0
+from tackerclient.tacker.v1_0 import TackerCommand
 from tackerclient.tacker.v1_0.vnfm import vnf
 from tackerclient.tests.unit import test_cli10
 
@@ -39,14 +39,12 @@ class CLITestV10VmVNFJSON(test_cli10.CLITestV10Base):
                    'resources': 'resource'}
         super(CLITestV10VmVNFJSON, self).setUp(plurals=plurals)
 
-    def _test_create_resource(self, resource, cmd,
-                              name, myid, args,
-                              position_names, position_values, tenant_id=None,
-                              tags=None, admin_state_up=True, extra_body=None,
-                              **kwargs):
-        self.mox.StubOutWithMock(cmd, "get_client")
-        self.mox.StubOutWithMock(self.client.httpclient, "request")
-        cmd.get_client().MultipleTimes().AndReturn(self.client)
+    @mock.patch.object(TackerCommand, 'get_client')
+    def _test_create_resource(self, resource, cmd, name, myid, args,
+                              position_names, position_values, mock_get,
+                              tenant_id=None, tags=None, admin_state_up=True,
+                              extra_body=None, **kwargs):
+        mock_get.return_value = self.client
         non_admin_status_resources = ['vnfd', 'vnf']
         if (resource in non_admin_status_resources):
             body = {resource: {}, }
@@ -75,21 +73,24 @@ class CLITestV10VmVNFJSON(test_cli10.CLITestV10Base):
         # Work around for LP #1217791. XML deserializer called from
         # MyComparator does not decodes XML string correctly.
         if self.format == 'json':
-            mox_body = test_cli10.MyComparator(body, self.client)
+            _body = test_cli10.MyComparator(body, self.client)
         else:
-            mox_body = self.client.serialize(body)
-        self.client.httpclient.request(
-            test_cli10.end_url(path, format=self.format), 'POST',
-            body=mox_body,
-            headers=mox.ContainsKeyValue(
-                'X-Auth-Token', TOKEN)).AndReturn((
-                    test_cli10.MyResp(200), resstr))
-        args.extend(['--request-format', self.format])
-        args.extend(['--vnfd-id', 'vnfd'])
-        self.mox.ReplayAll()
-        cmd_parser = cmd.get_parser('create_' + resource)
-        shell.run_command(cmd, cmd_parser, args)
-        self.mox.VerifyAll()
+            _body = self.client.serialize(body)
+        with mock.patch.object(self.client.httpclient, 'request') as mock_req:
+            mock_req.return_value = (test_cli10.MyResp(200), resstr)
+            self.client.httpclient.request(
+                test_cli10.end_url(path, format=self.format), 'POST',
+                body=_body,
+                headers={'X-Auth-Token', TOKEN})
+            mock_req.assert_called_once_with(
+                test_cli10.end_url(path, format=self.format), 'POST',
+                body=_body,
+                headers={'X-Auth-Token', TOKEN})
+            args.extend(['--request-format', self.format])
+            args.extend(['--vnfd-id', 'vnfd'])
+            cmd_parser = cmd.get_parser('create_' + resource)
+            shell.run_command(cmd, cmd_parser, args)
+        mock_get.assert_any_call()
 
     def test_create_vnf_all_params(self):
         cmd = vnf.CreateVNF(test_cli10.MyApp(sys.stdout), None)

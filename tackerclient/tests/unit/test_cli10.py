@@ -18,7 +18,7 @@ import urllib
 
 import contextlib
 import fixtures
-import mox
+import mock
 import six
 import six.moves.urllib.parse as urlparse
 import sys
@@ -28,6 +28,7 @@ from tackerclient.common import constants
 from tackerclient.common import exceptions
 from tackerclient import shell
 from tackerclient.tacker import v1_0 as tackerV1_0
+from tackerclient.tacker.v1_0 import TackerCommand
 from tackerclient.v1_0 import client
 
 API_VERSION = "1.0"
@@ -79,7 +80,7 @@ def end_url(path, query=None, format=FORMAT):
     return query and _url_str + "?" + query or _url_str
 
 
-class MyUrlComparator(mox.Comparator):
+class MyUrlComparator(object):
     def __init__(self, lhs, client):
         self.lhs = lhs
         self.client = client
@@ -114,7 +115,7 @@ class MyUrlComparator(mox.Comparator):
         return str(self)
 
 
-class MyComparator(mox.Comparator):
+class MyComparator(object):
     def __init__(self, lhs, client):
         self.lhs = lhs
         self.client = client
@@ -165,6 +166,9 @@ class MyComparator(mox.Comparator):
             return self.client.serialize(self.lhs)
         return str(self.lhs)
 
+    def __eq__(self, rhs):
+        return self.equals(rhs)
+
 
 class CLITestV10Base(testtools.TestCase):
 
@@ -192,7 +196,6 @@ class CLITestV10Base(testtools.TestCase):
                          'xmlns': constants.XML_NS_V10,
                          constants.EXT_NS: {'prefix':
                                             'http://xxxx.yy.com'}}
-        self.mox = mox.Mox()
         self.endurl = ENDURL
         self.fake_stdout = FakeStdout()
         self.useFixture(fixtures.MonkeyPatch('sys.stdout', self.fake_stdout))
@@ -207,14 +210,14 @@ class CLITestV10Base(testtools.TestCase):
             self._get_attr_metadata))
         self.client = client.Client(token=TOKEN, endpoint_url=self.endurl)
 
+    @mock.patch.object(TackerCommand, 'get_client')
     def _test_create_resource(self, resource, cmd,
                               name, myid, args,
-                              position_names, position_values, tenant_id=None,
+                              position_names, position_values, mock_get,
+                              tenant_id=None, get_client_called_count=1,
                               tags=None, admin_state_up=True, extra_body=None,
                               **kwargs):
-        self.mox.StubOutWithMock(cmd, "get_client")
-        self.mox.StubOutWithMock(self.client.httpclient, "request")
-        cmd.get_client().MultipleTimes().AndReturn(self.client)
+        mock_get.return_value = self.client
         non_admin_status_resources = ['vnfd', 'vnf', 'vim', 'vnffgd', 'vnffg']
         if (resource in non_admin_status_resources):
             body = {resource: {}, }
@@ -243,53 +246,56 @@ class CLITestV10Base(testtools.TestCase):
         # Work around for LP #1217791. XML deserializer called from
         # MyComparator does not decodes XML string correctly.
         if self.format == 'json':
-            mox_body = MyComparator(body, self.client)
+            _body = MyComparator(body, self.client)
         else:
-            mox_body = self.client.serialize(body)
-        self.client.httpclient.request(
-            end_url(path, format=self.format), 'POST',
-            body=mox_body,
-            headers=mox.ContainsKeyValue(
-                'X-Auth-Token', TOKEN)).AndReturn((MyResp(200), resstr))
-        args.extend(['--request-format', self.format])
-        self.mox.ReplayAll()
-        cmd_parser = cmd.get_parser('create_' + resource)
-        shell.run_command(cmd, cmd_parser, args)
-        self.mox.VerifyAll()
-        self.mox.UnsetStubs()
+            _body = self.client.serialize(body)
+        with mock.patch.object(self.client.httpclient, 'request') as mock_req:
+            mock_req.return_value = (MyResp(200), resstr)
+            self.client.httpclient.request(
+                end_url(path, format=self.format), 'POST',
+                body=_body,
+                headers={'X-Auth-Token', TOKEN})
+            mock_req.assert_called_once_with(
+                end_url(path, format=self.format), 'POST',
+                body=_body,
+                headers={'X-Auth-Token', TOKEN})
+            args.extend(['--request-format', self.format])
+            cmd_parser = cmd.get_parser('create_' + resource)
+            shell.run_command(cmd, cmd_parser, args)
+        self.assertEqual(get_client_called_count, mock_get.call_count)
         _str = self.fake_stdout.make_string()
         self.assertIn(myid, _str)
         if name:
             self.assertIn(name, _str)
 
+    @mock.patch.object(TackerCommand, 'get_client')
     def _test_list_columns(self, cmd, resources_collection,
-                           resources_out, args=['-f', 'json']):
-        self.mox.StubOutWithMock(cmd, "get_client")
-        self.mox.StubOutWithMock(self.client.httpclient, "request")
-        cmd.get_client().MultipleTimes().AndReturn(self.client)
+                           resources_out, mock_get,
+                           args=['-f', 'json']):
+        mock_get.return_value = self.client
         self.client.format = self.format
         resstr = self.client.serialize(resources_out)
 
         path = getattr(self.client, resources_collection + "_path")
-        self.client.httpclient.request(
-            end_url(path, format=self.format), 'GET',
-            body=None,
-            headers=mox.ContainsKeyValue(
-                'X-Auth-Token', TOKEN)).AndReturn((MyResp(200), resstr))
-        args.extend(['--request-format', self.format])
-        self.mox.ReplayAll()
-        cmd_parser = cmd.get_parser("list_" + resources_collection)
-        shell.run_command(cmd, cmd_parser, args)
-        self.mox.VerifyAll()
-        self.mox.UnsetStubs()
+        with mock.patch.object(self.client.httpclient, 'request') as mock_req:
+            mock_req.return_value = (MyResp(200), resstr)
+            self.client.httpclient.request(
+                end_url(path, format=self.format), 'GET',
+                body=None,
+                headers={'X-Auth-Token': TOKEN})
+            mock_req.assert_called_once_with(
+                end_url(path, format=self.format), 'GET',
+                body=None,
+                headers={'X-Auth-Token': TOKEN})
+            args.extend(['--request-format', self.format])
+            cmd_parser = cmd.get_parser("list_" + resources_collection)
+            shell.run_command(cmd, cmd_parser, args)
+        mock_get.assert_called_once_with()
 
     def _test_list_resources(self, resources, cmd, detail=False, tags=[],
                              fields_1=[], fields_2=[], page_size=None,
                              sort_key=[], sort_dir=[], response_contents=None,
                              base_args=None, path=None):
-        self.mox.StubOutWithMock(cmd, "get_client")
-        self.mox.StubOutWithMock(self.client.httpclient, "request")
-        cmd.get_client().MultipleTimes().AndReturn(self.client)
         if response_contents is None:
             contents = [{self.id_field: 'myid1', },
                         {self.id_field: 'myid2', }, ]
@@ -362,32 +368,31 @@ class CLITestV10Base(testtools.TestCase):
                 query += 'sort_dir=%s' % dir
         if path is None:
             path = getattr(self.client, resources + "_path")
-        self.client.httpclient.request(
-            MyUrlComparator(end_url(path, query, format=self.format),
-                            self.client),
-            'GET',
-            body=None,
-            headers=mox.ContainsKeyValue(
-                'X-Auth-Token', TOKEN)).AndReturn((MyResp(200), resstr))
-        self.mox.ReplayAll()
-        cmd_parser = cmd.get_parser("list_" + resources)
-        shell.run_command(cmd, cmd_parser, args)
-        self.mox.VerifyAll()
-        self.mox.UnsetStubs()
+        with mock.patch.object(self.client.httpclient, 'request') as mock_req:
+            mock_req.return_value = (MyResp(200), resstr)
+            self.client.httpclient.request(
+                MyUrlComparator(end_url(path, query, format=self.format),
+                                self.client),
+                'GET',
+                body=None,
+                headers={'X-Auth-Token': TOKEN})
+            with mock.patch.object(TackerCommand, 'get_client') as mock_get:
+                mock_get.return_value = self.client
+                cmd_parser = cmd.get_parser("list_" + resources)
+                shell.run_command(cmd, cmd_parser, args)
         _str = self.fake_stdout.make_string()
         if response_contents is None:
             self.assertIn('myid1', _str)
         return _str
 
+    @mock.patch.object(TackerCommand, 'get_client')
     def _test_list_sub_resources(self, resources, api_resource, cmd, myid,
-                                 detail=False,
+                                 mock_get, detail=False,
                                  tags=[], fields_1=[], fields_2=[],
                                  page_size=None, sort_key=[], sort_dir=[],
                                  response_contents=None, base_args=None,
                                  path=None):
-        self.mox.StubOutWithMock(cmd, "get_client")
-        self.mox.StubOutWithMock(self.client.httpclient, "request")
-        cmd.get_client().MultipleTimes().AndReturn(self.client)
+        mock_get.return_value = self.client
         if response_contents is None:
             contents = [{self.id_field: 'myid1', },
                         {self.id_field: 'myid2', }, ]
@@ -460,186 +465,192 @@ class CLITestV10Base(testtools.TestCase):
                 query += 'sort_dir=%s' % dir
         if path is None:
             path = getattr(self.client, resources + "_path")
-        self.client.httpclient.request(
-            MyUrlComparator(end_url(path % myid, query, format=self.format),
-                            self.client),
-            'GET',
-            body=None,
-            headers=mox.ContainsKeyValue(
-                'X-Auth-Token', TOKEN)).AndReturn((MyResp(200), resstr))
-        self.mox.ReplayAll()
-        cmd_parser = cmd.get_parser("list_" + resources)
-        shell.run_command(cmd, cmd_parser, args)
-        self.mox.VerifyAll()
-        self.mox.UnsetStubs()
+        with mock.patch.object(self.client.httpclient, 'request') as mock_req:
+            mock_req.return_value = (MyResp(200), resstr)
+            self.client.httpclient.request(
+                end_url(path, format=self.format), 'GET',
+                body=None,
+                headers={'X-Auth-Token': TOKEN})
+            mock_req.assert_called_once_with(
+                end_url(path, format=self.format), 'GET',
+                body=None,
+                headers={'X-Auth-Token': TOKEN})
+            args.extend(['--request-format', self.format])
+            cmd_parser = cmd.get_parser("list_" + resources)
+            shell.run_command(cmd, cmd_parser, args)
+
         _str = self.fake_stdout.make_string()
         if response_contents is None:
             self.assertIn('myid1', _str)
         return _str
 
-    def _test_list_sub_resources_with_pagination(self, resources, api_resource,
-                                                 cmd, myid):
-        self.mox.StubOutWithMock(cmd, "get_client")
-        self.mox.StubOutWithMock(self.client.httpclient, "request")
-        cmd.get_client().MultipleTimes().AndReturn(self.client)
-        path = getattr(self.client, resources + "_path")
-        fake_query = "marker=myid2&limit=2"
-        reses1 = {api_resource: [{'id': 'myid1', },
-                                 {'id': 'myid2', }],
-                  '%s_links' % api_resource: [
-                      {'href': end_url(path % myid, fake_query),
-                       'rel': 'next'}]
-                  }
-        reses2 = {api_resource: [{'id': 'myid3', },
-                                 {'id': 'myid4', }]}
-        self.client.format = self.format
-        resstr1 = self.client.serialize(reses1)
-        resstr2 = self.client.serialize(reses2)
-        self.client.httpclient.request(
-            end_url(path % myid, "", format=self.format), 'GET',
-            body=None,
-            headers=mox.ContainsKeyValue(
-                'X-Auth-Token', TOKEN)).AndReturn((MyResp(200), resstr1))
-        self.client.httpclient.request(
-            MyUrlComparator(end_url(path % myid, fake_query,
-                                    format=self.format), self.client), 'GET',
-            body=None, headers=mox.ContainsKeyValue(
-                'X-Auth-Token', TOKEN)).AndReturn((MyResp(200), resstr2))
-        self.mox.ReplayAll()
-        cmd_parser = cmd.get_parser("list_" + resources)
-        args = [myid, '--request-format', self.format]
-        shell.run_command(cmd, cmd_parser, args)
-        self.mox.VerifyAll()
-        self.mox.UnsetStubs()
+    # TODO(gongysh) add pagination unit test BUG 1633255
+    # def _test_list_sub_resources_with_pagination(
+    #      self, resources, api_resource, cmd, myid):
+    #     self.mox.StubOutWithMock(cmd, "get_client")
+    #     self.mox.StubOutWithMock(self.client.httpclient, "request")
+    #     cmd.get_client().MultipleTimes().AndReturn(self.client)
+    #     path = getattr(self.client, resources + "_path")
+    #     fake_query = "marker=myid2&limit=2"
+    #     reses1 = {api_resource: [{'id': 'myid1', },
+    #                              {'id': 'myid2', }],
+    #               '%s_links' % api_resource: [
+    #                   {'href': end_url(path % myid, fake_query),
+    #                    'rel': 'next'}]
+    #               }
+    #     reses2 = {api_resource: [{'id': 'myid3', },
+    #                              {'id': 'myid4', }]}
+    #     self.client.format = self.format
+    #     resstr1 = self.client.serialize(reses1)
+    #     resstr2 = self.client.serialize(reses2)
+    #     self.client.httpclient.request(
+    #         end_url(path % myid, "", format=self.format), 'GET',
+    #         body=None,
+    #         headers=mox.ContainsKeyValue(
+    #             'X-Auth-Token', TOKEN)).AndReturn((MyResp(200), resstr1))
+    #     self.client.httpclient.request(
+    #         MyUrlComparator(end_url(path % myid, fake_query,
+    #                                 format=self.format), self.client), 'GET',
+    #         body=None, headers=mox.ContainsKeyValue(
+    #             'X-Auth-Token', TOKEN)).AndReturn((MyResp(200), resstr2))
+    #     self.mox.ReplayAll()
+    #     cmd_parser = cmd.get_parser("list_" + resources)
+    #     args = [myid, '--request-format', self.format]
+    #     shell.run_command(cmd, cmd_parser, args)
+    #     self.mox.VerifyAll()
+    #     self.mox.UnsetStubs()
 
-    def _test_list_resources_with_pagination(self, resources, cmd):
-        self.mox.StubOutWithMock(cmd, "get_client")
-        self.mox.StubOutWithMock(self.client.httpclient, "request")
-        cmd.get_client().MultipleTimes().AndReturn(self.client)
-        path = getattr(self.client, resources + "_path")
-        fake_query = "marker=myid2&limit=2"
-        reses1 = {resources: [{'id': 'myid1', },
-                              {'id': 'myid2', }],
-                  '%s_links' % resources: [{'href': end_url(path, fake_query),
-                                            'rel': 'next'}]}
-        reses2 = {resources: [{'id': 'myid3', },
-                              {'id': 'myid4', }]}
-        self.client.format = self.format
-        resstr1 = self.client.serialize(reses1)
-        resstr2 = self.client.serialize(reses2)
-        self.client.httpclient.request(
-            end_url(path, "", format=self.format), 'GET',
-            body=None,
-            headers=mox.ContainsKeyValue(
-                'X-Auth-Token', TOKEN)).AndReturn((MyResp(200), resstr1))
-        self.client.httpclient.request(
-            MyUrlComparator(end_url(path, fake_query, format=self.format),
-                            self.client), 'GET', body=None,
-            headers=mox.ContainsKeyValue(
-                'X-Auth-Token', TOKEN)).AndReturn((MyResp(200), resstr2))
-        self.mox.ReplayAll()
-        cmd_parser = cmd.get_parser("list_" + resources)
-        args = ['--request-format', self.format]
-        shell.run_command(cmd, cmd_parser, args)
-        self.mox.VerifyAll()
-        self.mox.UnsetStubs()
+    # def _test_list_resources_with_pagination(self, resources, cmd):
+    #     self.mox.StubOutWithMock(cmd, "get_client")
+    #     self.mox.StubOutWithMock(self.client.httpclient, "request")
+    #     cmd.get_client().MultipleTimes().AndReturn(self.client)
+    #     path = getattr(self.client, resources + "_path")
+    #     fake_query = "marker=myid2&limit=2"
+    #     reses1 = {resources: [{'id': 'myid1', },
+    #                           {'id': 'myid2', }],
+    #               '%s_links' % resources: [
+    #                   {'href': end_url(path, fake_query),
+    #                    'rel': 'next'}]}
+    #     reses2 = {resources: [{'id': 'myid3', },
+    #                           {'id': 'myid4', }]}
+    #     self.client.format = self.format
+    #     resstr1 = self.client.serialize(reses1)
+    #     resstr2 = self.client.serialize(reses2)
+    #     self.client.httpclient.request(
+    #         end_url(path, "", format=self.format), 'GET',
+    #         body=None,
+    #         headers=mox.ContainsKeyValue(
+    #             'X-Auth-Token', TOKEN)).AndReturn((MyResp(200), resstr1))
+    #     self.client.httpclient.request(
+    #         MyUrlComparator(end_url(path, fake_query, format=self.format),
+    #                         self.client), 'GET', body=None,
+    #         headers=mox.ContainsKeyValue(
+    #             'X-Auth-Token', TOKEN)).AndReturn((MyResp(200), resstr2))
+    #     self.mox.ReplayAll()
+    #     cmd_parser = cmd.get_parser("list_" + resources)
+    #     args = ['--request-format', self.format]
+    #     shell.run_command(cmd, cmd_parser, args)
+    #     self.mox.VerifyAll()
+    #     self.mox.UnsetStubs()
 
-    def _test_update_resource(self, resource, cmd, myid, args, extrafields):
-        self.mox.StubOutWithMock(cmd, "get_client")
-        self.mox.StubOutWithMock(self.client.httpclient, "request")
-        cmd.get_client().MultipleTimes().AndReturn(self.client)
+    @mock.patch.object(TackerCommand, 'get_client')
+    def _test_update_resource(self, resource, cmd, myid, args, extrafields,
+                              mock_get, get_client_called_count=1):
+        mock_get.return_value = self.client
         body = {resource: extrafields}
         path = getattr(self.client, resource + "_path")
         self.client.format = self.format
         # Work around for LP #1217791. XML deserializer called from
         # MyComparator does not decodes XML string correctly.
         if self.format == 'json':
-            mox_body = MyComparator(body, self.client)
+            _body = MyComparator(body, self.client)
         else:
-            mox_body = self.client.serialize(body)
-        self.client.httpclient.request(
-            MyUrlComparator(end_url(path % myid, format=self.format),
-                            self.client),
-            'PUT',
-            body=mox_body,
-            headers=mox.ContainsKeyValue(
-                'X-Auth-Token', TOKEN)).AndReturn((MyResp(204), None))
-        args.extend(['--request-format', self.format])
-        self.mox.ReplayAll()
-        cmd_parser = cmd.get_parser("update_" + resource)
-        shell.run_command(cmd, cmd_parser, args)
-        self.mox.VerifyAll()
-        self.mox.UnsetStubs()
+            _body = self.client.serialize(body)
+        with mock.patch.object(self.client.httpclient, 'request') as mock_req:
+            comparator = MyUrlComparator(
+                end_url(path % myid, format=self.format), self.client)
+            mock_req.return_value = (MyResp(204), None)
+            self.client.httpclient.request(
+                comparator, 'PUT', body=_body,
+                headers={'X-Auth-Token', TOKEN})
+            mock_req.assert_called_once_with(
+                comparator,
+                'PUT',
+                body=_body,
+                headers={'X-Auth-Token', TOKEN})
+            args.extend(['--request-format', self.format])
+            cmd_parser = cmd.get_parser("update_" + resource)
+            shell.run_command(cmd, cmd_parser, args)
+        self.assertEqual(get_client_called_count, mock_get.call_count)
         _str = self.fake_stdout.make_string()
         self.assertIn(myid, _str)
 
     def _test_show_resource(self, resource, cmd, myid, args, fields=[]):
-        self.mox.StubOutWithMock(cmd, "get_client")
-        self.mox.StubOutWithMock(self.client.httpclient, "request")
-        cmd.get_client().MultipleTimes().AndReturn(self.client)
-        query = "&".join(["fields=%s" % field for field in fields])
-        expected_res = {resource:
-                        {self.id_field: myid,
-                         'name': 'myname', }, }
-        self.client.format = self.format
-        resstr = self.client.serialize(expected_res)
-        path = getattr(self.client, resource + "_path")
-        self.client.httpclient.request(
-            end_url(path % myid, query, format=self.format), 'GET',
-            body=None,
-            headers=mox.ContainsKeyValue(
-                'X-Auth-Token', TOKEN)).AndReturn((MyResp(200), resstr))
-        args.extend(['--request-format', self.format])
-        self.mox.ReplayAll()
-        cmd_parser = cmd.get_parser("show_" + resource)
-        shell.run_command(cmd, cmd_parser, args)
-        self.mox.VerifyAll()
-        self.mox.UnsetStubs()
-        _str = self.fake_stdout.make_string()
-        self.assertIn(myid, _str)
-        self.assertIn('myname', _str)
+        with mock.patch.object(cmd, 'get_client') as mock_get:
+            mock_get.return_value = self.client
+            query = "&".join(["fields=%s" % field for field in fields])
+            expected_res = {resource:
+                            {self.id_field: myid,
+                             'name': 'myname', }, }
+            self.client.format = self.format
+            resstr = self.client.serialize(expected_res)
+            path = getattr(self.client, resource + "_path")
+            with mock.patch.object(self.client.httpclient, 'request') as\
+                mock_req:
+                mock_req.return_value = (MyResp(200), resstr)
+                self.client.httpclient.request(
+                    end_url(path % myid, query, format=self.format), 'GET',
+                    body=None, headers={'X-Auth-Token': TOKEN})
+                mock_req.assert_called_once_with(
+                    end_url(path % myid, query, format=self.format), 'GET',
+                    body=None, headers={'X-Auth-Token': TOKEN})
+                args.extend(['--request-format', self.format])
+                cmd_parser = cmd.get_parser("show_" + resource)
+                shell.run_command(cmd, cmd_parser, args)
+            _str = self.fake_stdout.make_string()
+            mock_get.assert_called_once_with()
+            self.assertIn(myid, _str)
+            self.assertIn('myname', _str)
 
-    def _test_delete_resource(self, resource, cmd, myid, args):
+    @mock.patch.object(TackerCommand, 'get_client')
+    def _test_delete_resource(self, resource, cmd, myid, args, mock_get):
         deleted_msg = {'vnf': 'delete initiated'}
-        self.mox.StubOutWithMock(cmd, "get_client")
-        self.mox.StubOutWithMock(self.client.httpclient, "request")
-        cmd.get_client().MultipleTimes().AndReturn(self.client)
+        mock_get.return_value = self.client
         path = getattr(self.client, resource + "_path")
-        self.client.httpclient.request(
-            end_url(path % myid, format=self.format), 'DELETE',
-            body=None,
-            headers=mox.ContainsKeyValue(
-                'X-Auth-Token', TOKEN)).AndReturn((MyResp(204), None))
-        args.extend(['--request-format', self.format])
-        self.mox.ReplayAll()
-        cmd_parser = cmd.get_parser("delete_" + resource)
-        shell.run_command(cmd, cmd_parser, args)
-        self.mox.VerifyAll()
-        self.mox.UnsetStubs()
+        with mock.patch.object(self.client.httpclient, 'request') as mock_req:
+            mock_req.return_value = (MyResp(204), None)
+            self.client.httpclient.request(
+                end_url(path % myid, format=self.format), 'DELETE',
+                body=None,
+                headers={'X-Auth-Token', TOKEN})
+            args.extend(['--request-format', self.format])
+            mock_req.assert_called_once_with(
+                end_url(path % myid, format=self.format), 'DELETE',
+                body=None, headers={'X-Auth-Token', TOKEN})
+            cmd_parser = cmd.get_parser("delete_" + resource)
+            shell.run_command(cmd, cmd_parser, args)
+        mock_get.assert_called_once_with()
         _str = self.fake_stdout.make_string()
         msg = 'All %(resource)s(s) %(msg)s successfully\n' % {
             'msg': deleted_msg.get(resource, 'deleted'),
             'resource': resource}
         self.assertEqual(msg, _str)
 
+    @mock.patch.object(TackerCommand, 'get_client')
     def _test_update_resource_action(self, resource, cmd, myid, action, args,
-                                     body, retval=None):
-        self.mox.StubOutWithMock(cmd, "get_client")
-        self.mox.StubOutWithMock(self.client.httpclient, "request")
-        cmd.get_client().MultipleTimes().AndReturn(self.client)
+                                     body, mock_get, retval=None):
+        mock_get.return_value = self.client
         path = getattr(self.client, resource + "_path")
         path_action = '%s/%s' % (myid, action)
-        self.client.httpclient.request(
-            end_url(path % path_action, format=self.format), 'PUT',
-            body=MyComparator(body, self.client),
-            headers=mox.ContainsKeyValue(
-                'X-Auth-Token', TOKEN)).AndReturn((MyResp(204), retval))
-        args.extend(['--request-format', self.format])
-        self.mox.ReplayAll()
-        cmd_parser = cmd.get_parser("delete_" + resource)
-        shell.run_command(cmd, cmd_parser, args)
-        self.mox.VerifyAll()
-        self.mox.UnsetStubs()
+        with mock.patch.object(self.client.httpclient, 'request') as mock_req:
+            mock_req.return_value = (MyResp(204), retval)
+            self.client.httpclient.request(
+                end_url(path % path_action, format=self.format), 'PUT',
+                body=MyComparator(body, self.client),
+                headers={'X-Auth-Token': TOKEN})
+            args.extend(['--request-format', self.format])
+            cmd_parser = cmd.get_parser("delete_" + resource)
+            shell.run_command(cmd, cmd_parser, args)
         _str = self.fake_stdout.make_string()
         self.assertIn(myid, _str)
 
@@ -647,7 +658,6 @@ class CLITestV10Base(testtools.TestCase):
 class ClientV1TestJson(CLITestV10Base):
     def test_do_request_unicode(self):
         self.client.format = self.format
-        self.mox.StubOutWithMock(self.client.httpclient, "request")
         unicode_text = u'\u7f51\u7edc'
         # url with unicode
         action = u'/test'
@@ -662,47 +672,33 @@ class ClientV1TestJson(CLITestV10Base):
         # headers with unicode
         self.client.httpclient.auth_token = unicode_text
         expected_auth_token = unicode_text.encode('utf-8')
-
-        self.client.httpclient.request(
-            end_url(expected_action, query=expect_query, format=self.format),
-            'PUT', body=expect_body,
-            headers=mox.ContainsKeyValue(
-                'X-Auth-Token',
-                expected_auth_token)).AndReturn((MyResp(200), expect_body))
-
-        self.mox.ReplayAll()
-        res_body = self.client.do_request('PUT', action, body=body,
-                                          params=params)
-        self.mox.VerifyAll()
-        self.mox.UnsetStubs()
-
+        with mock.patch.object(self.client.httpclient, 'request') as mock_req:
+            mock_req.return_value = (MyResp(200), expect_body)
+            self.client.httpclient.request(
+                end_url(expected_action, query=expect_query,
+                        format=self.format), 'PUT', body=expect_body,
+                headers={'X-Auth-Token': expected_auth_token})
+            res_body = self.client.do_request('PUT', action, body=body,
+                                              params=params)
         # test response with unicode
         self.assertEqual(res_body, body)
 
     def test_do_request_error_without_response_body(self):
         self.client.format = self.format
-        self.mox.StubOutWithMock(self.client.httpclient, "request")
         params = {'test': 'value'}
         expect_query = urllib.urlencode(params)
         self.client.httpclient.auth_token = 'token'
-
-        self.client.httpclient.request(
-            end_url('/test', query=expect_query, format=self.format),
-            'PUT', body='',
-            headers=mox.ContainsKeyValue('X-Auth-Token', 'token')
-        ).AndReturn((MyResp(400, reason='An error'), ''))
-
-        self.mox.ReplayAll()
-        error = self.assertRaises(exceptions.TackerClientException,
-                                  self.client.do_request, 'PUT', '/test',
-                                  body='', params=params)
-        self.assertEqual("An error", str(error))
-        self.mox.VerifyAll()
-        self.mox.UnsetStubs()
-
-
-class ClientV1UnicodeTestXML(ClientV1TestJson):
-    format = 'xml'
+        with mock.patch.object(self.client.httpclient, 'request') as mock_req:
+            mock_req.return_value = (MyResp(400, reason='An error'), '')
+            self.client.httpclient.request(
+                end_url('/test', query=expect_query, format=self.format),
+                'PUT', body='',
+                headers={'X-Auth-Token': 'token'}
+            )
+            error = self.assertRaises(exceptions.TackerClientException,
+                                      self.client.do_request, 'PUT', '/test',
+                                      body='', params=params)
+            self.assertEqual("An error", str(error))
 
 
 class CLITestV10ExceptionHandler(CLITestV10Base):
