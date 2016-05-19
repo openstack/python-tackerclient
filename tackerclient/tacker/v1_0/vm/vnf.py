@@ -30,13 +30,13 @@ class ListVNF(tackerV10.ListCommand):
 
 
 class ShowVNF(tackerV10.ShowCommand):
-    """show information of a given VNF."""
+    """Show information of a given VNF."""
 
     resource = _VNF
 
 
 class CreateVNF(tackerV10.CreateCommand):
-    """create a VNF."""
+    """Create a VNF."""
 
     resource = _VNF
     remove_output_fields = ["attributes"]

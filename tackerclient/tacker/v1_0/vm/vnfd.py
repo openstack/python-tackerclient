@@ -34,13 +34,13 @@ class ListVNFD(tackerV10.ListCommand):
 
 
 class ShowVNFD(tackerV10.ShowCommand):
-    """show information of a given VNFD."""
+    """Show information of a given VNFD."""
 
     resource = _VNFD
 
 
 class CreateVNFD(tackerV10.CreateCommand):
-    """create a VNFD."""
+    """Create a VNFD."""
 
     resource = _VNFD
     remove_output_fields = ["attributes"]
