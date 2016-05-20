@@ -20,7 +20,7 @@ import contextlib
 import cStringIO
 import fixtures
 import mox
-from six import iteritems
+import six
 import sys
 import testtools
 
@@ -112,7 +112,7 @@ class MyComparator(mox.Comparator):
     def _com_dict(self, lhs, rhs):
         if len(lhs) != len(rhs):
             return False
-        for key, value in iteritems(lhs):
+        for key, value in lhs.items():
             if key not in rhs:
                 return False
             rhs_value = rhs[key]
@@ -304,7 +304,7 @@ class CLITestV10Base(testtools.TestCase):
             args.append("--tag")
         for tag in tags:
             args.append(tag)
-            if isinstance(tag, unicode):
+            if isinstance(tag, six.string_types):
                 tag = urllib.quote(tag.encode('utf-8'))
             if query:
                 query += "&tag=" + tag
