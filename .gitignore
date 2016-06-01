@@ -19,3 +19,6 @@ run_tests.log
 .testrepository/
 .tox/
 .venv/
+
+# Files created by releasenotes build
+releasenotes/build
