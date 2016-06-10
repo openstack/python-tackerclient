@@ -15,7 +15,7 @@ In order to use the CLI, you must provide your OpenStack username, password, ten
 
 The command line tool will attempt to reauthenticate using your provided credentials for every request. You can override this behavior by manually supplying an auth token using ``--os-url`` and ``--os-auth-token``. You can alternatively set these environment variables::
 
-    export OS_URL=http://tacker.example.org:8888/
+    export OS_URL=http://tacker.example.org:9890/
     export OS_TOKEN=3bcc3d3a03f44e3d8377f9247b0ad155
 
 If tacker server does not require authentication, besides these two arguments or environment variables (We can use any value as token.), we need manually supply ``--os-auth-strategy`` or set the environment variable::
