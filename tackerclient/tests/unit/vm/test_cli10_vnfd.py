@@ -38,7 +38,7 @@ class CLITestV10VmVNFDJSON(test_cli10.CLITestV10Base):
         attr_key = 'vnfd'
         attr_val = 'vnfd'
         args = [
-            '--name', name,
+            name,
             '--vnfd', 'vnfd'
         ]
         position_names = ['name', 'mgmt_driver', 'infra_driver']
@@ -54,17 +54,18 @@ class CLITestV10VmVNFDJSON(test_cli10.CLITestV10Base):
     def test_create_vnfd_with_mandatory_params(self):
         cmd = vnfd.CreateVNFD(
             test_cli10.MyApp(sys.stdout), None)
+        name = 'my_name'
         my_id = 'my-id'
         mgmt_driver = 'noop'
         infra_driver = 'heat'
-        args = ['--vnfd', 'vnfd', ]
-        position_names = ['mgmt_driver', 'infra_driver']
-        position_values = [mgmt_driver, infra_driver]
+        args = [name, '--vnfd', 'vnfd', ]
+        position_names = ['name', 'mgmt_driver', 'infra_driver']
+        position_values = [name, mgmt_driver, infra_driver]
         extra_body = {
             'service_types': [{'service_type': 'vnfd'}],
             'attributes': {'vnfd': 'vnfd'}
         }
-        self._test_create_resource(self._RESOURCE, cmd, None, my_id,
+        self._test_create_resource(self._RESOURCE, cmd, name, my_id,
                                    args, position_names, position_values,
                                    extra_body=extra_body)
 

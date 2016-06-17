@@ -50,7 +50,7 @@ class CreateVIM(tackerV10.CreateCommand):
         group.add_argument('--config', help='Specify VIM config parameters '
                                             'as a direct input')
         parser.add_argument(
-            '--name',
+            'name', metavar='NAME',
             help='Set a name for the VIM')
         parser.add_argument(
             '--description',

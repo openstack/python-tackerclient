@@ -39,36 +39,49 @@ class CLITestV10VIMJSON(test_cli10.CLITestV10Base):
 
     def test_register_vim_all_params(self):
         cmd = vim.CreateVIM(test_cli10.MyApp(sys.stdout), None)
+        name = 'my-name'
         my_id = 'my-id'
-        name = 'test_vim'
         description = 'Vim Description'
         vim_config = {'auth_url': 'http://1.2.3.4:5000', 'username': 'xyz',
                       'password': '12345', 'project_name': 'abc'}
         args = [
+            name,
             '--config', str(vim_config),
-            '--name', name,
-            '--description', description]
-        position_names = ['auth_cred', 'vim_project', 'auth_url']
-        position_values = [self.auth_cred, self.vim_project, self.auth_url]
-        extra_body = {'type': 'openstack', 'name': name, 'description':
-                      description, 'is_default': False}
-        self._test_create_resource(self._RESOURCE, cmd, None, my_id,
+            '--description', description,
+        ]
+        position_names = ['name', 'auth_cred', 'vim_project', 'auth_url']
+        position_values = [
+            name,
+            self.auth_cred,
+            self.vim_project,
+            self.auth_url
+        ]
+        extra_body = {'type': 'openstack', 'description': description,
+                      'is_default': False}
+        self._test_create_resource(self._RESOURCE, cmd, name, my_id,
                                    args, position_names, position_values,
                                    extra_body=extra_body)
 
     def test_register_vim_with_mandatory_params(self):
         cmd = vim.CreateVIM(test_cli10.MyApp(sys.stdout), None)
+        name = 'my-name'
         my_id = 'my-id'
 
         vim_config = {'auth_url': 'http://1.2.3.4:5000', 'username': 'xyz',
                       'password': '12345', 'project_name': 'abc'}
         args = [
+            name,
             '--config', str(vim_config),
         ]
-        position_names = ['auth_cred', 'vim_project', 'auth_url']
-        position_values = [self.auth_cred, self.vim_project, self.auth_url]
+        position_names = ['name', 'auth_cred', 'vim_project', 'auth_url']
+        position_values = [
+            name,
+            self.auth_cred,
+            self.vim_project,
+            self.auth_url
+        ]
         extra_body = {'type': 'openstack', 'is_default': False}
-        self._test_create_resource(self._RESOURCE, cmd, None, my_id, args,
+        self._test_create_resource(self._RESOURCE, cmd, name, my_id, args,
                                    position_names, position_values,
                                    extra_body=extra_body)
 
