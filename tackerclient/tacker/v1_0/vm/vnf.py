@@ -26,7 +26,7 @@ class ListVNF(tackerV10.ListCommand):
 
     resource = _VNF
     list_columns = ['id', 'name', 'description', 'mgmt_url', 'status',
-                    'vim_id', 'placement_attr']
+                    'vim_id', 'placement_attr', 'error_reason']
 
 
 class ShowVNF(tackerV10.ShowCommand):

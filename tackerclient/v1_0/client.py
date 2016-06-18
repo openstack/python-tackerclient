@@ -30,6 +30,7 @@ from tackerclient.i18n import _
 
 _logger = logging.getLogger(__name__)
 DEFAULT_DESC_LENGTH = 25
+DEFAULT_ERROR_REASON_LENGTH = 100
 
 
 def exception_handler_v10(status_code, error_content):
@@ -390,7 +391,15 @@ class Client(ClientBase):
 
     @APIParamsCall
     def list_vnfs(self, retrieve_all=True, **_params):
-        return self.list('vnfs', self.vnfs_path, retrieve_all, **_params)
+        vnfs = self.list('vnfs', self.vnfs_path, retrieve_all, **_params)
+        for vnf in vnfs['vnfs']:
+            error_reason = vnf.get('error_reason', None)
+            if error_reason and \
+                len(error_reason) > DEFAULT_ERROR_REASON_LENGTH:
+                vnf['error_reason'] = error_reason[
+                    :DEFAULT_ERROR_REASON_LENGTH]
+                vnf['error_reason'] += '...'
+        return vnfs
 
     @APIParamsCall
     def show_vnf(self, vnf, **_params):
