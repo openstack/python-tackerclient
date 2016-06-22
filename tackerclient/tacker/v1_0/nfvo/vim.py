@@ -50,16 +50,16 @@ class CreateVIM(tackerV10.CreateCommand):
 
     def add_known_arguments(self, parser):
         group = parser.add_mutually_exclusive_group(required=True)
-        group.add_argument('--config-file', help='specify VIM specific '
+        group.add_argument('--config-file', help='Specify VIM specific '
                                                  'config parameters in a file')
-        group.add_argument('--config', help='specify VIM config parameters '
+        group.add_argument('--config', help='Specify VIM config parameters '
                                             'as a direct input')
         parser.add_argument(
             '--name',
-            help='Set a name for the vim')
+            help='Set a name for the VIM')
         parser.add_argument(
             '--description',
-            help='Set a description for the vim')
+            help='Set a description for the VIM')
 
     def args2body(self, parsed_args):
         body = {self.resource: {}}
@@ -94,10 +94,10 @@ class UpdateVIM(tackerV10.UpdateCommand):
         group = parser.add_mutually_exclusive_group(required=True)
         group.add_argument(
             '--config-file',
-            help='specify VIM specific config parameters in a file')
+            help='Specify VIM specific config parameters in a file')
         group.add_argument(
             '--config',
-            help='specify VIM config parameters as a direct input')
+            help='Specify VIM config parameters as a direct input')
 
     def args2body(self, parsed_args):
         body = {self.resource: {}}
