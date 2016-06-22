@@ -649,6 +649,10 @@ class ShowCommand(TackerCommand, show.ShowOne):
     log = None
     allow_names = True
 
+    def get_id(self):
+        if self.resource:
+            return self.resource.upper()
+
     def get_parser(self, prog_name):
         parser = super(ShowCommand, self).get_parser(prog_name)
         add_show_list_common_argument(parser)
@@ -657,7 +661,7 @@ class ShowCommand(TackerCommand, show.ShowOne):
         else:
             help_str = _('ID of %s to look up')
         parser.add_argument(
-            'id', metavar=self.resource.upper(),
+            'id', metavar=self.get_id(),
             help=help_str % self.resource)
         return parser
 

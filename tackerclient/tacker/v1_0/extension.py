@@ -14,7 +14,6 @@
 #    under the License.
 #
 
-from tackerclient.common._i18n import _
 from tackerclient.tacker import v1_0 as cmd_base
 
 
@@ -31,10 +30,5 @@ class ShowExt(cmd_base.ShowCommand):
     resource = "extension"
     allow_names = False
 
-    def get_parser(self, prog_name):
-        parser = super(ShowExt, self).get_parser(prog_name)
-        cmd_base.add_show_list_common_argument(parser)
-        parser.add_argument(
-            'id', metavar='EXT-ALIAS',
-            help=_('The extension alias'))
-        return parser
+    def get_id(self):
+        return 'EXT-ALIAS'
