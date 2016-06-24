@@ -44,7 +44,7 @@ class CreateVNF(tackerV10.CreateCommand):
     def add_known_arguments(self, parser):
         parser.add_argument(
             '--name',
-            help='Set a name for the vnf')
+            help='Set a name for the VNF')
         vnfd_group = parser.add_mutually_exclusive_group(required=True)
         vnfd_group.add_argument(
             '--vnfd-id',
@@ -64,13 +64,13 @@ class CreateVNF(tackerV10.CreateCommand):
             help='VIM Region to use to create VNF on the specified VIM')
         parser.add_argument(
             '--config-file',
-            help='specify config yaml file')
+            help='Specify config yaml file')
         parser.add_argument(
             '--config',
-            help='specify config yaml data')
+            help='Specify config yaml data')
         parser.add_argument(
             '--param-file',
-            help='specify parameter yaml file'
+            help='Specify parameter yaml file'
         )
 
     def args2body(self, parsed_args):
@@ -120,10 +120,10 @@ class UpdateVNF(tackerV10.UpdateCommand):
     def add_known_arguments(self, parser):
         parser.add_argument(
             '--config-file',
-            help='specify config yaml file')
+            help='Specify config yaml file')
         parser.add_argument(
             '--config',
-            help='specify config yaml data')
+            help='Specify config yaml data')
 
     def args2body(self, parsed_args):
         body = {self.resource: {}}
