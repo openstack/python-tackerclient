@@ -338,6 +338,7 @@ class Client(ClientBase):
     vnfd_path = '/vnfds/%s'
     vnfs_path = '/vnfs'
     vnf_path = '/vnfs/%s'
+    vnf_scale_path = '/vnfs/%s/actions'
 
     vims_path = '/vims'
     vim_path = '/vims/%s'
@@ -416,6 +417,10 @@ class Client(ClientBase):
     @APIParamsCall
     def update_vnf(self, vnf, body=None):
         return self.put(self.vnf_path % vnf, body=body)
+
+    @APIParamsCall
+    def scale_vnf(self, vnf, body=None):
+        return self.post(self.vnf_scale_path % vnf, body=body)
 
     @APIParamsCall
     def show_vim(self, vim, **_params):
