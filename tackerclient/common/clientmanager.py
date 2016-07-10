@@ -17,13 +17,8 @@
 """Manage access to the clients, including authenticating when needed.
 """
 
-import logging
-
 from tackerclient import client
 from tackerclient.tacker import client as tacker_client
-
-
-LOG = logging.getLogger(__name__)
 
 
 class ClientCache(object):
