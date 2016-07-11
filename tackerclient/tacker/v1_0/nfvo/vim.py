@@ -30,7 +30,7 @@ class ListVIM(tackerV10.ListCommand):
 
     resource = _VIM
     list_columns = ['id', 'tenant_id', 'name', 'type', 'description',
-                    'auth_url', 'placement_attr', 'auth_cred']
+                    'auth_url', 'placement_attr', 'auth_cred', 'status']
 
     def extend_list(self, data, parsed_args):
         for index, value in enumerate(data):
