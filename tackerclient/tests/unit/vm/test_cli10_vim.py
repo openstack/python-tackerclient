@@ -53,7 +53,7 @@ class CLITestV10VIMJSON(test_cli10.CLITestV10Base):
         position_names = ['auth_cred', 'vim_project', 'auth_url']
         position_values = [self.auth_cred, self.vim_project, self.auth_url]
         extra_body = {'type': 'openstack', 'name': name, 'description':
-                      description}
+                      description, 'is_default': False}
         self._test_create_resource(self._RESOURCE, cmd, None, my_id,
                                    args, position_names, position_values,
                                    extra_body=extra_body)
@@ -69,7 +69,7 @@ class CLITestV10VIMJSON(test_cli10.CLITestV10Base):
         ]
         position_names = ['auth_cred', 'vim_project', 'auth_url']
         position_values = [self.auth_cred, self.vim_project, self.auth_url]
-        extra_body = {'type': 'openstack'}
+        extra_body = {'type': 'openstack', 'is_default': False}
         self._test_create_resource(self._RESOURCE, cmd, None, my_id, args,
                                    position_names, position_values,
                                    extra_body=extra_body)
@@ -131,7 +131,7 @@ class CLITestV10VIMJSON(test_cli10.CLITestV10Base):
         key = 'config'
         value = str(update_config)
         extra_fields = {'vim_project': self.vim_project, 'auth_cred':
-                        self.auth_cred}
+                        self.auth_cred, 'is_default': False}
         self._test_update_resource(self._RESOURCE, cmd, my_id, [my_id,
                                                                 '--%s' %
                                                                 key, value],
