@@ -34,9 +34,11 @@ class CLITestV10VIMJSON(test_cli10.CLITestV10Base):
     def setUp(self):
         plurals = {'vims': 'vim'}
         super(CLITestV10VIMJSON, self).setUp(plurals=plurals)
-        self.vim_project = {'name': 'abc', 'id': ''}
+        self.vim_project = {
+            'name': 'abc', 'id': '',
+            'project_domain_name': 'prj_domain_name'}
         self.auth_cred = {'username': 'xyz', 'password': '12345', 'user_id':
-                          ''}
+                          '', 'user_domain_name': 'user_domain_name'}
         self.auth_url = 'http://1.2.3.4:5000'
 
     def test_register_vim_all_params(self):
@@ -45,7 +47,9 @@ class CLITestV10VIMJSON(test_cli10.CLITestV10Base):
         name = 'test_vim'
         description = 'Vim Description'
         vim_config = {'auth_url': 'http://1.2.3.4:5000', 'username': 'xyz',
-                      'password': '12345', 'project_name': 'abc'}
+                      'password': '12345', 'project_name': 'abc',
+                      'project_domain_name': 'prj_domain_name',
+                      'user_domain_name': 'user_domain_name'}
         args = [
             '--config', str(vim_config),
             '--name', name,
@@ -63,7 +67,9 @@ class CLITestV10VIMJSON(test_cli10.CLITestV10Base):
         my_id = 'my-id'
 
         vim_config = {'auth_url': 'http://1.2.3.4:5000', 'username': 'xyz',
-                      'password': '12345', 'project_name': 'abc'}
+                      'password': '12345', 'project_name': 'abc',
+                      'project_domain_name': 'prj_domain_name',
+                      'user_domain_name': 'user_domain_name'}
         args = [
             '--config', str(vim_config),
         ]
@@ -126,7 +132,9 @@ class CLITestV10VIMJSON(test_cli10.CLITestV10Base):
     def test_update_vim(self):
         cmd = vim.UpdateVIM(test_cli10.MyApp(sys.stdout), None)
         update_config = {'username': 'xyz', 'password': '12345',
-                         'project_name': 'abc'}
+                         'project_name': 'abc',
+                         'project_domain_name': 'prj_domain_name',
+                         'user_domain_name': 'user_domain_name'}
         my_id = 'my-id'
         key = 'config'
         value = str(update_config)

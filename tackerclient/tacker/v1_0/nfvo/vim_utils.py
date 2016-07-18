@@ -25,11 +25,15 @@ def args2body_vim(config_param, vim):
     :return: vim body with args populated
     """
     vim['vim_project'] = {'id': config_param.pop('project_id', ''),
-                          'name': config_param.pop('project_name', '')}
+                          'name': config_param.pop('project_name', ''),
+                          'project_domain_name':
+                              config_param.pop('project_domain_name', '')}
     if not vim['vim_project']['id'] and not vim['vim_project']['name']:
         raise exceptions.TackerClientException(message='Project Id or name '
                                                        'must be specified',
                                                status_code=404)
     vim['auth_cred'] = {'username': config_param.pop('username', ''),
                         'password': config_param.pop('password', ''),
-                        'user_id': config_param.pop('user_id', '')}
+                        'user_id': config_param.pop('user_id', ''),
+                        'user_domain_name':
+                            config_param.pop('user_domain_name', '')}
