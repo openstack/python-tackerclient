@@ -25,7 +25,6 @@ from cliff.formatters import table
 from cliff import lister
 from cliff import show
 from oslo_serialization import jsonutils
-from oslo_utils import strutils
 import six
 
 from tackerclient.common._i18n import _
@@ -386,8 +385,6 @@ class TackerCommand(command.OpenStackCommand):
     def format_output_data(self, data):
         # Modify data to make it more readable
         if self.resource in data:
-            data[self.resource] = strutils.mask_dict_password(
-                data[self.resource])
             for k, v in six.iteritems(data[self.resource]):
                 if isinstance(v, list):
                     value = '\n'.join(jsonutils.dumps(
