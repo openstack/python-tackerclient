@@ -55,6 +55,11 @@ class CreateVIM(tackerV10.CreateCommand):
         parser.add_argument(
             '--description',
             help='Set a description for the VIM')
+        parser.add_argument(
+            '--is-default',
+            action='store_true',
+            default=False,
+            help='Set as default VIM')
 
     def args2body(self, parsed_args):
         body = {self.resource: {}}
@@ -76,7 +81,8 @@ class CreateVIM(tackerV10.CreateCommand):
         vim_obj['type'] = config_param.pop('type', 'openstack')
         vim_utils.args2body_vim(config_param, vim_obj)
         tackerV10.update_dict(parsed_args, body[self.resource],
-                              ['tenant_id', 'name', 'description'])
+                              ['tenant_id', 'name', 'description',
+                              'is_default'])
         return body
 
 
@@ -93,6 +99,11 @@ class UpdateVIM(tackerV10.UpdateCommand):
         group.add_argument(
             '--config',
             help='Specify VIM config parameters as a direct input')
+        parser.add_argument(
+            '--is-default',
+            action='store_true',
+            default=False,
+            help='Set as default VIM')
 
     def args2body(self, parsed_args):
         body = {self.resource: {}}
@@ -110,7 +121,8 @@ class UpdateVIM(tackerV10.UpdateCommand):
                                                    status_code=404)
         vim_obj = body[self.resource]
         vim_utils.args2body_vim(config_param, vim_obj)
-        tackerV10.update_dict(parsed_args, body[self.resource], ['tenant_id'])
+        tackerV10.update_dict(parsed_args, body[self.resource],
+                              ['tenant_id', 'is_default'])
         return body
 
 
