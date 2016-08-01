@@ -343,6 +343,9 @@ class Client(ClientBase):
     vims_path = '/vims'
     vim_path = '/vims/%s'
 
+    events_path = '/events'
+    event_path = '/events/%s'
+
     # API has no way to report plurals, so we have to hard code them
     # EXTED_PLURALS = {}
 
@@ -447,3 +450,40 @@ class Client(ClientBase):
     @APIParamsCall
     def list_vims(self, retrieve_all=True, **_params):
         return self.list('vims', self.vims_path, retrieve_all, **_params)
+
+    @APIParamsCall
+    def list_events(self, retrieve_all=True, **_params):
+        events = self.list('events', self.events_path, retrieve_all,
+                           **_params)
+        return events
+
+    @APIParamsCall
+    def list_vnf_events(self, retrieve_all=True, **_params):
+        _params['resource_type'] = 'vnf'
+        events = self.list('events', self.events_path, retrieve_all,
+                           **_params)
+        vnf_events = {}
+        vnf_events['vnf_events'] = events['events']
+        return vnf_events
+
+    @APIParamsCall
+    def list_vnfd_events(self, retrieve_all=True, **_params):
+        _params['resource_type'] = 'vnfd'
+        events = self.list('events', self.events_path, retrieve_all,
+                           **_params)
+        vnfd_events = {}
+        vnfd_events['vnfd_events'] = events['events']
+        return vnfd_events
+
+    @APIParamsCall
+    def list_vim_events(self, retrieve_all=True, **_params):
+        _params['resource_type'] = 'vim'
+        events = self.list('events', self.events_path, retrieve_all,
+                           **_params)
+        vim_events = {}
+        vim_events['vim_events'] = events['events']
+        return vim_events
+
+    @APIParamsCall
+    def show_event(self, event_id, **_params):
+        return self.get(self.event_path % event_id, params=_params)

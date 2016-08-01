@@ -45,6 +45,7 @@ from tackerclient.common import exceptions as exc
 from tackerclient.common import extension as client_extension
 from tackerclient.common import utils
 from tackerclient.i18n import _
+from tackerclient.tacker.v1_0.events import events
 from tackerclient.tacker.v1_0 import extension
 from tackerclient.tacker.v1_0.nfvo import vim
 from tackerclient.tacker.v1_0.vm import vnf
@@ -124,6 +125,13 @@ COMMAND_V1 = {
     'vim-delete': vim.DeleteVIM,
     'vim-list': vim.ListVIM,
     'vim-show': vim.ShowVIM,
+
+    'events-list': events.ListResourceEvents,
+    'event-show': events.ShowEvent,
+    'vnf-events-list': events.ListVNFEvents,
+    'vim-events-list': events.ListVIMEvents,
+    'vnfd-events-list': events.ListVNFDEvents,
+
 }
 
 COMMANDS = {'1.0': COMMAND_V1}

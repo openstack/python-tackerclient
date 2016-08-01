@@ -49,8 +49,10 @@ def _get_resource_plural(resource, client):
 def find_resourceid_by_id(client, resource, resource_id):
     resource_plural = _get_resource_plural(resource, client)
     obj_lister = getattr(client, "list_%s" % resource_plural)
-    # perform search by id only if we are passing a valid UUID
-    match = re.match(UUID_PATTERN, resource_id)
+    if resource == 'event':
+        match = resource_id.isdigit() and resource_id != 0
+    else:
+        match = re.match(UUID_PATTERN, resource_id)
     collection = resource_plural
     if match:
         data = obj_lister(id=resource_id, fields='id')
