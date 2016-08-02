@@ -500,7 +500,7 @@ class UpdateCommand(TackerCommand):
 
 
 class DeleteCommand(TackerCommand):
-    """Delete a given resource
+    """Delete given resource(s)
 
     """
 
@@ -508,34 +508,61 @@ class DeleteCommand(TackerCommand):
     resource = None
     log = None
     allow_names = True
+    deleted_msg = {}
 
     def get_parser(self, prog_name):
         parser = super(DeleteCommand, self).get_parser(prog_name)
         if self.allow_names:
-            help_str = _('ID or name of %s to delete')
+            help_str = _('IDs or names of %s to delete')
         else:
-            help_str = _('ID of %s to delete')
+            help_str = _('IDs of %s to delete')
         parser.add_argument(
-            'id', metavar=self.resource.upper(),
+            'ids', nargs='+',
+            metavar=self.resource.upper(),
             help=help_str % self.resource)
         return parser
 
     def run(self, parsed_args):
-        self.log.debug('run(%s)', parsed_args)
+        failure = False
+        deleted_ids = []
+        failed_items = {}
         tacker_client = self.get_client()
         tacker_client.format = parsed_args.request_format
         obj_deleter = getattr(tacker_client,
                               "delete_%s" % self.resource)
-        if self.allow_names:
-            _id = find_resourceid_by_name_or_id(tacker_client, self.resource,
-                                                parsed_args.id)
+        for resource_id in parsed_args.ids:
+            try:
+                if self.allow_names:
+                    _id = find_resourceid_by_name_or_id(
+                        tacker_client, self.resource, resource_id)
+                else:
+                    _id = resource_id
+                obj_deleter(_id)
+                deleted_ids.append(resource_id)
+            except Exception as e:
+                failure = True
+                failed_items[resource_id] = e
+        if failure:
+            msg = ''
+            if deleted_ids:
+                status_msg = self.deleted_msg.get(self.resource, 'deleted')
+                msg = (_('Successfully %(status_msg)s %(resource)s(s):'
+                         ' %(deleted_list)s') % {'status_msg': status_msg,
+                                                 'deleted_list':
+                                                 ', '.join(deleted_ids),
+                                                 'resource': self.resource})
+            err_msg = _("\n\nUnable to delete the below"
+                        " %s(s):") % self.resource
+            for failed_id, error in failed_items.iteritems():
+                err_msg += (_('\n Cannot delete %(failed_id)s: %(error)s')
+                            % {'failed_id': failed_id,
+                               'error': error})
+            msg += err_msg
+            raise exceptions.CommandError(msg)
         else:
-            _id = parsed_args.id
-        obj_deleter(_id)
-        print((_('Deleted %(resource)s: %(id)s')
-               % {'id': parsed_args.id,
-                  'resource': self.resource}),
-              file=self.app.stdout)
+            print((_('All %(resource)s(s) %(msg)s successfully')
+                   % {'msg': self.deleted_msg.get(self.resource, 'deleted'),
+                      'resource': self.resource}))
         return
 
 

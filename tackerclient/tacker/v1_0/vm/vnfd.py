@@ -80,7 +80,7 @@ class CreateVNFD(tackerV10.CreateCommand):
 
 
 class DeleteVNFD(tackerV10.DeleteCommand):
-    """Delete a given VNFD."""
+    """Delete given VNFD(s)."""
     resource = _VNFD
 
 

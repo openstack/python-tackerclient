@@ -95,3 +95,10 @@ class CLITestV10VmVNFDJSON(test_cli10.CLITestV10Base):
         my_id = 'my-id'
         args = [my_id]
         self._test_delete_resource(self._RESOURCE, cmd, my_id, args)
+
+    def test_multi_delete_vnfd(self):
+        cmd = vnfd.DeleteVNFD(
+            test_cli10.MyApp(sys.stdout), None)
+        vnfd_ids = 'my-id1 my-id2 my-id3'
+        args = [vnfd_ids]
+        self._test_delete_resource(self._RESOURCE, cmd, vnfd_ids, args)

@@ -143,3 +143,9 @@ class CLITestV10VIMJSON(test_cli10.CLITestV10Base):
         my_id = 'my-id'
         args = [my_id]
         self._test_delete_resource(self._RESOURCE, cmd, my_id, args)
+
+    def test_multi_delete_vim(self):
+        cmd = vim.DeleteVIM(test_cli10.MyApp(sys.stdout), None)
+        vim_ids = 'my-id1 my-id2 my-id3'
+        args = [vim_ids]
+        self._test_delete_resource(self._RESOURCE, cmd, vim_ids, args)

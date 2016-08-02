@@ -165,9 +165,10 @@ class UpdateVNF(tackerV10.UpdateCommand):
 
 
 class DeleteVNF(tackerV10.DeleteCommand):
-    """Delete a given VNF."""
+    """Delete given VNF(s)."""
 
     resource = _VNF
+    deleted_msg = {'vnf': 'delete initiated'}
 
 
 class ListVNFResources(tackerV10.ListCommand):

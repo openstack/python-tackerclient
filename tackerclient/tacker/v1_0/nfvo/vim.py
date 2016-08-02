@@ -115,5 +115,5 @@ class UpdateVIM(tackerV10.UpdateCommand):
 
 
 class DeleteVIM(tackerV10.DeleteCommand):
-    """Delete a given VIM."""
+    """Delete given VIM(s)."""
     resource = _VIM

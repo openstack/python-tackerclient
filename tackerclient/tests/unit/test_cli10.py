@@ -601,6 +601,7 @@ class CLITestV10Base(testtools.TestCase):
         self.assertIn('myname', _str)
 
     def _test_delete_resource(self, resource, cmd, myid, args):
+        deleted_msg = {'vnf': 'delete initiated'}
         self.mox.StubOutWithMock(cmd, "get_client")
         self.mox.StubOutWithMock(self.client.httpclient, "request")
         cmd.get_client().MultipleTimes().AndReturn(self.client)
@@ -617,7 +618,10 @@ class CLITestV10Base(testtools.TestCase):
         self.mox.VerifyAll()
         self.mox.UnsetStubs()
         _str = self.fake_stdout.make_string()
-        self.assertIn(myid, _str)
+        msg = 'All %(resource)s(s) %(msg)s successfully\n' % {
+            'msg': deleted_msg.get(resource, 'deleted'),
+            'resource': resource}
+        self.assertEqual(msg, _str)
 
     def _test_update_resource_action(self, resource, cmd, myid, action, args,
                                      body, retval=None):

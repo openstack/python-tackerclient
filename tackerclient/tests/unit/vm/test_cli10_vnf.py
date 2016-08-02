@@ -207,3 +207,9 @@ class CLITestV10VmVNFJSON(test_cli10.CLITestV10Base):
         self.assertIn('id1', val)
         self.assertIn('NeutronPort', val)
         self.assertIn('CP11', val)
+
+    def test_multi_delete_vnf(self):
+        cmd = vnf.DeleteVNF(test_cli10.MyApp(sys.stdout), None)
+        vnf_ids = 'vnf1 vnf2 vnf3'
+        args = [vnf_ids]
+        self._test_delete_resource(self._RESOURCE, cmd, vnf_ids, args)
