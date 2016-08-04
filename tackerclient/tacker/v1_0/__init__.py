@@ -426,7 +426,7 @@ class CreateCommand(TackerCommand, show.ShowOne):
         return parser
 
     def get_data(self, parsed_args):
-        self.log.debug('get_data(%s)' % parsed_args)
+        self.log.debug('get_data(%s)', parsed_args)
         tacker_client = self.get_client()
         tacker_client.format = parsed_args.request_format
         _extra_values = parse_args_to_dict(self.values_specs)
