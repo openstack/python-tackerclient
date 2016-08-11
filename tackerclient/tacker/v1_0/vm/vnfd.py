@@ -48,7 +48,7 @@ class CreateVNFD(tackerV10.CreateCommand):
         group.add_argument('--vnfd-file', help='Specify VNFD file')
         group.add_argument('--vnfd', help='Specify VNFD')
         parser.add_argument(
-            '--name',
+            'name', metavar='NAME',
             help='Set a name for the VNFD')
         parser.add_argument(
             '--description',

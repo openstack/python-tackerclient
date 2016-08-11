@@ -91,6 +91,7 @@ class CLITestV10VmVNFJSON(test_cli10.CLITestV10Base):
 
     def test_create_vnf_all_params(self):
         cmd = vnf.CreateVNF(test_cli10.MyApp(sys.stdout), None)
+        name = 'my_name'
         my_id = 'my-id'
         vnfd_id = 'vnfd'
         vim_id = 'vim_id'
@@ -99,28 +100,31 @@ class CLITestV10VmVNFJSON(test_cli10.CLITestV10Base):
         value = 'value'
 
         args = [
+            name,
             '--vnfd-id', vnfd_id,
             '--vim-id', vim_id,
             '--vim-region-name', region_name,
             '--%s' % key, value]
-        position_names = ['vnfd_id', 'vim_id', 'attributes']
-        position_values = [vnfd_id, vim_id, {}]
+        position_names = ['name', 'vnfd_id', 'vim_id', 'attributes']
+        position_values = [name, vnfd_id, vim_id, {}]
         extra_body = {key: value, 'placement_attr': {'region_name':
                                                      region_name}}
-        self._test_create_resource(self._RESOURCE, cmd, None, my_id,
+        self._test_create_resource(self._RESOURCE, cmd, name, my_id,
                                    args, position_names, position_values,
                                    extra_body=extra_body)
 
     def test_create_vnf_with_mandatory_params(self):
         cmd = vnf.CreateVNF(test_cli10.MyApp(sys.stdout), None)
+        name = 'my_name'
         my_id = 'my-id'
         vnfd_id = 'vnfd'
         args = [
+            name,
             '--vnfd-id', vnfd_id,
         ]
-        position_names = ['vnfd_id', 'attributes']
-        position_values = [vnfd_id, {}]
-        self._test_create_resource(self._RESOURCE, cmd, None, my_id,
+        position_names = ['name', 'vnfd_id', 'attributes']
+        position_values = [name, vnfd_id, {}]
+        self._test_create_resource(self._RESOURCE, cmd, name, my_id,
                                    args, position_names, position_values)
 
     def test_list_vnfs(self):

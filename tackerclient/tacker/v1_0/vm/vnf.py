@@ -43,7 +43,7 @@ class CreateVNF(tackerV10.CreateCommand):
 
     def add_known_arguments(self, parser):
         parser.add_argument(
-            '--name',
+            'name', metavar='NAME',
             help='Set a name for the VNF')
         vnfd_group = parser.add_mutually_exclusive_group(required=True)
         vnfd_group.add_argument(
