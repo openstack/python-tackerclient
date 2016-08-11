@@ -671,7 +671,9 @@ class ShowCommand(TackerCommand, show.ShowOne):
 
         params = {}
         if parsed_args.show_details:
-            params = {'verbose': 'True'}
+            method_name = 'show_%s_details' % self.resource
+        else:
+            method_name = 'show_%s' % self.resource
         if parsed_args.fields:
             params = {'fields': parsed_args.fields}
         if self.allow_names:
@@ -680,8 +682,10 @@ class ShowCommand(TackerCommand, show.ShowOne):
         else:
             _id = parsed_args.id
 
-        obj_shower = getattr(tacker_client, "show_%s" % self.resource)
+        obj_shower = getattr(tacker_client, method_name)
         data = obj_shower(_id, **params)
+        if parsed_args.show_details:
+            data[self.resource] = data.pop('details')[0]
         self.format_output_data(data)
         resource = data[self.resource]
         if self.resource in data:

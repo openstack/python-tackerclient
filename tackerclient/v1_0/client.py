@@ -339,6 +339,7 @@ class Client(ClientBase):
     vnfs_path = '/vnfs'
     vnf_path = '/vnfs/%s'
     vnf_scale_path = '/vnfs/%s/actions'
+    vnf_detail = '/vnfs/%s/details'
 
     vims_path = '/vims'
     vim_path = '/vims/%s'
@@ -412,6 +413,10 @@ class Client(ClientBase):
     @APIParamsCall
     def show_vnf(self, vnf, **_params):
         return self.get(self.vnf_path % vnf, params=_params)
+
+    @APIParamsCall
+    def show_vnf_details(self, vnf, **_params):
+        return self.get(self.vnf_detail % vnf, params=_params)
 
     @APIParamsCall
     def create_vnf(self, body=None):
