@@ -19,6 +19,7 @@ import yaml
 from oslo_utils import strutils
 
 from tackerclient.common import exceptions
+from tackerclient.i18n import _
 from tackerclient.tacker import v1_0 as tackerV10
 from tackerclient.tacker.v1_0.nfvo import vim_utils
 
@@ -48,18 +49,18 @@ class CreateVIM(tackerV10.CreateCommand):
         parser.add_argument(
             '--config-file',
             required=True,
-            help='YAML file with VIM configuration parameters')
+            help=_('YAML file with VIM configuration parameters'))
         parser.add_argument(
             'name', metavar='NAME',
-            help='Set a name for the VIM')
+            help=_('Set a name for the VIM'))
         parser.add_argument(
             '--description',
-            help='Set a description for the VIM')
+            help=_('Set a description for the VIM'))
         parser.add_argument(
             '--is-default',
             action='store_true',
             default=False,
-            help='Set as default VIM')
+            help=_('Set as default VIM'))
 
     def args2body(self, parsed_args):
         body = {self.resource: {}}
@@ -92,18 +93,18 @@ class UpdateVIM(tackerV10.UpdateCommand):
         parser.add_argument(
             '--config-file',
             required=True,
-            help='YAML file with VIM configuration parameters')
+            help=_('YAML file with VIM configuration parameters'))
         parser.add_argument(
             '--name',
-            help='New name for the VIM')
+            help=_('New name for the VIM'))
         parser.add_argument(
             '--description',
-            help='New description for the VIM')
+            help=_('New description for the VIM'))
         parser.add_argument(
             '--is-default',
             type=strutils.bool_from_string,
             metavar='{True,False}',
-            help='Indicate whether the VIM is used as default')
+            help=_('Indicate whether the VIM is used as default'))
 
     def args2body(self, parsed_args):
         body = {self.resource: {}}
