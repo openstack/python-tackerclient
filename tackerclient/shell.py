@@ -115,6 +115,7 @@ COMMAND_V1 = {
     'vnf-delete': vnf.DeleteVNF,
     'vnf-list': vnf.ListVNF,
     'vnf-show': vnf.ShowVNF,
+    'vnf-scale': vnf.ScaleVNF,
     # 'vnf-config-create'
     # 'vnf-config-push'
 

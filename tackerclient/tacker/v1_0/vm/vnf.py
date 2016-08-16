@@ -143,3 +143,58 @@ class DeleteVNF(tackerV10.DeleteCommand):
     """Delete a given VNF."""
 
     resource = _VNF
+
+
+class ScaleVNF(tackerV10.TackerCommand):
+    """Scale a VNF."""
+
+    api = 'nfv-orchestration'
+    resource = None
+    log = None
+
+    def get_parser(self, prog_name):
+        parser = super(ScaleVNF, self).get_parser(prog_name)
+        self.add_known_arguments(parser)
+        return parser
+
+    def run(self, parsed_args):
+        tacker_client = self.get_client()
+        tacker_client.format = parsed_args.request_format
+        body = self.args2body(parsed_args)
+        obj_creator = getattr(tacker_client,
+                              "scale_vnf")
+        obj_creator(body["scale"].pop('vnf_id'), body)
+
+    def add_known_arguments(self, parser):
+        vnf_group = parser.add_mutually_exclusive_group(required=True)
+        vnf_group.add_argument(
+            '--vnf-id',
+            help='VNF ID')
+        vnf_group.add_argument(
+            '--vnf-name',
+            help='VNF name')
+        parser.add_argument(
+            '--scaling-policy-name',
+            help='VNF policy name used to scale')
+        parser.add_argument(
+            '--scaling-type',
+            help='VNF scaling type, it could be either "out" or "in"')
+
+    def args2body(self, parsed_args):
+        args = {}
+        body = {"scale": args}
+
+        if parsed_args.vnf_name:
+            tacker_client = self.get_client()
+            tacker_client.format = parsed_args.request_format
+            _id = tackerV10.find_resourceid_by_name_or_id(tacker_client,
+                                                          'vnf',
+                                                          parsed_args.
+                                                          vnf_name)
+            parsed_args.vnf_id = _id
+
+        args['vnf_id'] = parsed_args.vnf_id
+        args['type'] = parsed_args.scaling_type
+        args['policy'] = parsed_args.scaling_policy_name
+
+        return body
