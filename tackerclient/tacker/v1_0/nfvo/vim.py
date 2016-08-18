@@ -44,11 +44,10 @@ class CreateVIM(tackerV10.CreateCommand):
     resource = _VIM
 
     def add_known_arguments(self, parser):
-        group = parser.add_mutually_exclusive_group(required=True)
-        group.add_argument('--config-file', help='Specify VIM specific '
-                                                 'config parameters in a file')
-        group.add_argument('--config', help='Specify VIM config parameters '
-                                            'as a direct input')
+        parser.add_argument(
+            '--config-file',
+            required=True,
+            help='Specify VIM specific config parameters in a file')
         parser.add_argument(
             'name', metavar='NAME',
             help='Set a name for the VIM')
@@ -67,9 +66,6 @@ class CreateVIM(tackerV10.CreateCommand):
             with open(parsed_args.config_file) as f:
                 vim_config = f.read()
                 config_param = yaml.load(vim_config)
-        if parsed_args.config:
-            parsed_args.config = parsed_args.config.decode('unicode_escape')
-            config_param = yaml.load(parsed_args.config)
         vim_obj = body[self.resource]
         try:
             auth_url = config_param.pop('auth_url')
@@ -92,13 +88,9 @@ class UpdateVIM(tackerV10.UpdateCommand):
     resource = _VIM
 
     def add_known_arguments(self, parser):
-        group = parser.add_mutually_exclusive_group(required=True)
-        group.add_argument(
+        parser.add_argument(
             '--config-file',
             help='Specify VIM specific config parameters in a file')
-        group.add_argument(
-            '--config',
-            help='Specify VIM config parameters as a direct input')
         parser.add_argument(
             '--is-default',
             action='store_true',
@@ -112,9 +104,6 @@ class UpdateVIM(tackerV10.UpdateCommand):
             with open(parsed_args.config_file) as f:
                 config_yaml = f.read()
             config_param = yaml.load(config_yaml)
-        if parsed_args.config:
-            parsed_args.config = parsed_args.config.decode('unicode_escape')
-            config_param = yaml.load(parsed_args.config)
         if 'auth_url' in config_param:
             raise exceptions.TackerClientException(message='Auth URL cannot '
                                                            'be updated',
