@@ -45,6 +45,9 @@ class CreateVNF(tackerV10.CreateCommand):
         parser.add_argument(
             'name', metavar='NAME',
             help='Set a name for the VNF')
+        parser.add_argument(
+            '--description',
+            help='Set description for the VNF')
         vnfd_group = parser.add_mutually_exclusive_group(required=True)
         vnfd_group.add_argument(
             '--vnfd-id',
@@ -108,7 +111,8 @@ class CreateVNF(tackerV10.CreateCommand):
                 param_yaml = f.read()
             args['attributes']['param_values'] = param_yaml
         tackerV10.update_dict(parsed_args, body[self.resource],
-                              ['tenant_id', 'name', 'vnfd_id', 'vim_id'])
+                              ['tenant_id', 'name', 'description',
+                               'vnfd_id', 'vim_id'])
         return body
 
 

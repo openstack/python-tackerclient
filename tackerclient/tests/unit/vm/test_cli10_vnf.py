@@ -95,6 +95,7 @@ class CLITestV10VmVNFJSON(test_cli10.CLITestV10Base):
         my_id = 'my-id'
         vnfd_id = 'vnfd'
         vim_id = 'vim_id'
+        description = 'my-description'
         region_name = 'region'
         key = 'key'
         value = 'value'
@@ -103,10 +104,23 @@ class CLITestV10VmVNFJSON(test_cli10.CLITestV10Base):
             name,
             '--vnfd-id', vnfd_id,
             '--vim-id', vim_id,
+            '--description', description,
             '--vim-region-name', region_name,
             '--%s' % key, value]
-        position_names = ['name', 'vnfd_id', 'vim_id', 'attributes']
-        position_values = [name, vnfd_id, vim_id, {}]
+        position_names = [
+            'name',
+            'vnfd_id',
+            'vim_id',
+            'description',
+            'attributes'
+        ]
+        position_values = [
+            name,
+            vnfd_id,
+            vim_id,
+            description,
+            {}
+        ]
         extra_body = {key: value, 'placement_attr': {'region_name':
                                                      region_name}}
         self._test_create_resource(self._RESOURCE, cmd, name, my_id,
@@ -125,6 +139,23 @@ class CLITestV10VmVNFJSON(test_cli10.CLITestV10Base):
         position_names = ['name', 'vnfd_id', 'attributes']
         position_values = [name, vnfd_id, {}]
         self._test_create_resource(self._RESOURCE, cmd, name, my_id,
+                                   args, position_names, position_values)
+
+    def test_create_vnf_with_description_param(self):
+        cmd = vnf.CreateVNF(test_cli10.MyApp(sys.stdout), None)
+        name = 'my_name'
+        my_id = 'my-id'
+        vnfd_id = 'vnfd'
+        description = 'my-description'
+        args = [
+            name,
+            '--vnfd-id', vnfd_id,
+            '--description', description,
+        ]
+        position_names = ['name', 'vnfd_id', 'description',
+                          'attributes']
+        position_values = [name, vnfd_id, description, {}]
+        self._test_create_resource(self._RESOURCE, cmd, None, my_id,
                                    args, position_names, position_values)
 
     def test_list_vnfs(self):
