@@ -15,6 +15,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import yaml
+
+from tackerclient.common import utils
 from tackerclient.i18n import _
 from tackerclient.tacker import v1_0 as tackerV10
 
@@ -82,14 +85,22 @@ class CreateVNF(tackerV10.CreateCommand):
         args = {'attributes': {}}
         body = {self.resource: args}
         # config arg passed as data overrides config yaml when both args passed
+        config = None
         if parsed_args.config_file:
             with open(parsed_args.config_file) as f:
                 config_yaml = f.read()
-            args['attributes']['config'] = config_yaml
+            config = yaml.load(
+                config_yaml, Loader=yaml.SafeLoader)
         if parsed_args.config:
-            parsed_args.config = parsed_args.config.decode('unicode_escape')
-            args['attributes']['config'] = parsed_args.config
+            config = parsed_args.config
+            if isinstance(config, str):
+                config_str = parsed_args.config.decode('unicode_escape')
+                config = yaml.load(config_str, Loader=yaml.SafeLoader)
+                utils.deprecate_warning(what='yaml as string', as_of='N',
+                                        in_favor_of='yaml as dictionary')
 
+        if config:
+            args['attributes']['config'] = config
         if parsed_args.vim_region_name:
             args.setdefault('placement_attr', {})['region_name'] = \
                 parsed_args.vim_region_name
@@ -111,7 +122,8 @@ class CreateVNF(tackerV10.CreateCommand):
         if parsed_args.param_file:
             with open(parsed_args.param_file) as f:
                 param_yaml = f.read()
-            args['attributes']['param_values'] = param_yaml
+            args['attributes']['param_values'] = yaml.load(
+                param_yaml, Loader=yaml.SafeLoader)
         tackerV10.update_dict(parsed_args, body[self.resource],
                               ['tenant_id', 'name', 'description',
                                'vnfd_id', 'vim_id'])
@@ -134,13 +146,20 @@ class UpdateVNF(tackerV10.UpdateCommand):
     def args2body(self, parsed_args):
         body = {self.resource: {}}
         # config arg passed as data overrides config yaml when both args passed
+        config = None
         if parsed_args.config_file:
             with open(parsed_args.config_file) as f:
                 config_yaml = f.read()
-            body[self.resource]['attributes'] = {'config': config_yaml}
+            config = yaml.load(config_yaml, Loader=yaml.SafeLoader)
         if parsed_args.config:
-            parsed_args.config = parsed_args.config.decode('unicode_escape')
-            body[self.resource]['attributes'] = {'config': parsed_args.config}
+            config = parsed_args.config
+            if isinstance(parsed_args.config, str):
+                config_str = parsed_args.config.decode('unicode_escape')
+                config = yaml.load(config_str, Loader=yaml.SafeLoader)
+                utils.deprecate_warning(what='yaml as string', as_of='N',
+                                        in_favor_of='yaml as dictionary')
+        if config:
+            body[self.resource]['attributes'] = {'config': config}
         tackerV10.update_dict(parsed_args, body[self.resource], ['tenant_id'])
         return body
 
