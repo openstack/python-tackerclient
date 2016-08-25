@@ -117,6 +117,7 @@ COMMAND_V1 = {
     'vnf-list': vnf.ListVNF,
     'vnf-show': vnf.ShowVNF,
     'vnf-scale': vnf.ScaleVNF,
+    'vnf-resource-list': vnf.ListVNFResources,
     # 'vnf-config-create'
     # 'vnf-config-push'
 

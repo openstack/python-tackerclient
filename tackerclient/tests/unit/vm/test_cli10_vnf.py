@@ -32,9 +32,11 @@ ENDURL = 'localurl'
 class CLITestV10VmVNFJSON(test_cli10.CLITestV10Base):
     _RESOURCE = 'vnf'
     _RESOURCES = 'vnfs'
+    _VNF_RESOURCES = 'vnf_resources'
 
     def setUp(self):
-        plurals = {'vnfs': 'vnf'}
+        plurals = {'vnfs': 'vnf',
+                   'resources': 'resource'}
         super(CLITestV10VmVNFJSON, self).setUp(plurals=plurals)
 
     def _test_create_resource(self, resource, cmd,
@@ -192,3 +194,22 @@ class CLITestV10VmVNFJSON(test_cli10.CLITestV10Base):
         my_id = 'my-id'
         args = [my_id]
         self._test_delete_resource(self._RESOURCE, cmd, my_id, args)
+
+    def test_list_vnf_resources(self):
+        cmd = vnf.ListVNFResources(test_cli10.MyApp(sys.stdout), None)
+        base_args = [self.test_id]
+        response = [{'name': 'CP11', 'id': 'id1', 'type': 'NeutronPort'},
+                    {'name': 'CP12', 'id': 'id2', 'type': 'NeutronPort'}]
+        val = self._test_list_sub_resources(self._VNF_RESOURCES, 'resources',
+                                            cmd, self.test_id,
+                                            response_contents=response,
+                                            detail=True, base_args=base_args)
+        self.assertIn('id1', val)
+        self.assertIn('NeutronPort', val)
+        self.assertIn('CP11', val)
+
+    def test_list_vnf_resources_pagination(self):
+        cmd = vnf.ListVNFResources(test_cli10.MyApp(sys.stdout), None)
+        self._test_list_sub_resources_with_pagination(self._VNF_RESOURCES,
+                                                      'resources', cmd,
+                                                      self.test_id)

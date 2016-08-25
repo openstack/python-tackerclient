@@ -1,0 +1,4 @@
+---
+features:
+  - Adds new CLI command 'vnf-resource-list' to view VNF
+    resources, such as VDU, CP, etc.

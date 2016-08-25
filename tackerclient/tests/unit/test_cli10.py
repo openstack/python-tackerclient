@@ -369,6 +369,139 @@ class CLITestV10Base(testtools.TestCase):
             self.assertIn('myid1', _str)
         return _str
 
+    def _test_list_sub_resources(self, resources, api_resource, cmd, myid,
+                                 detail=False,
+                                 tags=[], fields_1=[], fields_2=[],
+                                 page_size=None, sort_key=[], sort_dir=[],
+                                 response_contents=None, base_args=None,
+                                 path=None):
+        self.mox.StubOutWithMock(cmd, "get_client")
+        self.mox.StubOutWithMock(self.client.httpclient, "request")
+        cmd.get_client().MultipleTimes().AndReturn(self.client)
+        if response_contents is None:
+            contents = [{self.id_field: 'myid1', },
+                        {self.id_field: 'myid2', }, ]
+        else:
+            contents = response_contents
+        reses = {api_resource: contents}
+        self.client.format = self.format
+        resstr = self.client.serialize(reses)
+        # url method body
+        query = ""
+        args = base_args if base_args is not None else []
+        if detail:
+            args.append('-D')
+        args.extend(['--request-format', self.format])
+        if fields_1:
+            for field in fields_1:
+                args.append('--fields')
+                args.append(field)
+
+        if tags:
+            args.append('--')
+            args.append("--tag")
+        for tag in tags:
+            args.append(tag)
+            if isinstance(tag, six.string_types):
+                tag = urllib.quote(tag.encode('utf-8'))
+            if query:
+                query += "&tag=" + tag
+            else:
+                query = "tag=" + tag
+        if (not tags) and fields_2:
+            args.append('--')
+        if fields_2:
+            args.append("--fields")
+            for field in fields_2:
+                args.append(field)
+        if detail:
+            query = query and query + '&verbose=True' or 'verbose=True'
+        fields_1.extend(fields_2)
+        for field in fields_1:
+            if query:
+                query += "&fields=" + field
+            else:
+                query = "fields=" + field
+        if page_size:
+            args.append("--page-size")
+            args.append(str(page_size))
+            if query:
+                query += "&limit=%s" % page_size
+            else:
+                query = "limit=%s" % page_size
+        if sort_key:
+            for key in sort_key:
+                args.append('--sort-key')
+                args.append(key)
+                if query:
+                    query += '&'
+                query += 'sort_key=%s' % key
+        if sort_dir:
+            len_diff = len(sort_key) - len(sort_dir)
+            if len_diff > 0:
+                sort_dir += ['asc'] * len_diff
+            elif len_diff < 0:
+                sort_dir = sort_dir[:len(sort_key)]
+            for dir in sort_dir:
+                args.append('--sort-dir')
+                args.append(dir)
+                if query:
+                    query += '&'
+                query += 'sort_dir=%s' % dir
+        if path is None:
+            path = getattr(self.client, resources + "_path")
+        self.client.httpclient.request(
+            MyUrlComparator(end_url(path % myid, query, format=self.format),
+                            self.client),
+            'GET',
+            body=None,
+            headers=mox.ContainsKeyValue(
+                'X-Auth-Token', TOKEN)).AndReturn((MyResp(200), resstr))
+        self.mox.ReplayAll()
+        cmd_parser = cmd.get_parser("list_" + resources)
+        shell.run_command(cmd, cmd_parser, args)
+        self.mox.VerifyAll()
+        self.mox.UnsetStubs()
+        _str = self.fake_stdout.make_string()
+        if response_contents is None:
+            self.assertIn('myid1', _str)
+        return _str
+
+    def _test_list_sub_resources_with_pagination(self, resources, api_resource,
+                                                 cmd, myid):
+        self.mox.StubOutWithMock(cmd, "get_client")
+        self.mox.StubOutWithMock(self.client.httpclient, "request")
+        cmd.get_client().MultipleTimes().AndReturn(self.client)
+        path = getattr(self.client, resources + "_path")
+        fake_query = "marker=myid2&limit=2"
+        reses1 = {api_resource: [{'id': 'myid1', },
+                                 {'id': 'myid2', }],
+                  '%s_links' % api_resource: [
+                      {'href': end_url(path % myid, fake_query),
+                       'rel': 'next'}]
+                  }
+        reses2 = {api_resource: [{'id': 'myid3', },
+                                 {'id': 'myid4', }]}
+        self.client.format = self.format
+        resstr1 = self.client.serialize(reses1)
+        resstr2 = self.client.serialize(reses2)
+        self.client.httpclient.request(
+            end_url(path % myid, "", format=self.format), 'GET',
+            body=None,
+            headers=mox.ContainsKeyValue(
+                'X-Auth-Token', TOKEN)).AndReturn((MyResp(200), resstr1))
+        self.client.httpclient.request(
+            end_url(path % myid, fake_query, format=self.format), 'GET',
+            body=None,
+            headers=mox.ContainsKeyValue(
+                'X-Auth-Token', TOKEN)).AndReturn((MyResp(200), resstr2))
+        self.mox.ReplayAll()
+        cmd_parser = cmd.get_parser("list_" + resources)
+        args = [myid, '--request-format', self.format]
+        shell.run_command(cmd, cmd_parser, args)
+        self.mox.VerifyAll()
+        self.mox.UnsetStubs()
+
     def _test_list_resources_with_pagination(self, resources, cmd):
         self.mox.StubOutWithMock(cmd, "get_client")
         self.mox.StubOutWithMock(self.client.httpclient, "request")
