@@ -1,0 +1,4 @@
+---
+deprecations:
+  - infra_driver and mgmt_driver attributes in VNFD client
+    attribute is deprecated and will be removed in Ocata.

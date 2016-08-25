@@ -403,6 +403,11 @@ class Client(ClientBase):
                 _logger.warning("VNFD legacy templates are deprecated. Please "
                                 "use NFV TOSCA templates.")
             body[self._VNFD]['service_types'] = [{'service_type': 'vnfd'}]
+            _logger.warning(
+                "Passing infra_driver and mgmt_driver in the VNFD"
+                " API is deprecated. infra_driver will be automatically"
+                " derived from target vim type. mgmt_driver will be"
+                " derived from TOSCA template values.")
             body[self._VNFD]['infra_driver'] = 'heat'
             body[self._VNFD]['mgmt_driver'] = 'noop'
         else:
