@@ -205,7 +205,7 @@ class CLITestV10Base(testtools.TestCase):
         self.mox.StubOutWithMock(cmd, "get_client")
         self.mox.StubOutWithMock(self.client.httpclient, "request")
         cmd.get_client().MultipleTimes().AndReturn(self.client)
-        non_admin_status_resources = ['vnfd', 'vnf', 'vim']
+        non_admin_status_resources = ['vnfd', 'vnf', 'vim', 'vnffgd', 'vnffg']
         if (resource in non_admin_status_resources):
             body = {resource: {}, }
         else:

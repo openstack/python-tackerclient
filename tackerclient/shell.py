@@ -48,6 +48,8 @@ from tackerclient.i18n import _
 from tackerclient.tacker.v1_0.events import events
 from tackerclient.tacker.v1_0 import extension
 from tackerclient.tacker.v1_0.nfvo import vim
+from tackerclient.tacker.v1_0.nfvo import vnffg
+from tackerclient.tacker.v1_0.nfvo import vnffgd
 from tackerclient.tacker.v1_0.vm import vnf
 from tackerclient.tacker.v1_0.vm import vnfd
 from tackerclient.version import __version__
@@ -133,6 +135,26 @@ COMMAND_V1 = {
     'vim-events-list': events.ListVIMEvents,
     'vnfd-events-list': events.ListVNFDEvents,
 
+    'vnffgd-create': vnffgd.CreateVNFFGD,
+    'vnffgd-delete': vnffgd.DeleteVNFFGD,
+    'vnffgd-list': vnffgd.ListVNFFGD,
+    'vnffgd-show': vnffgd.ShowVNFFGD,
+    'vnffgd-template-show': vnffgd.ShowTemplateVNFFGD,
+
+    'vnffg-create': vnffg.CreateVNFFG,
+    'vnffg-delete': vnffg.DeleteVNFFG,
+    'vnffg-list': vnffg.ListVNFFG,
+    'vnffg-show': vnffg.ShowVNFFG,
+    'vnffg-update': vnffg.UpdateVNFFG,
+
+    'nfp-list': vnffg.ListNFP,
+    'nfp-show': vnffg.ShowNFP,
+
+    'chain-list': vnffg.ListSFC,
+    'chain-show': vnffg.ShowSFC,
+
+    'classifier-list': vnffg.ListFC,
+    'classifier-show': vnffg.ShowFC,
 }
 
 COMMANDS = {'1.0': COMMAND_V1}
