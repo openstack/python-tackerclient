@@ -21,6 +21,7 @@ import cStringIO
 import fixtures
 import mox
 import six
+import six.moves.urllib.parse as urlparse
 import sys
 import testtools
 
@@ -85,7 +86,17 @@ class MyUrlComparator(mox.Comparator):
         self.client = client
 
     def equals(self, rhs):
-        return str(self) == rhs
+        lhsp = urlparse.urlparse(self.lhs)
+        rhsp = urlparse.urlparse(rhs)
+
+        lhs_qs = urlparse.parse_qsl(lhsp.query)
+        rhs_qs = urlparse.parse_qsl(rhsp.query)
+
+        return (lhsp.scheme == rhsp.scheme and
+                lhsp.netloc == rhsp.netloc and
+                lhsp.path == rhsp.path and
+                len(lhs_qs) == len(rhs_qs) and
+                set(lhs_qs) == set(rhs_qs))
 
     def __str__(self):
         if self.client and self.client.format != FORMAT:
@@ -491,9 +502,9 @@ class CLITestV10Base(testtools.TestCase):
             headers=mox.ContainsKeyValue(
                 'X-Auth-Token', TOKEN)).AndReturn((MyResp(200), resstr1))
         self.client.httpclient.request(
-            end_url(path % myid, fake_query, format=self.format), 'GET',
-            body=None,
-            headers=mox.ContainsKeyValue(
+            MyUrlComparator(end_url(path % myid, fake_query,
+                                    format=self.format), self.client), 'GET',
+            body=None, headers=mox.ContainsKeyValue(
                 'X-Auth-Token', TOKEN)).AndReturn((MyResp(200), resstr2))
         self.mox.ReplayAll()
         cmd_parser = cmd.get_parser("list_" + resources)
@@ -523,8 +534,8 @@ class CLITestV10Base(testtools.TestCase):
             headers=mox.ContainsKeyValue(
                 'X-Auth-Token', TOKEN)).AndReturn((MyResp(200), resstr1))
         self.client.httpclient.request(
-            end_url(path, fake_query, format=self.format), 'GET',
-            body=None,
+            MyUrlComparator(end_url(path, fake_query, format=self.format),
+                            self.client), 'GET', body=None,
             headers=mox.ContainsKeyValue(
                 'X-Auth-Token', TOKEN)).AndReturn((MyResp(200), resstr2))
         self.mox.ReplayAll()
