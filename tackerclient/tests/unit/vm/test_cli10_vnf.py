@@ -207,9 +207,3 @@ class CLITestV10VmVNFJSON(test_cli10.CLITestV10Base):
         self.assertIn('id1', val)
         self.assertIn('NeutronPort', val)
         self.assertIn('CP11', val)
-
-    def test_list_vnf_resources_pagination(self):
-        cmd = vnf.ListVNFResources(test_cli10.MyApp(sys.stdout), None)
-        self._test_list_sub_resources_with_pagination(self._VNF_RESOURCES,
-                                                      'resources', cmd,
-                                                      self.test_id)
