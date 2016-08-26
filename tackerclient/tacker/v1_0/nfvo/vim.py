@@ -65,7 +65,7 @@ class CreateVIM(tackerV10.CreateCommand):
         if parsed_args.config_file:
             with open(parsed_args.config_file) as f:
                 vim_config = f.read()
-                config_param = yaml.load(vim_config)
+                config_param = yaml.load(vim_config, Loader=yaml.SafeLoader)
         vim_obj = body[self.resource]
         try:
             auth_url = config_param.pop('auth_url')
