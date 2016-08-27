@@ -16,3 +16,4 @@ testtools>=1.4.0 # MIT
 
 # releasenotes
 reno>=1.8.0 # Apache2
+mock>=2.0 # BSD
