@@ -397,7 +397,7 @@ class Client(ClientBase):
 
     @APIParamsCall
     def create_vnfd(self, body=None):
-        if body is not None:
+        if body:
             if ("tosca_definitions_version" not in
                body[self._VNFD]['attributes']['vnfd']):
                 _logger.warning("VNFD legacy templates are deprecated. Please "
@@ -410,8 +410,6 @@ class Client(ClientBase):
                 " derived from TOSCA template values.")
             body[self._VNFD]['infra_driver'] = 'heat'
             body[self._VNFD]['mgmt_driver'] = 'noop'
-        else:
-            body = None
         return self.post(self.vnfds_path, body)
 
     @APIParamsCall
