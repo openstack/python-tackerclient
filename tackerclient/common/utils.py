@@ -25,7 +25,6 @@ from oslo_log import versionutils
 from oslo_utils import encodeutils
 from oslo_utils import importutils
 import six
-import six.moves.urllib.parse as urlparse
 
 from tackerclient.common import exceptions
 from tackerclient.i18n import _
@@ -173,13 +172,6 @@ def add_boolean_argument(parser, name, **kwargs):
         choices=['True', 'true', 'False', 'false'],
         default=default,
         **kwargs)
-
-
-def validate_url(url):
-    url_parts = urlparse.urlparse(url)
-    if not url_parts.scheme or not url_parts.netloc or not url_parts.port:
-        raise exceptions.TackerClientException(message='Invalid URL')
-    return url_parts
 
 
 def get_file_path(filename):
