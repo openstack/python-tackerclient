@@ -21,7 +21,7 @@ from tackerclient.common import exceptions
 from tackerclient.tacker.v1_0.nfvo import vim_utils
 
 
-class CLITestAuthNoAuth(testtools.TestCase):
+class TestVIMUtils(testtools.TestCase):
 
     def test_args2body_vim(self):
         config_param = {'project_id': sentinel.prj_id1,
@@ -50,3 +50,22 @@ class CLITestAuthNoAuth(testtools.TestCase):
         self.assertRaises(exceptions.TackerClientException,
                           vim_utils.args2body_vim,
                           config_param, vim)
+
+    def test_validate_auth_url_with_port(self):
+        auth_url = "http://localhost:8000/test"
+        url_parts = vim_utils.validate_auth_url(auth_url)
+        self.assertEqual('http', url_parts.scheme)
+        self.assertEqual('localhost:8000', url_parts.netloc)
+        self.assertEqual(8000, url_parts.port)
+
+    def test_validate_auth_url_without_port(self):
+        auth_url = "http://localhost/test"
+        url_parts = vim_utils.validate_auth_url(auth_url)
+        self.assertEqual('http', url_parts.scheme)
+        self.assertEqual('localhost', url_parts.netloc)
+
+    def test_validate_auth_url_exception(self):
+        auth_url = "localhost/test"
+        self.assertRaises(exceptions.TackerClientException,
+                          vim_utils.validate_auth_url,
+                          auth_url)
