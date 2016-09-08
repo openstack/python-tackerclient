@@ -13,7 +13,7 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-
+import six.moves.urllib.parse as urlparse
 
 from tackerclient.common import exceptions
 
@@ -37,3 +37,10 @@ def args2body_vim(config_param, vim):
                         'user_id': config_param.pop('user_id', ''),
                         'user_domain_name':
                             config_param.pop('user_domain_name', '')}
+
+
+def validate_auth_url(url):
+    url_parts = urlparse.urlparse(url)
+    if not url_parts.scheme or not url_parts.netloc:
+        raise exceptions.TackerClientException(message='Invalid auth URL')
+    return url_parts

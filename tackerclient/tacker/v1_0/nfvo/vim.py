@@ -17,7 +17,6 @@
 import yaml
 
 from tackerclient.common import exceptions
-from tackerclient.common import utils
 from tackerclient.tacker import v1_0 as tackerV10
 from tackerclient.tacker.v1_0.nfvo import vim_utils
 
@@ -73,7 +72,7 @@ class CreateVIM(tackerV10.CreateCommand):
             raise exceptions.TackerClientException(message='Auth URL must be '
                                                            'specified',
                                                    status_code=404)
-        vim_obj['auth_url'] = utils.validate_url(auth_url).geturl()
+        vim_obj['auth_url'] = vim_utils.validate_auth_url(auth_url).geturl()
         vim_obj['type'] = config_param.pop('type', 'openstack')
         vim_utils.args2body_vim(config_param, vim_obj)
         tackerV10.update_dict(parsed_args, body[self.resource],
