@@ -396,20 +396,19 @@ class Client(ClientBase):
                         params=_params)
 
     @APIParamsCall
-    def create_vnfd(self, body=None):
-        if body:
-            if ("tosca_definitions_version" not in
-               body[self._VNFD]['attributes']['vnfd']):
-                _logger.warning("VNFD legacy templates are deprecated. Please "
-                                "use NFV TOSCA templates.")
-            body[self._VNFD]['service_types'] = [{'service_type': 'vnfd'}]
-            _logger.warning(
-                "Passing infra_driver and mgmt_driver in the VNFD"
-                " API is deprecated. infra_driver will be automatically"
-                " derived from target vim type. mgmt_driver will be"
-                " derived from TOSCA template values.")
-            body[self._VNFD]['infra_driver'] = 'heat'
-            body[self._VNFD]['mgmt_driver'] = 'noop'
+    def create_vnfd(self, body):
+        if ("tosca_definitions_version" not in
+           body[self._VNFD]['attributes']['vnfd']):
+            _logger.warning("VNFD legacy templates are deprecated. Please "
+                            "use NFV TOSCA templates.")
+        body[self._VNFD]['service_types'] = [{'service_type': 'vnfd'}]
+        _logger.warning(
+            "Passing infra_driver and mgmt_driver in the VNFD"
+            " API is deprecated. infra_driver will be automatically"
+            " derived from target vim type. mgmt_driver will be"
+            " derived from TOSCA template values.")
+        body[self._VNFD]['infra_driver'] = 'heat'
+        body[self._VNFD]['mgmt_driver'] = 'noop'
         return self.post(self.vnfds_path, body)
 
     @APIParamsCall
@@ -433,7 +432,7 @@ class Client(ClientBase):
         return self.get(self.vnf_path % vnf, params=_params)
 
     @APIParamsCall
-    def create_vnf(self, body=None):
+    def create_vnf(self, body):
         return self.post(self.vnfs_path, body=body)
 
     @APIParamsCall
@@ -441,7 +440,7 @@ class Client(ClientBase):
         return self.delete(self.vnf_path % vnf)
 
     @APIParamsCall
-    def update_vnf(self, vnf, body=None):
+    def update_vnf(self, vnf, body):
         return self.put(self.vnf_path % vnf, body=body)
 
     @APIParamsCall
@@ -460,7 +459,7 @@ class Client(ClientBase):
     _VIM = "vim"
 
     @APIParamsCall
-    def create_vim(self, body=None):
+    def create_vim(self, body):
         return self.post(self.vims_path, body=body)
 
     @APIParamsCall
@@ -468,7 +467,7 @@ class Client(ClientBase):
         return self.delete(self.vim_path % vim)
 
     @APIParamsCall
-    def update_vim(self, vim, body=None):
+    def update_vim(self, vim, body):
         return self.put(self.vim_path % vim, body=body)
 
     @APIParamsCall
@@ -515,7 +514,7 @@ class Client(ClientBase):
     _VNFFGD = "vnffgd"
 
     @APIParamsCall
-    def create_vnffgd(self, body=None):
+    def create_vnffgd(self, body):
         return self.post(self.vnffgds_path, body)
 
     @APIParamsCall
@@ -557,7 +556,7 @@ class Client(ClientBase):
         return self.get(self.vnffg_path % vnffg, params=_params)
 
     @APIParamsCall
-    def create_vnffg(self, body=None):
+    def create_vnffg(self, body):
         return self.post(self.vnffgs_path, body=body)
 
     @APIParamsCall
@@ -565,7 +564,7 @@ class Client(ClientBase):
         return self.delete(self.vnffg_path % vnffg)
 
     @APIParamsCall
-    def update_vnffg(self, vnffg, body=None):
+    def update_vnffg(self, vnffg, body):
         return self.put(self.vnffg_path % vnffg, body=body)
 
     @APIParamsCall
