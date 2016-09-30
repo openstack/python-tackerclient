@@ -17,7 +17,6 @@
 import urllib
 
 import contextlib
-import cStringIO
 import fixtures
 import mox
 import six
@@ -39,7 +38,7 @@ ENDURL = 'localurl'
 
 @contextlib.contextmanager
 def capture_std_streams():
-    fake_stdout, fake_stderr = cStringIO.StringIO(), cStringIO.StringIO()
+    fake_stdout, fake_stderr = six.StringIO(), six.StringIO()
     stdout, stderr = sys.stdout, sys.stderr
     try:
         sys.stdout, sys.stderr = fake_stdout, fake_stderr

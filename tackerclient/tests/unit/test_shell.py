@@ -14,10 +14,10 @@
 #    under the License.
 
 import argparse
-import cStringIO
 import logging
 import os
 import re
+import six
 import sys
 
 import fixtures
@@ -61,8 +61,8 @@ class ShellTest(testtools.TestCase):
         clean_env = {}
         _old_env, os.environ = os.environ, clean_env.copy()
         try:
-            sys.stdout = cStringIO.StringIO()
-            sys.stderr = cStringIO.StringIO()
+            sys.stdout = six.StringIO()
+            sys.stderr = six.StringIO()
             _shell = openstack_shell.TackerShell('1.0')
             _shell.run(argstr.split())
         except SystemExit:
