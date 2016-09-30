@@ -72,7 +72,7 @@ class CreateVNF(tackerV10.CreateCommand):
             help='VIM Region to use to create VNF on the specified VIM')
         parser.add_argument(
             '--config-file',
-            help='Specify config yaml file')
+            help='YAML file with VNF configuration')
         parser.add_argument(
             '--config',
             help='Specify config yaml data')
@@ -138,7 +138,7 @@ class UpdateVNF(tackerV10.UpdateCommand):
     def add_known_arguments(self, parser):
         parser.add_argument(
             '--config-file',
-            help='Specify config yaml file')
+            help='YAML file with VNF configuration')
         parser.add_argument(
             '--config',
             help='Specify config yaml data')

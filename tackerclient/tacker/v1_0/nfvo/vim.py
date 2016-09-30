@@ -48,7 +48,7 @@ class CreateVIM(tackerV10.CreateCommand):
         parser.add_argument(
             '--config-file',
             required=True,
-            help='Specify VIM specific config parameters in a file')
+            help='YAML file with VIM configuration parameters')
         parser.add_argument(
             'name', metavar='NAME',
             help='Set a name for the VIM')
@@ -92,7 +92,7 @@ class UpdateVIM(tackerV10.UpdateCommand):
         parser.add_argument(
             '--config-file',
             required=True,
-            help='Specify VIM specific config parameters in a file')
+            help='YAML file with VIM configuration parameters')
         parser.add_argument(
             '--name',
             help='New name for the VIM')
