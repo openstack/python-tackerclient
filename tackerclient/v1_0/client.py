@@ -404,10 +404,6 @@ class Client(ClientBase):
 
     @APIParamsCall
     def create_vnfd(self, body):
-        if ("tosca_definitions_version" not in
-           body[self._VNFD]['attributes']['vnfd']):
-            _logger.warning("VNFD legacy templates are deprecated. Please "
-                            "use NFV TOSCA templates.")
         body[self._VNFD]['service_types'] = [{'service_type': 'vnfd'}]
         return self.post(self.vnfds_path, body)
 

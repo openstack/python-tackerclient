@@ -64,8 +64,7 @@ class CreateVNFD(tackerV10.CreateCommand):
         if parsed_args.vnfd_file:
             with open(parsed_args.vnfd_file) as f:
                 vnfd = f.read()
-                if "tosca_definitions_version" in vnfd:
-                    vnfd = yaml.load(vnfd, Loader=yaml.SafeLoader)
+                vnfd = yaml.load(vnfd, Loader=yaml.SafeLoader)
         if parsed_args.vnfd:
                 vnfd = parsed_args.vnfd
                 if isinstance(vnfd, str):
