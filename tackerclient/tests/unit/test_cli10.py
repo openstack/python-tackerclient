@@ -179,14 +179,6 @@ class CLITestV10Base(testtools.TestCase):
     def _find_resourceid(self, client, resource, name_or_id):
         return name_or_id
 
-    def _get_attr_metadata(self):
-        return self.metadata
-        client.Client.EXTED_PLURALS.update(constants.PLURALS)
-        client.Client.EXTED_PLURALS.update({'tags': 'tag'})
-        return {'plurals': client.Client.EXTED_PLURALS,
-                'xmlns': constants.XML_NS_V10,
-                constants.EXT_NS: {'prefix': 'http://xxxx.yy.com'}}
-
     def setUp(self, plurals={}):
         """Prepare the test environment."""
         super(CLITestV10Base, self).setUp()
@@ -205,9 +197,6 @@ class CLITestV10Base(testtools.TestCase):
         self.useFixture(fixtures.MonkeyPatch(
             'tackerclient.tacker.v1_0.find_resourceid_by_id',
             self._find_resourceid))
-        self.useFixture(fixtures.MonkeyPatch(
-            'tackerclient.v1_0.client.Client.get_attr_metadata',
-            self._get_attr_metadata))
         self.client = client.Client(token=TOKEN, endpoint_url=self.endurl)
 
     @mock.patch.object(TackerCommand, 'get_client')
