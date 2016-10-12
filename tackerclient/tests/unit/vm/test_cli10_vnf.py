@@ -20,7 +20,7 @@ import sys
 
 from tackerclient import shell
 from tackerclient.tacker import v1_0 as tackerV1_0
-from tackerclient.tacker.v1_0.vm import vnf
+from tackerclient.tacker.v1_0.vnfm import vnf
 from tackerclient.tests.unit import test_cli10
 
 API_VERSION = "1.0"

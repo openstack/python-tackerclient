@@ -50,8 +50,8 @@ from tackerclient.tacker.v1_0 import extension
 from tackerclient.tacker.v1_0.nfvo import vim
 from tackerclient.tacker.v1_0.nfvo import vnffg
 from tackerclient.tacker.v1_0.nfvo import vnffgd
-from tackerclient.tacker.v1_0.vm import vnf
-from tackerclient.tacker.v1_0.vm import vnfd
+from tackerclient.tacker.v1_0.vnfm import vnf
+from tackerclient.tacker.v1_0.vnfm import vnfd
 from tackerclient.version import __version__
 
 
