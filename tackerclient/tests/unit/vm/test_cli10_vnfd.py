@@ -16,7 +16,7 @@
 
 import sys
 
-from tackerclient.tacker.v1_0.vm import vnfd
+from tackerclient.tacker.v1_0.vnfm import vnfd
 from tackerclient.tests.unit import test_cli10
 
 
