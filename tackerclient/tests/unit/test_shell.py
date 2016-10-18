@@ -145,7 +145,7 @@ class ShellTest(testtools.TestCase):
     def test_build_option_parser(self):
         tacker_shell = openstack_shell.TackerShell('1.0')
         result = tacker_shell.build_option_parser('descr', '1.0')
-        self.assertEqual(True, isinstance(result, argparse.ArgumentParser))
+        self.assertIsInstance(result, argparse.ArgumentParser)
 
     def test_main_with_unicode(self):
         self.mox.StubOutClassWithMocks(openstack_shell, 'TackerShell')
