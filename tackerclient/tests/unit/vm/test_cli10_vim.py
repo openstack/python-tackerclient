@@ -124,18 +124,37 @@ class CLITestV10VIMJSON(test_cli10.CLITestV10Base):
         self._test_show_resource(self._RESOURCE, cmd, self.test_id,
                                  args, ['id', 'name'])
 
-    def test_update_vim(self):
+    def test_update_vim_all_params(self):
         cmd = vim.UpdateVIM(test_cli10.MyApp(sys.stdout), None)
         update_config = utils.get_file_path(
             'tests/unit/vm/samples/vim_config_without_auth_url.yaml')
         my_id = 'my-id'
-        key = 'config-file'
-        value = str(update_config)
+        name = 'new_name'
+        description = 'new_description'
+        is_default = 'True'
+        args = [
+            my_id,
+            '--config-file', str(update_config),
+            '--name', name,
+            '--description', description,
+            '--is_default', is_default]
         extra_fields = {'vim_project': self.vim_project, 'auth_cred':
-                        self.auth_cred, 'is_default': False}
-        self._test_update_resource(self._RESOURCE, cmd, my_id, [my_id,
-                                                                '--%s' %
-                                                                key, value],
+                        self.auth_cred, 'is_default': 'True',
+                        'name': name, 'description': description}
+        self._test_update_resource(self._RESOURCE, cmd, my_id, args,
+                                   extra_fields)
+
+    def test_update_vim_with_mandatory_params(self):
+        cmd = vim.UpdateVIM(test_cli10.MyApp(sys.stdout), None)
+        update_config = utils.get_file_path(
+            'tests/unit/vm/samples/vim_config_without_auth_url.yaml')
+        my_id = 'my-id'
+        args = [
+            my_id,
+            '--config-file', str(update_config)]
+        extra_fields = {'vim_project': self.vim_project,
+                        'auth_cred': self.auth_cred}
+        self._test_update_resource(self._RESOURCE, cmd, my_id, args,
                                    extra_fields)
 
     def test_delete_vim(self):
