@@ -32,7 +32,7 @@ class ListVNFD(tackerV10.ListCommand):
     """List VNFD that belong to a given tenant."""
 
     resource = _VNFD
-    list_columns = ['id', 'name', 'description', 'infra_driver', 'mgmt_driver']
+    list_columns = ['id', 'name', 'description']
 
 
 class ShowVNFD(tackerV10.ShowCommand):

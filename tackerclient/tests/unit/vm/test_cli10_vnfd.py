@@ -33,16 +33,14 @@ class CLITestV10VmVNFDJSON(test_cli10.CLITestV10Base):
             test_cli10.MyApp(sys.stdout), None)
         my_id = 'my-id'
         name = 'my-name'
-        mgmt_driver = 'noop'
-        infra_driver = 'heat'
         attr_key = 'vnfd'
         attr_val = 'vnfd'
         args = [
             name,
             '--vnfd', 'vnfd'
         ]
-        position_names = ['name', 'mgmt_driver', 'infra_driver']
-        position_values = [name, mgmt_driver, infra_driver]
+        position_names = ['name']
+        position_values = [name]
         extra_body = {
             'service_types': [{'service_type': 'vnfd'}],
             'attributes': {attr_key: attr_val},
@@ -56,11 +54,9 @@ class CLITestV10VmVNFDJSON(test_cli10.CLITestV10Base):
             test_cli10.MyApp(sys.stdout), None)
         name = 'my_name'
         my_id = 'my-id'
-        mgmt_driver = 'noop'
-        infra_driver = 'heat'
         args = [name, '--vnfd', 'vnfd', ]
-        position_names = ['name', 'mgmt_driver', 'infra_driver']
-        position_values = [name, mgmt_driver, infra_driver]
+        position_names = ['name']
+        position_values = [name]
         extra_body = {
             'service_types': [{'service_type': 'vnfd'}],
             'attributes': {'vnfd': 'vnfd'}

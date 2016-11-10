@@ -1,0 +1,3 @@
+---
+fixes:
+  - Remove passing mgmt and infra driver from client.
