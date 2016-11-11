@@ -29,6 +29,7 @@ from tackerclient.common import exceptions
 from tackerclient import shell
 from tackerclient.tacker import v1_0 as tackerV1_0
 from tackerclient.tacker.v1_0 import TackerCommand
+from tackerclient.tests.unit import test_utils
 from tackerclient.v1_0 import client
 
 API_VERSION = "1.0"
@@ -113,6 +114,12 @@ class MyUrlComparator(object):
 
     def __repr__(self):
         return str(self)
+
+    def __eq__(self, rhs):
+        return self.equals(rhs)
+
+    def __ne__(self, rhs):
+        return not self.__eq__(rhs)
 
 
 class MyComparator(object):
@@ -243,17 +250,13 @@ class CLITestV10Base(testtools.TestCase):
             _body = self.client.serialize(body)
         with mock.patch.object(self.client.httpclient, 'request') as mock_req:
             mock_req.return_value = (MyResp(200), resstr)
-            self.client.httpclient.request(
-                end_url(path, format=self.format), 'POST',
-                body=_body,
-                headers={'X-Auth-Token', TOKEN})
-            mock_req.assert_called_once_with(
-                end_url(path, format=self.format), 'POST',
-                body=_body,
-                headers={'X-Auth-Token', TOKEN})
             args.extend(['--request-format', self.format])
             cmd_parser = cmd.get_parser('create_' + resource)
             shell.run_command(cmd, cmd_parser, args)
+            mock_req.assert_called_once_with(
+                end_url(path, format=self.format), 'POST',
+                body=_body,
+                headers=test_utils.ContainsKeyValue('X-Auth-Token', TOKEN))
         self.assertEqual(get_client_called_count, mock_get.call_count)
         _str = self.fake_stdout.make_string()
         self.assertIn(myid, _str)
@@ -271,17 +274,13 @@ class CLITestV10Base(testtools.TestCase):
         path = getattr(self.client, resources_collection + "_path")
         with mock.patch.object(self.client.httpclient, 'request') as mock_req:
             mock_req.return_value = (MyResp(200), resstr)
-            self.client.httpclient.request(
-                end_url(path, format=self.format), 'GET',
-                body=None,
-                headers={'X-Auth-Token': TOKEN})
-            mock_req.assert_called_once_with(
-                end_url(path, format=self.format), 'GET',
-                body=None,
-                headers={'X-Auth-Token': TOKEN})
             args.extend(['--request-format', self.format])
             cmd_parser = cmd.get_parser("list_" + resources_collection)
             shell.run_command(cmd, cmd_parser, args)
+            mock_req.assert_called_once_with(
+                end_url(path, format=self.format), 'GET',
+                body=None,
+                headers=test_utils.ContainsKeyValue('X-Auth-Token', TOKEN))
         mock_get.assert_called_once_with()
 
     def _test_list_resources(self, resources, cmd, detail=False, tags=[],
@@ -362,16 +361,16 @@ class CLITestV10Base(testtools.TestCase):
             path = getattr(self.client, resources + "_path")
         with mock.patch.object(self.client.httpclient, 'request') as mock_req:
             mock_req.return_value = (MyResp(200), resstr)
-            self.client.httpclient.request(
-                MyUrlComparator(end_url(path, query, format=self.format),
-                                self.client),
-                'GET',
-                body=None,
-                headers={'X-Auth-Token': TOKEN})
             with mock.patch.object(TackerCommand, 'get_client') as mock_get:
                 mock_get.return_value = self.client
                 cmd_parser = cmd.get_parser("list_" + resources)
                 shell.run_command(cmd, cmd_parser, args)
+                mock_req.assert_called_once_with(
+                    MyUrlComparator(end_url(path, query, format=self.format),
+                                    self.client),
+                    'GET',
+                    body=None,
+                    headers=test_utils.ContainsKeyValue('X-Auth-Token', TOKEN))
         _str = self.fake_stdout.make_string()
         if response_contents is None:
             self.assertIn('myid1', _str)
@@ -459,18 +458,16 @@ class CLITestV10Base(testtools.TestCase):
             path = getattr(self.client, resources + "_path")
         with mock.patch.object(self.client.httpclient, 'request') as mock_req:
             mock_req.return_value = (MyResp(200), resstr)
-            self.client.httpclient.request(
-                end_url(path, format=self.format), 'GET',
-                body=None,
-                headers={'X-Auth-Token': TOKEN})
-            mock_req.assert_called_once_with(
-                end_url(path, format=self.format), 'GET',
-                body=None,
-                headers={'X-Auth-Token': TOKEN})
+            comparator = MyUrlComparator(
+                end_url(path % myid, query=query, format=self.format),
+                self.client)
             args.extend(['--request-format', self.format])
             cmd_parser = cmd.get_parser("list_" + resources)
             shell.run_command(cmd, cmd_parser, args)
-
+            mock_req.assert_called_once_with(
+                comparator, 'GET',
+                body=None,
+                headers=test_utils.ContainsKeyValue('X-Auth-Token', TOKEN))
         _str = self.fake_stdout.make_string()
         if response_contents is None:
             self.assertIn('myid1', _str)
@@ -562,17 +559,14 @@ class CLITestV10Base(testtools.TestCase):
             comparator = MyUrlComparator(
                 end_url(path % myid, format=self.format), self.client)
             mock_req.return_value = (MyResp(204), None)
-            self.client.httpclient.request(
-                comparator, 'PUT', body=_body,
-                headers={'X-Auth-Token', TOKEN})
+            args.extend(['--request-format', self.format])
+            cmd_parser = cmd.get_parser("update_" + resource)
+            shell.run_command(cmd, cmd_parser, args)
             mock_req.assert_called_once_with(
                 comparator,
                 'PUT',
                 body=_body,
-                headers={'X-Auth-Token', TOKEN})
-            args.extend(['--request-format', self.format])
-            cmd_parser = cmd.get_parser("update_" + resource)
-            shell.run_command(cmd, cmd_parser, args)
+                headers=test_utils.ContainsKeyValue('X-Auth-Token', TOKEN))
         self.assertEqual(get_client_called_count, mock_get.call_count)
         _str = self.fake_stdout.make_string()
         self.assertIn(myid, _str)
@@ -590,15 +584,13 @@ class CLITestV10Base(testtools.TestCase):
             with mock.patch.object(self.client.httpclient, 'request') as\
                 mock_req:
                 mock_req.return_value = (MyResp(200), resstr)
-                self.client.httpclient.request(
-                    end_url(path % myid, query, format=self.format), 'GET',
-                    body=None, headers={'X-Auth-Token': TOKEN})
-                mock_req.assert_called_once_with(
-                    end_url(path % myid, query, format=self.format), 'GET',
-                    body=None, headers={'X-Auth-Token': TOKEN})
                 args.extend(['--request-format', self.format])
                 cmd_parser = cmd.get_parser("show_" + resource)
                 shell.run_command(cmd, cmd_parser, args)
+                mock_req.assert_called_once_with(
+                    end_url(path % myid, query, format=self.format), 'GET',
+                    body=None,
+                    headers=test_utils.ContainsKeyValue('X-Auth-Token', TOKEN))
             _str = self.fake_stdout.make_string()
             mock_get.assert_called_once_with()
             self.assertIn(myid, _str)
@@ -611,16 +603,13 @@ class CLITestV10Base(testtools.TestCase):
         path = getattr(self.client, resource + "_path")
         with mock.patch.object(self.client.httpclient, 'request') as mock_req:
             mock_req.return_value = (MyResp(204), None)
-            self.client.httpclient.request(
-                end_url(path % myid, format=self.format), 'DELETE',
-                body=None,
-                headers={'X-Auth-Token', TOKEN})
             args.extend(['--request-format', self.format])
-            mock_req.assert_called_once_with(
-                end_url(path % myid, format=self.format), 'DELETE',
-                body=None, headers={'X-Auth-Token', TOKEN})
             cmd_parser = cmd.get_parser("delete_" + resource)
             shell.run_command(cmd, cmd_parser, args)
+            mock_req.assert_called_once_with(
+                end_url(path % myid, format=self.format), 'DELETE',
+                body=None,
+                headers=test_utils.ContainsKeyValue('X-Auth-Token', TOKEN))
         mock_get.assert_called_once_with()
         _str = self.fake_stdout.make_string()
         msg = 'All %(resource)s(s) %(msg)s successfully\n' % {
@@ -636,13 +625,13 @@ class CLITestV10Base(testtools.TestCase):
         path_action = '%s/%s' % (myid, action)
         with mock.patch.object(self.client.httpclient, 'request') as mock_req:
             mock_req.return_value = (MyResp(204), retval)
-            self.client.httpclient.request(
-                end_url(path % path_action, format=self.format), 'PUT',
-                body=MyComparator(body, self.client),
-                headers={'X-Auth-Token': TOKEN})
             args.extend(['--request-format', self.format])
             cmd_parser = cmd.get_parser("delete_" + resource)
             shell.run_command(cmd, cmd_parser, args)
+            mock_req.assert_called_once_with(
+                end_url(path % path_action, format=self.format), 'PUT',
+                body=MyComparator(body, self.client),
+                headers=test_utils.ContainsKeyValue('X-Auth-Token', TOKEN))
         _str = self.fake_stdout.make_string()
         self.assertIn(myid, _str)
 
@@ -666,12 +655,14 @@ class ClientV1TestJson(CLITestV10Base):
         expected_auth_token = unicode_text.encode('utf-8')
         with mock.patch.object(self.client.httpclient, 'request') as mock_req:
             mock_req.return_value = (MyResp(200), expect_body)
-            self.client.httpclient.request(
-                end_url(expected_action, query=expect_query,
-                        format=self.format), 'PUT', body=expect_body,
-                headers={'X-Auth-Token': expected_auth_token})
             res_body = self.client.do_request('PUT', action, body=body,
                                               params=params)
+            mock_req.assert_called_once_with(
+                end_url(expected_action, query=expect_query,
+                        format=self.format),
+                'PUT', body=expect_body,
+                headers=test_utils.ContainsKeyValue('X-Auth-Token',
+                                                    expected_auth_token))
         # test response with unicode
         self.assertEqual(res_body, body)
 

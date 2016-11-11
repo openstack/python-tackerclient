@@ -22,6 +22,7 @@ from tackerclient.tacker import v1_0 as tackerV1_0
 from tackerclient.tacker.v1_0 import TackerCommand
 from tackerclient.tacker.v1_0.vnfm import vnf
 from tackerclient.tests.unit import test_cli10
+from tackerclient.tests.unit import test_utils
 
 API_VERSION = "1.0"
 FORMAT = 'json'
@@ -78,18 +79,14 @@ class CLITestV10VmVNFJSON(test_cli10.CLITestV10Base):
             _body = self.client.serialize(body)
         with mock.patch.object(self.client.httpclient, 'request') as mock_req:
             mock_req.return_value = (test_cli10.MyResp(200), resstr)
-            self.client.httpclient.request(
-                test_cli10.end_url(path, format=self.format), 'POST',
-                body=_body,
-                headers={'X-Auth-Token', TOKEN})
-            mock_req.assert_called_once_with(
-                test_cli10.end_url(path, format=self.format), 'POST',
-                body=_body,
-                headers={'X-Auth-Token', TOKEN})
             args.extend(['--request-format', self.format])
             args.extend(['--vnfd-id', 'vnfd'])
             cmd_parser = cmd.get_parser('create_' + resource)
             shell.run_command(cmd, cmd_parser, args)
+            mock_req.assert_called_once_with(
+                test_cli10.end_url(path, format=self.format), 'POST',
+                body=_body,
+                headers=test_utils.ContainsKeyValue('X-Auth-Token', TOKEN))
         mock_get.assert_any_call()
 
     def test_create_vnf_all_params(self):

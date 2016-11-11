@@ -47,7 +47,7 @@ class CLITestV10VmVNFFGJSON(test_cli10.CLITestV10Base):
             '--symmetrical', 'True']
         position_names = ['vnffgd_id', 'vnf_mapping', 'symmetrical']
         position_values = [vnffgd_id, {"VNFD1": "VNF1"}, 'True']
-        extra_body = {'name': vnffg_name}
+        extra_body = {'name': vnffg_name, 'attributes': {}}
         self._test_create_resource(self._RESOURCE, cmd, None, my_id,
                                    args, position_names, position_values,
                                    extra_body=extra_body,
@@ -64,7 +64,7 @@ class CLITestV10VmVNFFGJSON(test_cli10.CLITestV10Base):
         ]
         position_names = ['vnffgd_id']
         position_values = [vnffgd_id]
-        extra_body = {'name': vnffg_name}
+        extra_body = {'name': vnffg_name, 'attributes': {}}
         self._test_create_resource(self._RESOURCE, cmd, vnffg_name, my_id,
                                    args, position_names, position_values,
                                    extra_body=extra_body,

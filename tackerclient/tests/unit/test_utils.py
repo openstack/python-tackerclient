@@ -109,3 +109,41 @@ class ImportClassTestCase(testtools.TestCase):
         self.assertRaises(
             exceptions.UnsupportedVersion,
             utils.get_client_class, 'image', '2', {'image': '2'})
+
+
+class ContainsKeyValue(object):
+    """Checks whether a key/value pair is in a dict parameter.
+
+    The ContainsKeyValue class is a helper for mock.assert_*()
+    method. It enables strict check than the built in mock.ANY
+    helper, and is the equivalent of the mox.ContainsKeyValue()
+    function from the legacy mox library
+
+    Example usage could be:
+
+      mock_some_method.assert_called_once_with(
+            "hello",
+            ContainsKeyValue('foo', bar),
+            mock.ANY,
+            "world",
+            ContainsKeyValue('hello', world))
+    """
+    def __init__(self, wantkey, wantvalue):
+        self.wantkey = wantkey
+        self.wantvalue = wantvalue
+
+    def __eq__(self, other):
+        try:
+            return other[self.wantkey] == self.wantvalue
+        except (KeyError, TypeError):
+            return False
+
+    def __ne__(self, other):
+        try:
+            return other[self.wantkey] != self.wantvalue
+        except (KeyError, TypeError):
+            return True
+
+    def __repr__(self):
+        return "<ContainsKeyValue: key " + str(self.wantkey) + \
+               " and value " + str(self.wantvalue) + ">"
