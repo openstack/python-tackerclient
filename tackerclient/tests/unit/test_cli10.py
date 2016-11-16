@@ -169,6 +169,9 @@ class MyComparator(object):
     def __eq__(self, rhs):
         return self.equals(rhs)
 
+    def __ne__(self, rhs):
+        return not self.__eq__(rhs)
+
 
 class CLITestV10Base(testtools.TestCase):
 
