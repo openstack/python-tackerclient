@@ -24,20 +24,18 @@ from tackerclient.tacker.v1_0.nfvo import vim_utils
 class TestVIMUtils(testtools.TestCase):
 
     def test_args2body_vim(self):
-        config_param = {'project_id': sentinel.prj_id1,
+        config_param = {'project_name': sentinel.prj_name,
                         'username': sentinel.usrname1,
                         'password': sentinel.password1,
                         'project_domain_name': sentinel.prj_domain_name1,
                         'user_domain_name': sentinel.user_domain.name, }
         vim = {}
         auth_cred = config_param.copy()
-        auth_cred.pop('project_id')
+        auth_cred.pop('project_name')
         auth_cred.pop('project_domain_name')
-        auth_cred.update({'user_id': ''})
         expected_vim = {'auth_cred': auth_cred,
                         'vim_project':
-                            {'id': sentinel.prj_id1,
-                             'name': '',
+                            {'name': sentinel.prj_name,
                              'project_domain_name': sentinel.prj_domain_name1}}
         vim_utils.args2body_vim(config_param.copy(), vim)
         self.assertEqual(expected_vim, vim)
