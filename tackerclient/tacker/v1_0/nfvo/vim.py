@@ -16,6 +16,8 @@
 
 import yaml
 
+from oslo_utils import strutils
+
 from tackerclient.common import exceptions
 from tackerclient.tacker import v1_0 as tackerV10
 from tackerclient.tacker.v1_0.nfvo import vim_utils
@@ -89,12 +91,19 @@ class UpdateVIM(tackerV10.UpdateCommand):
     def add_known_arguments(self, parser):
         parser.add_argument(
             '--config-file',
+            required=True,
             help='Specify VIM specific config parameters in a file')
         parser.add_argument(
+            '--name',
+            help='New name for the VIM')
+        parser.add_argument(
+            '--description',
+            help='New description for the VIM')
+        parser.add_argument(
             '--is-default',
-            action='store_true',
-            default=False,
-            help='Set as default VIM')
+            type=strutils.bool_from_string,
+            metavar='{True,False}',
+            help='Indicate whether the VIM is used as default')
 
     def args2body(self, parsed_args):
         body = {self.resource: {}}
@@ -110,7 +119,8 @@ class UpdateVIM(tackerV10.UpdateCommand):
         vim_obj = body[self.resource]
         vim_utils.args2body_vim(config_param, vim_obj)
         tackerV10.update_dict(parsed_args, body[self.resource],
-                              ['tenant_id', 'is_default'])
+                              ['tenant_id', 'name', 'description',
+                               'is_default'])
         return body
 
 
