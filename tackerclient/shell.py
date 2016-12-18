@@ -47,6 +47,8 @@ from tackerclient.common import utils
 from tackerclient.i18n import _
 from tackerclient.tacker.v1_0.events import events
 from tackerclient.tacker.v1_0 import extension
+from tackerclient.tacker.v1_0.nfvo import ns
+from tackerclient.tacker.v1_0.nfvo import nsd
 from tackerclient.tacker.v1_0.nfvo import vim
 from tackerclient.tacker.v1_0.nfvo import vnffg
 from tackerclient.tacker.v1_0.nfvo import vnffgd
@@ -155,6 +157,17 @@ COMMAND_V1 = {
 
     'classifier-list': vnffg.ListFC,
     'classifier-show': vnffg.ShowFC,
+
+    'nsd-create': nsd.CreateNSD,
+    'nsd-list': nsd.ListNSD,
+    'nsd-delete': nsd.DeleteNSD,
+    'nsd-show': nsd.ShowNSD,
+    'nsd-template-show': nsd.ShowTemplateNSD,
+
+    'ns-create': ns.CreateNS,
+    'ns-list': ns.ListNS,
+    'ns-delete': ns.DeleteNS,
+    'ns-show': ns.ShowNS,
 }
 
 COMMANDS = {'1.0': COMMAND_V1}
