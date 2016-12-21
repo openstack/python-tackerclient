@@ -10,6 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from tackerclient.i18n import _
 from tackerclient.tacker import v1_0 as tackerV10
 
 
@@ -80,21 +81,21 @@ class CreateVNFFG(tackerV10.CreateCommand):
     def add_known_arguments(self, parser):
         parser.add_argument(
             'name', metavar='NAME',
-            help='Set a name for the VNFFG')
+            help=_('Set a name for the VNFFG'))
         vnffgd_group = parser.add_mutually_exclusive_group(required=True)
         vnffgd_group.add_argument(
             '--vnffgd-id',
-            help='VNFFGD ID to use as template to create VNFFG')
+            help=_('VNFFGD ID to use as template to create VNFFG'))
         vnffgd_group.add_argument(
             '--vnffgd-name',
-            help='VNFFGD Name to use as template to create VNFFG')
+            help=_('VNFFGD Name to use as template to create VNFFG'))
         parser.add_argument(
             '--vnf-mapping',
-            help='List of logical VNFD name to VNF instance name mapping.  '
-                 'Example: VNF1:my_vnf1,VNF2:my_vnf2')
+            help=_('List of logical VNFD name to VNF instance name mapping.  '
+                   'Example: VNF1:my_vnf1,VNF2:my_vnf2'))
         parser.add_argument(
             '--symmetrical', metavar='{True,False}',
-            help='Should a reverse path be created for the NFP')
+            help=_('Should a reverse path be created for the NFP'))
 
     def args2body(self, parsed_args):
         body = {self.resource: {}}
@@ -134,11 +135,11 @@ class UpdateVNFFG(tackerV10.UpdateCommand):
     def add_known_arguments(self, parser):
         parser.add_argument(
             '--vnf-mapping',
-            help='List of logical VNFD name to VNF instance name mapping.  '
-                 'Example: VNF1:my_vnf1,VNF2:my_vnf2')
+            help=_('List of logical VNFD name to VNF instance name mapping.  '
+                   'Example: VNF1:my_vnf1,VNF2:my_vnf2'))
         parser.add_argument(
             '--symmetrical', metavar='{True,False}',
-            help='Should a reverse path be created for the NFP')
+            help=_('Should a reverse path be created for the NFP'))
 
     def args2body(self, parsed_args):
         body = {self.resource: {}}

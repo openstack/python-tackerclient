@@ -42,14 +42,14 @@ class CreateVNFFGD(tackerV10.CreateCommand):
 
     def add_known_arguments(self, parser):
         group = parser.add_mutually_exclusive_group(required=True)
-        group.add_argument('--vnffgd-file', help='Specify VNFFGD file')
-        group.add_argument('--vnffgd', help='Specify VNFFGD')
+        group.add_argument('--vnffgd-file', help=_('Specify VNFFGD file'))
+        group.add_argument('--vnffgd', help=_('Specify VNFFGD'))
         parser.add_argument(
             'name', metavar='NAME',
-            help='Set a name for the VNFFGD')
+            help=_('Set a name for the VNFFGD'))
         parser.add_argument(
             '--description',
-            help='Set a description for the VNFFGD')
+            help=_('Set a description for the VNFFGD'))
 
     def args2body(self, parsed_args):
         body = {self.resource: {}}
