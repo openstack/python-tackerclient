@@ -70,7 +70,7 @@ class TestHTTPClient(testtools.TestCase):
 
         e = self.assertRaises(exceptions.Unauthorized,
                               self.http._cs_request, URL, METHOD)
-        self.assertEqual('unauthorized message', e.message)
+        self.assertEqual('unauthorized message', str(e))
         self.mox.VerifyAll()
 
     def test_request_forbidden_is_returned_to_caller(self):

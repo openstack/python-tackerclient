@@ -714,7 +714,7 @@ class CLITestV10ExceptionHandler(CLITestV10Base):
                 expected_msg = '\n'.join([error_msg, error_detail])
             else:
                 expected_msg = error_msg
-        self.assertEqual(expected_msg, e.message)
+        self.assertEqual(expected_msg, str(e))
 
     def test_exception_handler_v10_ip_address_in_use(self):
         err_msg = ('Unable to complete operation for network '
