@@ -286,7 +286,8 @@ class CLITestV10Base(testtools.TestCase):
     def _test_list_resources(self, resources, cmd, detail=False, tags=[],
                              fields_1=[], fields_2=[], page_size=None,
                              sort_key=[], sort_dir=[], response_contents=None,
-                             base_args=None, path=None):
+                             base_args=None, path=None,
+                             template_source=None):
         if response_contents is None:
             contents = [{self.id_field: 'myid1', },
                         {self.id_field: 'myid2', }, ]
@@ -305,6 +306,10 @@ class CLITestV10Base(testtools.TestCase):
             for field in fields_1:
                 args.append('--fields')
                 args.append(field)
+        if template_source is not None:
+            args.append("--template-source")
+            args.append(template_source)
+            query += 'template_source=' + template_source
 
         if tags:
             args.append('--')

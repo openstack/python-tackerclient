@@ -32,7 +32,24 @@ class ListVNFD(tackerV10.ListCommand):
     """List VNFD that belong to a given tenant."""
 
     resource = _VNFD
-    list_columns = ['id', 'name', 'description']
+    list_columns = ['id', 'name', 'template_source', 'description']
+
+    def get_parser(self, prog_name):
+        parser = super(ListVNFD, self).get_parser(prog_name)
+        parser.add_argument(
+            '--template-source',
+            help=_("List VNFD with specified template source. Available \
+                   options are 'onboarded' (default), 'inline' or 'all'"),
+            action='store',
+            default='onboarded')
+        return parser
+
+    def args2search_opts(self, parsed_args):
+        search_opts = super(ListVNFD, self).args2search_opts(parsed_args)
+        template_source = parsed_args.template_source
+        if parsed_args.template_source:
+            search_opts.update({'template_source': template_source})
+        return search_opts
 
 
 class ShowVNFD(tackerV10.ShowCommand):
