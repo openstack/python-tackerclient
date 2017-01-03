@@ -11,6 +11,8 @@
 # under the License.
 
 from tackerclient.i18n import _
+import yaml
+
 from tackerclient.tacker import v1_0 as tackerV10
 
 
@@ -96,9 +98,14 @@ class CreateVNFFG(tackerV10.CreateCommand):
         parser.add_argument(
             '--symmetrical', metavar='{True,False}',
             help=_('Should a reverse path be created for the NFP'))
+        parser.add_argument(
+            '--param-file',
+            help='Specify parameter yaml file'
+        )
 
     def args2body(self, parsed_args):
-        body = {self.resource: {}}
+        args = {'attributes': {}}
+        body = {self.resource: args}
 
         tacker_client = self.get_client()
         tacker_client.format = parsed_args.request_format
@@ -120,6 +127,12 @@ class CreateVNFFG(tackerV10.CreateCommand):
                                                           parsed_args.
                                                           vnffgd_name)
             parsed_args.vnffgd_id = _id
+
+        if parsed_args.param_file:
+            with open(parsed_args.param_file) as f:
+                param_yaml = f.read()
+            args['attributes']['param_values'] = yaml.load(
+                param_yaml, Loader=yaml.SafeLoader)
 
         tackerV10.update_dict(parsed_args, body[self.resource],
                               ['tenant_id', 'name', 'vnffgd_id',
