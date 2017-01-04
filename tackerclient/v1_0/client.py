@@ -362,6 +362,12 @@ class Client(ClientBase):
     fcs_path = '/classifiers'
     fc_path = '/classifiers/%s'
 
+    nsds_path = '/nsds'
+    nsd_path = '/nsds/%s'
+
+    nss_path = '/nss'
+    ns_path = '/nss/%s'
+
     # API has no way to report plurals, so we have to hard code them
     # EXTED_PLURALS = {}
 
@@ -376,6 +382,7 @@ class Client(ClientBase):
         return self.get(self.extension_path % ext_alias, params=_params)
 
     _VNFD = "vnfd"
+    _NSD = "nsd"
 
     @APIParamsCall
     def list_vnfds(self, retrieve_all=True, **_params):
@@ -608,3 +615,53 @@ class Client(ClientBase):
     @APIParamsCall
     def show_classifier(self, classifier, **_params):
         return self.get(self.fc_path % classifier, params=_params)
+
+    @APIParamsCall
+    def list_nsds(self, retrieve_all=True, **_params):
+        nsds_dict = self.list(self._NSD + 's',
+                              self.nsds_path,
+                              retrieve_all,
+                              **_params)
+        for nsd in nsds_dict['nsds']:
+            if 'description' in nsd.keys() and \
+                len(nsd['description']) > DEFAULT_DESC_LENGTH:
+                nsd['description'] = nsd['description'][:DEFAULT_DESC_LENGTH]
+                nsd['description'] += '...'
+        return nsds_dict
+
+    @APIParamsCall
+    def show_nsd(self, nsd, **_params):
+        return self.get(self.nsd_path % nsd,
+                        params=_params)
+
+    @APIParamsCall
+    def create_nsd(self, body):
+        return self.post(self.nsds_path, body)
+
+    @APIParamsCall
+    def delete_nsd(self, nsd):
+        return self.delete(self.nsd_path % nsd)
+
+    @APIParamsCall
+    def list_nss(self, retrieve_all=True, **_params):
+        nss = self.list('nss', self.nss_path, retrieve_all, **_params)
+        for ns in nss['nss']:
+            error_reason = ns.get('error_reason', None)
+            if error_reason and \
+                len(error_reason) > DEFAULT_ERROR_REASON_LENGTH:
+                ns['error_reason'] = error_reason[
+                    :DEFAULT_ERROR_REASON_LENGTH]
+                ns['error_reason'] += '...'
+        return nss
+
+    @APIParamsCall
+    def show_ns(self, ns, **_params):
+        return self.get(self.ns_path % ns, params=_params)
+
+    @APIParamsCall
+    def create_ns(self, body):
+        return self.post(self.nss_path, body=body)
+
+    @APIParamsCall
+    def delete_ns(self, ns):
+        return self.delete(self.ns_path % ns)
