@@ -19,42 +19,72 @@ from tackerclient.tacker import v1_0 as tackerV10
 _EVENT = "event"
 
 
-class ListResourceEvents(tackerV10.ListCommand):
-    """List events that belong to a given resource.
+class ListEventsBase(tackerV10.ListCommand):
+    """Base class for list command."""
 
-    The supported args are --id, --resource_id, --resource_state,
-    --resource_type, --event_type
-    """
-
-    resource = _EVENT
     list_columns = ['id', 'resource_type', 'resource_id',
                     'resource_state', 'event_type',
                     'timestamp', 'event_details']
 
+    def get_parser(self, prog_name):
+        parser = super(ListEventsBase, self).get_parser(prog_name)
+        parser.add_argument('--id',
+                            help='id of the event to look up.')
+        parser.add_argument('--resource-id',
+                            help='resource id of the events to look up.')
+        parser.add_argument('--resource-state',
+                            help='resource state of the events to look up.')
+        parser.add_argument('--event-type',
+                            help='event type of the events to look up.')
+        return parser
 
-class ListVNFEvents(ListResourceEvents):
-    """List events that belong to a given VNF.
+    def args2search_opts(self, parsed_args):
+        search_opts = super(ListEventsBase, self).args2search_opts(
+            parsed_args)
+        if parsed_args.id:
+            search_opts.update({'id': parsed_args.id})
+        if parsed_args.resource_id:
+            search_opts.update({'resource_id': parsed_args.resource_id})
+        if parsed_args.resource_state:
+            search_opts.update({'resource_state': parsed_args.resource_state})
+        if parsed_args.event_type:
+            search_opts.update({'event_type': parsed_args.event_type})
+        return search_opts
 
-    The supported args are --id, --resource_id, --resource_state, --event_type
-    """
+
+class ListResourceEvents(ListEventsBase):
+    """List events of resources."""
+
+    resource = _EVENT
+
+    def get_parser(self, prog_name):
+        parser = super(ListResourceEvents, self).get_parser(prog_name)
+        parser.add_argument('--resource-type',
+                            help='resource type of the events to look up.')
+        return parser
+
+    def args2search_opts(self, parsed_args):
+        search_opts = super(ListResourceEvents, self).args2search_opts(
+            parsed_args)
+        if parsed_args.resource_type:
+            search_opts.update({'resource_type': parsed_args.resource_type})
+        return search_opts
+
+
+class ListVNFEvents(ListEventsBase):
+    """List events of VNFs."""
 
     resource = "vnf_event"
 
 
-class ListVNFDEvents(ListResourceEvents):
-    """List events that belong to a given VNFD.
-
-    The supported args are --id, --resource_id, --resource_state, --event_type
-    """
+class ListVNFDEvents(ListEventsBase):
+    """List events of VNFDs."""
 
     resource = "vnfd_event"
 
 
-class ListVIMEvents(ListResourceEvents):
-    """List events that belong to a given VIM.
-
-    The supported args are --id, --resource_id, --resource_state, --event_type
-    """
+class ListVIMEvents(ListEventsBase):
+    """List events of VIMs."""
 
     resource = "vim_event"
 
