@@ -41,7 +41,7 @@ class CreateNS(tackerV10.CreateCommand):
 
     def add_known_arguments(self, parser):
         parser.add_argument(
-            'name', metavar='NAME', required=True,
+            'name', metavar='NAME',
             help=_('Set a name for the NS'))
         parser.add_argument(
             '--description',

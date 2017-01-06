@@ -45,7 +45,7 @@ class CreateNSD(tackerV10.CreateCommand):
                             required=True)
         parser.add_argument(
             'name', metavar='NAME',
-            help='Set a name for the NSD', required=True)
+            help='Set a name for the NSD')
         parser.add_argument(
             '--description',
             help='Set a description for the NSD')
