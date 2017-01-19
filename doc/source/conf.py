@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-#
-
 project = 'python-tackerclient'
 
 # -- General configuration ---------------------------------------------
