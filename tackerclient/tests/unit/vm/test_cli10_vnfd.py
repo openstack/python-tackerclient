@@ -67,11 +67,24 @@ class CLITestV10VmVNFDJSON(test_cli10.CLITestV10Base):
 
     def test_list_vnfds(self):
         cmd = vnfd.ListVNFD(test_cli10.MyApp(sys.stdout), None)
-        self._test_list_resources(self._RESOURCES, cmd, True)
+        self._test_list_resources(self._RESOURCES, cmd, True,
+                                  template_source='onboarded')
+
+    def test_list_inline_vnfds(self):
+        cmd = vnfd.ListVNFD(test_cli10.MyApp(sys.stdout), None)
+        self._test_list_resources(self._RESOURCES, cmd, True,
+                                  template_source='inline')
+
+    def test_list_all_vnfds(self):
+        cmd = vnfd.ListVNFD(test_cli10.MyApp(sys.stdout), None)
+        self._test_list_resources(self._RESOURCES, cmd, True,
+                                  template_source='all')
 
     def test_list_vnfds_pagenation(self):
         cmd = vnfd.ListVNFD(test_cli10.MyApp(sys.stdout), None)
-        self._test_list_resources(self._RESOURCES, cmd, True)
+        print(cmd)
+        self._test_list_resources(self._RESOURCES, cmd, True,
+                                  template_source='onboarded')
 
     def test_show_vnfd_id(self):
         cmd = vnfd.ShowVNFD(test_cli10.MyApp(sys.stdout), None)

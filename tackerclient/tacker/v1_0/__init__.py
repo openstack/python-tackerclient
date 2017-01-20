@@ -98,7 +98,7 @@ def add_show_list_common_argument(parser):
         '-D', '--show-details',
         help=_('Show detailed info'),
         action='store_true',
-        default=False, )
+        default=False,)
     parser.add_argument(
         '--show_details',
         action='store_true',

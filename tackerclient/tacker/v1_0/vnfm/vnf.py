@@ -60,6 +60,9 @@ class CreateVNF(tackerV10.CreateCommand):
         vnfd_group.add_argument(
             '--vnfd-name',
             help=_('VNFD Name to use as template to create VNF'))
+        vnfd_group.add_argument(
+            '--vnfd-template',
+            help=_("VNFD file to create VNF"))
         vim_group = parser.add_mutually_exclusive_group()
         vim_group.add_argument(
             '--vim-id',
@@ -118,6 +121,12 @@ class CreateVNF(tackerV10.CreateCommand):
                                                               parsed_args.
                                                               vnfd_name)
                 parsed_args.vnfd_id = _id
+        elif parsed_args.vnfd_template:
+            with open(parsed_args.vnfd_template) as f:
+                template = f.read()
+            args['vnfd_template'] = yaml.load(
+                template, Loader=yaml.SafeLoader)
+
         if parsed_args.param_file:
             with open(parsed_args.param_file) as f:
                 param_yaml = f.read()

@@ -112,14 +112,14 @@ class CLITestV10VmVNFJSON(test_cli10.CLITestV10Base):
             'vnfd_id',
             'vim_id',
             'description',
-            'attributes'
+            'attributes',
         ]
         position_values = [
             name,
             vnfd_id,
             vim_id,
             description,
-            {}
+            {},
         ]
         extra_body = {key: value, 'placement_attr': {'region_name':
                                                      region_name}}
@@ -127,7 +127,7 @@ class CLITestV10VmVNFJSON(test_cli10.CLITestV10Base):
                                    args, position_names, position_values,
                                    extra_body=extra_body)
 
-    def test_create_vnf_with_mandatory_params(self):
+    def test_create_vnf_with_vnfd_id(self):
         cmd = vnf.CreateVNF(test_cli10.MyApp(sys.stdout), None)
         name = 'my_name'
         my_id = 'my-id'
