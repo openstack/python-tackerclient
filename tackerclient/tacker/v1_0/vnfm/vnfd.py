@@ -50,7 +50,7 @@ class CreateVNFD(tackerV10.CreateCommand):
     def add_known_arguments(self, parser):
         group = parser.add_mutually_exclusive_group(required=True)
         group.add_argument('--vnfd-file', help=_('Specify VNFD file'))
-        group.add_argument('--vnfd', help=_('Specify VNFD'))
+        group.add_argument('--vnfd', help=_('Specify VNFD (DEPRECATED)'))
         parser.add_argument(
             'name', metavar='NAME',
             help=_('Set a name for the VNFD'))
@@ -66,12 +66,15 @@ class CreateVNFD(tackerV10.CreateCommand):
                 vnfd = f.read()
                 vnfd = yaml.load(vnfd, Loader=yaml.SafeLoader)
         if parsed_args.vnfd:
-                vnfd = parsed_args.vnfd
-                if isinstance(vnfd, str):
-                    vnfd = yaml.load(vnfd, Loader=yaml.SafeLoader)
-                    utils.deprecate_warning(what='yaml as string',
-                                            as_of='N',
-                                            in_favor_of='yaml as dictionary')
+            # TODO(sridhar_ram): Only file based input supported starting
+            #       Ocata, remove all direct inputs in Pike
+            utils.deprecate_warning(what="Direct VNFD template input",
+                                    as_of="O",
+                                    remove_in=1)
+            vnfd = parsed_args.vnfd
+            if isinstance(vnfd, str) or isinstance(vnfd, unicode):
+                vnfd = yaml.load(vnfd, Loader=yaml.SafeLoader)
+
         if vnfd:
             body[self.resource]['attributes'] = {'vnfd': vnfd}
 
