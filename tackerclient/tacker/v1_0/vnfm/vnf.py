@@ -78,7 +78,7 @@ class CreateVNF(tackerV10.CreateCommand):
             help=_('YAML file with VNF configuration'))
         parser.add_argument(
             '--config',
-            help=_('Specify config yaml data'))
+            help=_('Specify config yaml data (DEPRECATED)'))
         parser.add_argument(
             '--param-file',
             help=_('Specify parameter yaml file'))
@@ -93,14 +93,16 @@ class CreateVNF(tackerV10.CreateCommand):
                 config_yaml = f.read()
             config = yaml.load(
                 config_yaml, Loader=yaml.SafeLoader)
+
         if parsed_args.config:
+            # TODO(sridhar_ram): Only file based input supported starting
+            #       Ocata, remove all direct inputs in Pike
+            utils.deprecate_warning(what="Direct config YAML input", as_of="O",
+                                    remove_in=1)
             config = parsed_args.config
-            if isinstance(config, str):
+            if isinstance(config, str) or isinstance(config, unicode):
                 config_str = parsed_args.config.decode('unicode_escape')
                 config = yaml.load(config_str, Loader=yaml.SafeLoader)
-                utils.deprecate_warning(what='yaml as string', as_of='N',
-                                        in_favor_of='yaml as dictionary')
-
         if config:
             args['attributes']['config'] = config
         if parsed_args.vim_region_name:
@@ -161,11 +163,9 @@ class UpdateVNF(tackerV10.UpdateCommand):
             config = yaml.load(config_yaml, Loader=yaml.SafeLoader)
         if parsed_args.config:
             config = parsed_args.config
-            if isinstance(parsed_args.config, str):
+            if isinstance(config, str) or isinstance(config, unicode):
                 config_str = parsed_args.config.decode('unicode_escape')
                 config = yaml.load(config_str, Loader=yaml.SafeLoader)
-                utils.deprecate_warning(what='yaml as string', as_of='N',
-                                        in_favor_of='yaml as dictionary')
         if config:
             body[self.resource]['attributes'] = {'config': config}
         tackerV10.update_dict(parsed_args, body[self.resource], ['tenant_id'])
