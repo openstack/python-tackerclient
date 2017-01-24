@@ -1,0 +1,6 @@
+---
+deprecations:
+  - |
+    Direct YAML input of any kind is now deprecated. Only file based YAML
+    input is supported. This deprecation is across all resources like VNFFGD
+    template, VNFD template and VNF configuration input.

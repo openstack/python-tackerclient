@@ -1,0 +1,6 @@
+---
+features:
+  - |
+    CLIs to onboard Network Services Descriptor (NSD) based on TOSCA Simple 
+    Profile for NFV and to create Network Services using NSD to create multiple
+    related VNFs using a single TOSCA template.
