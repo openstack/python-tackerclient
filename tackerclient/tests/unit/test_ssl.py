@@ -14,12 +14,13 @@
 #    under the License.
 
 import fixtures
-import mox
+from keystoneclient import session
+import mock
 import requests
 import testtools
 
-from tackerclient.client import HTTPClient
-from tackerclient.common.clientmanager import ClientManager
+from tackerclient import client
+from tackerclient.common import clientmanager
 from tackerclient.common import exceptions
 from tackerclient import shell as openstack_shell
 
@@ -29,6 +30,7 @@ END_URL = 'test_url'
 METHOD = 'GET'
 URL = 'http://test.test:1234/v1.0/'
 CA_CERT = '/tmp/test/path'
+DEFAULT_API_VERSION = '1.0'
 
 
 class TestSSL(testtools.TestCase):
@@ -37,106 +39,44 @@ class TestSSL(testtools.TestCase):
 
         self.useFixture(fixtures.EnvironmentVariable('OS_TOKEN', AUTH_TOKEN))
         self.useFixture(fixtures.EnvironmentVariable('OS_URL', END_URL))
+        self.addCleanup(mock.patch.stopall)
 
-        self.mox = mox.Mox()
-        self.addCleanup(self.mox.UnsetStubs)
+    def _test_verify_client_manager(self, cacert):
+        with mock.patch.object(session, 'Session'), \
+                mock.patch.object(clientmanager, 'ClientManager') as mock_cmgr:
+
+            mock_cmgr.return_value = 0
+            shell = openstack_shell.TackerShell(DEFAULT_API_VERSION)
+            shell.options = mock.Mock()
+            auth_session = shell._get_keystone_session()
+
+            shell.run(cacert)
+
+        mock_cmgr.assert_called_with(
+            api_version={'nfv-orchestration': '1.0'},
+            auth=auth_session.auth, auth_strategy='keystone',
+            auth_url='', ca_cert=CA_CERT, endpoint_type='publicURL',
+            insecure=False, log_credentials=True, password='',
+            raise_errors=False, region_name='', retries=0,
+            service_type='nfv-orchestration', session=auth_session,
+            tenant_id='', tenant_name='', timeout=None,
+            token='test_token', url='test_url', user_id='', username='')
 
     def test_ca_cert_passed(self):
-        self.mox.StubOutWithMock(ClientManager, '__init__')
-        self.mox.StubOutWithMock(openstack_shell.TackerShell, 'interact')
-
-        ClientManager.__init__(
-            ca_cert=CA_CERT,
-            # we are not really interested in other args
-            api_version=mox.IgnoreArg(),
-            auth_strategy=mox.IgnoreArg(),
-            auth_url=mox.IgnoreArg(),
-            service_type=mox.IgnoreArg(),
-            endpoint_type=mox.IgnoreArg(),
-            insecure=mox.IgnoreArg(),
-            password=mox.IgnoreArg(),
-            region_name=mox.IgnoreArg(),
-            tenant_id=mox.IgnoreArg(),
-            tenant_name=mox.IgnoreArg(),
-            token=mox.IgnoreArg(),
-            url=mox.IgnoreArg(),
-            username=mox.IgnoreArg(),
-            user_id=mox.IgnoreArg(),
-            log_credentials=mox.IgnoreArg(),
-        )
-        openstack_shell.TackerShell.interact().AndReturn(0)
-        self.mox.ReplayAll()
-
-        openstack_shell.TackerShell('1.0').run(['--os-cacert', CA_CERT])
-        self.mox.VerifyAll()
+        cacert = ['--os-cacert', CA_CERT]
+        self._test_verify_client_manager(cacert)
 
     def test_ca_cert_passed_as_env_var(self):
         self.useFixture(fixtures.EnvironmentVariable('OS_CACERT', CA_CERT))
+        self._test_verify_client_manager([])
 
-        self.mox.StubOutWithMock(ClientManager, '__init__')
-        self.mox.StubOutWithMock(openstack_shell.TackerShell, 'interact')
-
-        ClientManager.__init__(
-            ca_cert=CA_CERT,
-            # we are not really interested in other args
-            api_version=mox.IgnoreArg(),
-            auth_strategy=mox.IgnoreArg(),
-            auth_url=mox.IgnoreArg(),
-            service_type=mox.IgnoreArg(),
-            endpoint_type=mox.IgnoreArg(),
-            insecure=mox.IgnoreArg(),
-            password=mox.IgnoreArg(),
-            region_name=mox.IgnoreArg(),
-            tenant_id=mox.IgnoreArg(),
-            tenant_name=mox.IgnoreArg(),
-            token=mox.IgnoreArg(),
-            url=mox.IgnoreArg(),
-            username=mox.IgnoreArg(),
-            user_id=mox.IgnoreArg(),
-            log_credentials=mox.IgnoreArg(),
-        )
-        openstack_shell.TackerShell.interact().AndReturn(0)
-        self.mox.ReplayAll()
-
-        openstack_shell.TackerShell('1.0').run([])
-        self.mox.VerifyAll()
-
-    def test_client_manager_properly_creates_httpclient_instance(self):
-        self.mox.StubOutWithMock(HTTPClient, '__init__')
-        HTTPClient.__init__(
-            ca_cert=CA_CERT,
-            # we are not really interested in other args
-            auth_strategy=mox.IgnoreArg(),
-            auth_url=mox.IgnoreArg(),
-            endpoint_url=mox.IgnoreArg(),
-            insecure=mox.IgnoreArg(),
-            password=mox.IgnoreArg(),
-            region_name=mox.IgnoreArg(),
-            tenant_name=mox.IgnoreArg(),
-            token=mox.IgnoreArg(),
-            username=mox.IgnoreArg(),
-        )
-        self.mox.ReplayAll()
-
-        version = {'nfv-orchestration': '1.0'}
-        ClientManager(ca_cert=CA_CERT,
-                      api_version=version,
-                      url=END_URL,
-                      token=AUTH_TOKEN).tacker
-        self.mox.VerifyAll()
-
-    def test_proper_exception_is_raised_when_cert_validation_fails(self):
-        http = HTTPClient(token=AUTH_TOKEN, endpoint_url=END_URL)
-
-        self.mox.StubOutWithMock(HTTPClient, 'request')
-        HTTPClient.request(
-            URL, METHOD, headers=mox.IgnoreArg()
-        ).AndRaise(requests.exceptions.SSLError)
-        self.mox.ReplayAll()
-
+    @mock.patch.object(client.HTTPClient, 'request')
+    def test_proper_exception_is_raised_when_cert_validation_fails(self,
+                                                                   mock_req):
+        http = client.HTTPClient(token=AUTH_TOKEN, endpoint_url=END_URL)
+        mock_req.side_effect = requests.exceptions.SSLError()
         self.assertRaises(
             exceptions.SslCertificateValidationError,
             http._cs_request,
             URL, METHOD
         )
-        self.mox.VerifyAll()

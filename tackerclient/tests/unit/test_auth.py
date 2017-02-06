@@ -19,13 +19,12 @@ import json
 import uuid
 
 from keystoneclient import exceptions as k_exceptions
-import mox
+import mock
 import requests
 import testtools
 
 from tackerclient import client
 from tackerclient.common import exceptions
-from tackerclient.common import utils
 
 
 USERNAME = 'testuser'
@@ -71,10 +70,19 @@ ENDPOINTS_RESULT = {
 
 
 def get_response(status_code, headers=None):
-    response = mox.Mox().CreateMock(requests.Response)
+    response = mock.Mock().CreateMock(requests.Response)
     response.headers = headers or {}
     response.status_code = status_code
     return response
+
+
+resp_200 = get_response(200)
+resp_401 = get_response(401)
+headers = {'X-Auth-Token': '',
+           'User-Agent': 'python-tackerclient'}
+expected_headers = {'X-Auth-Token': TOKEN,
+                    'User-Agent': 'python-tackerclient'}
+agent_header = {'User-Agent': 'python-tackerclient'}
 
 
 class CLITestAuthNoAuth(testtools.TestCase):
@@ -82,28 +90,24 @@ class CLITestAuthNoAuth(testtools.TestCase):
     def setUp(self):
         """Prepare the test environment."""
         super(CLITestAuthNoAuth, self).setUp()
-        self.mox = mox.Mox()
         self.client = client.HTTPClient(username=USERNAME,
                                         tenant_name=TENANT_NAME,
                                         password=PASSWORD,
                                         endpoint_url=ENDPOINT_URL,
                                         auth_strategy=NOAUTH,
                                         region_name=REGION)
-        self.addCleanup(self.mox.VerifyAll)
-        self.addCleanup(self.mox.UnsetStubs)
+        self.addCleanup(mock.patch.stopall)
 
-    def test_get_noauth(self):
-        self.mox.StubOutWithMock(self.client, "request")
+    @mock.patch('tackerclient.client.HTTPClient.request')
+    def test_get_noauth(self, mock_request):
 
-        res200 = get_response(200)
-
-        self.client.request(
-            mox.StrContains(ENDPOINT_URL + '/resource'), 'GET',
-            headers=mox.IsA(dict),
-        ).AndReturn((res200, ''))
-        self.mox.ReplayAll()
-
-        self.client.do_request('/resource', 'GET')
+        mock_request.return_value = (resp_200, '')
+        self.client.do_request('/resource', 'GET',
+                               headers=headers)
+        mock_request.assert_called_once_with(
+            ENDPOINT_URL + '/resource',
+            'GET',
+            headers=headers)
         self.assertEqual(self.client.endpoint_url, ENDPOINT_URL)
 
 
@@ -117,14 +121,12 @@ class CLITestAuthKeystone(testtools.TestCase):
     def setUp(self):
         """Prepare the test environment."""
         super(CLITestAuthKeystone, self).setUp()
-        self.mox = mox.Mox()
         self.client = client.HTTPClient(username=USERNAME,
                                         tenant_name=TENANT_NAME,
                                         password=PASSWORD,
                                         auth_url=AUTH_URL,
                                         region_name=REGION)
-        self.addCleanup(self.mox.VerifyAll)
-        self.addCleanup(self.mox.UnsetStubs)
+        self.addCleanup(mock.patch.stopall)
 
     def test_reused_token_get_auth_info(self):
         """Test Client.get_auth_info().
@@ -144,69 +146,53 @@ class CLITestAuthKeystone(testtools.TestCase):
                     'endpoint_url': self.client.endpoint_url}
         self.assertEqual(client_.get_auth_info(), expected)
 
-    def test_get_token(self):
-        self.mox.StubOutWithMock(self.client, "request")
+    @mock.patch('tackerclient.client.HTTPClient.request')
+    def test_get_token(self, mock_request):
 
-        res200 = get_response(200)
-
-        self.client.request(
-            AUTH_URL + '/tokens', 'POST',
-            body=self.auth_body, headers=mox.IsA(dict)
-        ).AndReturn((res200, json.dumps(KS_TOKEN_RESULT)))
-        self.client.request(
-            mox.StrContains(ENDPOINT_URL + '/resource'), 'GET',
-            headers=mox.ContainsKeyValue('X-Auth-Token', TOKEN)
-        ).AndReturn((res200, ''))
-        self.mox.ReplayAll()
-
+        mock_request.return_value = (resp_200, json.dumps(KS_TOKEN_RESULT))
         self.client.do_request('/resource', 'GET')
+        mock_request.assert_called_with(
+            ENDPOINT_URL + '/resource', 'GET',
+            headers=expected_headers)
         self.assertEqual(self.client.endpoint_url, ENDPOINT_URL)
         self.assertEqual(self.client.auth_token, TOKEN)
 
-    def test_refresh_token(self):
-        self.mox.StubOutWithMock(self.client, "request")
+    @mock.patch('tackerclient.client.HTTPClient.request')
+    def test_refresh_token(self, mock_request):
 
         self.client.auth_token = TOKEN
         self.client.endpoint_url = ENDPOINT_URL
 
-        res200 = get_response(200)
-        res401 = get_response(401)
-
         # If a token is expired, tacker server retruns 401
-        self.client.request(
-            mox.StrContains(ENDPOINT_URL + '/resource'), 'GET',
-            headers=mox.ContainsKeyValue('X-Auth-Token', TOKEN)
-        ).AndReturn((res401, ''))
-        self.client.request(
-            AUTH_URL + '/tokens', 'POST',
-            body=mox.IsA(str), headers=mox.IsA(dict)
-        ).AndReturn((res200, json.dumps(KS_TOKEN_RESULT)))
-        self.client.request(
-            mox.StrContains(ENDPOINT_URL + '/resource'), 'GET',
-            headers=mox.ContainsKeyValue('X-Auth-Token', TOKEN)
-        ).AndReturn((res200, ''))
-        self.mox.ReplayAll()
-        self.client.do_request('/resource', 'GET')
+        mock_request.return_value = (resp_401, '')
+        self.assertRaises(exceptions.Unauthorized,
+                          self.client.do_request,
+                          '/resource',
+                          'GET')
 
-    def test_refresh_token_no_auth_url(self):
-        self.mox.StubOutWithMock(self.client, "request")
+        mock_request.return_value = (resp_200, json.dumps(KS_TOKEN_RESULT))
+        self.client.do_request('/resource', 'GET')
+        mock_request.assert_called_with(
+            ENDPOINT_URL + '/resource', 'GET',
+            headers=expected_headers)
+
+    @mock.patch('tackerclient.client.HTTPClient.request')
+    def test_refresh_token_no_auth_url(self, mock_request):
+
         self.client.auth_url = None
 
         self.client.auth_token = TOKEN
         self.client.endpoint_url = ENDPOINT_URL
 
-        res401 = get_response(401)
-
-        # If a token is expired, tacker server returns 401
-        self.client.request(
-            mox.StrContains(ENDPOINT_URL + '/resource'), 'GET',
-            headers=mox.ContainsKeyValue('X-Auth-Token', TOKEN)
-        ).AndReturn((res401, ''))
-        self.mox.ReplayAll()
+        # If a token is expired, tacker server retruns 401
+        mock_request.return_value = (resp_401, '')
         self.assertRaises(exceptions.NoAuthURLProvided,
                           self.client.do_request,
                           '/resource',
                           'GET')
+        expected_url = ENDPOINT_URL + '/resource'
+        mock_request.assert_called_with(expected_url, 'GET',
+                                        headers=expected_headers)
 
     def test_get_endpoint_url_with_invalid_auth_url(self):
         # Handle the case when auth_url is not provided
@@ -214,85 +200,70 @@ class CLITestAuthKeystone(testtools.TestCase):
         self.assertRaises(exceptions.NoAuthURLProvided,
                           self.client._get_endpoint_url)
 
-    def test_get_endpoint_url(self):
-        self.mox.StubOutWithMock(self.client, "request")
+    @mock.patch('tackerclient.client.HTTPClient.request')
+    def test_get_endpoint_url(self, mock_request):
 
         self.client.auth_token = TOKEN
 
-        res200 = get_response(200)
-
-        self.client.request(
-            mox.StrContains(AUTH_URL + '/tokens/%s/endpoints' % TOKEN), 'GET',
-            headers=mox.IsA(dict)
-        ).AndReturn((res200, json.dumps(ENDPOINTS_RESULT)))
-        self.client.request(
-            mox.StrContains(ENDPOINT_URL + '/resource'), 'GET',
-            headers=mox.ContainsKeyValue('X-Auth-Token', TOKEN)
-        ).AndReturn((res200, ''))
-        self.mox.ReplayAll()
+        mock_request.return_value = (resp_200, json.dumps(ENDPOINTS_RESULT))
         self.client.do_request('/resource', 'GET')
+        mock_request.assert_called_with(
+            ENDPOINT_URL + '/resource', 'GET',
+            headers=expected_headers)
 
-    def test_use_given_endpoint_url(self):
+        mock_request.return_value = (resp_200, '')
+        self.client.do_request('/resource', 'GET',
+                               headers=headers)
+        mock_request.assert_called_with(
+            ENDPOINT_URL + '/resource', 'GET',
+            headers=headers)
+
+    @mock.patch('tackerclient.client.HTTPClient.request')
+    def test_use_given_endpoint_url(self, mock_request):
         self.client = client.HTTPClient(
             username=USERNAME, tenant_name=TENANT_NAME, password=PASSWORD,
             auth_url=AUTH_URL, region_name=REGION,
             endpoint_url=ENDPOINT_OVERRIDE)
         self.assertEqual(self.client.endpoint_url, ENDPOINT_OVERRIDE)
 
-        self.mox.StubOutWithMock(self.client, "request")
-
         self.client.auth_token = TOKEN
-        res200 = get_response(200)
+        mock_request.return_value = (resp_200, '')
 
-        self.client.request(
-            mox.StrContains(ENDPOINT_OVERRIDE + '/resource'), 'GET',
-            headers=mox.ContainsKeyValue('X-Auth-Token', TOKEN)
-        ).AndReturn((res200, ''))
-        self.mox.ReplayAll()
-        self.client.do_request('/resource', 'GET')
+        self.client.do_request('/resource', 'GET',
+                               headers=headers)
+        mock_request.assert_called_with(
+            ENDPOINT_OVERRIDE + '/resource', 'GET',
+            headers=headers)
         self.assertEqual(self.client.endpoint_url, ENDPOINT_OVERRIDE)
 
-    def test_get_endpoint_url_other(self):
+    @mock.patch('tackerclient.client.HTTPClient.request')
+    def test_get_endpoint_url_other(self, mock_request):
         self.client = client.HTTPClient(
             username=USERNAME, tenant_name=TENANT_NAME, password=PASSWORD,
             auth_url=AUTH_URL, region_name=REGION, endpoint_type='otherURL')
-        self.mox.StubOutWithMock(self.client, "request")
 
         self.client.auth_token = TOKEN
-        res200 = get_response(200)
-
-        self.client.request(
-            mox.StrContains(AUTH_URL + '/tokens/%s/endpoints' % TOKEN), 'GET',
-            headers=mox.IsA(dict)
-        ).AndReturn((res200, json.dumps(ENDPOINTS_RESULT)))
-        self.mox.ReplayAll()
+        mock_request.return_value = (resp_200, json.dumps(ENDPOINTS_RESULT))
         self.assertRaises(exceptions.EndpointTypeNotFound,
                           self.client.do_request,
                           '/resource',
                           'GET')
+        expected_url = AUTH_URL + '/tokens/%s/endpoints' % TOKEN
+        headers = {'User-Agent': 'python-tackerclient'}
+        mock_request.assert_called_with(expected_url, 'GET',
+                                        headers=headers)
 
-    def test_get_endpoint_url_failed(self):
-        self.mox.StubOutWithMock(self.client, "request")
+    @mock.patch('tackerclient.client.HTTPClient.request')
+    def test_get_endpoint_url_failed(self, mock_request):
 
         self.client.auth_token = TOKEN
+        self.client.auth_url = AUTH_URL + '/tokens/%s/endpoints' % TOKEN
 
-        res200 = get_response(200)
-        res401 = get_response(401)
-
-        self.client.request(
-            mox.StrContains(AUTH_URL + '/tokens/%s/endpoints' % TOKEN), 'GET',
-            headers=mox.IsA(dict)
-        ).AndReturn((res401, ''))
-        self.client.request(
-            AUTH_URL + '/tokens', 'POST',
-            body=mox.IsA(str), headers=mox.IsA(dict)
-        ).AndReturn((res200, json.dumps(KS_TOKEN_RESULT)))
-        self.client.request(
-            mox.StrContains(ENDPOINT_URL + '/resource'), 'GET',
-            headers=mox.ContainsKeyValue('X-Auth-Token', TOKEN)
-        ).AndReturn((res200, ''))
-        self.mox.ReplayAll()
-        self.client.do_request('/resource', 'GET')
+        mock_request.return_value = (resp_401, '')
+        self.assertRaises(exceptions.Unauthorized,
+                          self.client.do_request,
+                          '/resource',
+                          'GET')
 
     def test_endpoint_type(self):
         resources = copy.deepcopy(KS_TOKEN_RESULT)
@@ -342,32 +313,25 @@ class CLITestAuthKeystone(testtools.TestCase):
                           self.client._extract_service_catalog,
                           resources)
 
-    def test_strip_credentials_from_log(self):
-        def verify_no_credentials(kwargs):
-            return ('REDACTED' in kwargs['body']) and (
-                self.client.password not in kwargs['body'])
+    @mock.patch('tackerclient.client.HTTPClient.request')
+    @mock.patch('tackerclient.common.utils.http_log_req')
+    def test_strip_credentials_from_log(self, mock_http_log_req,
+                                        mock_request,):
 
-        def verify_credentials(body):
-            return 'REDACTED' not in body and self.client.password in body
+        body = ('{"auth": {"tenantId": "testtenant_id",'
+                '"passwordCredentials": {"password": "password",'
+                '"userId": "testuser_id"}}}')
+        expected_body = ('{"auth": {"tenantId": "testtenant_id",'
+                         '"REDACTEDCredentials": {"REDACTED": "REDACTED",'
+                         '"userId": "testuser_id"}}}')
+        _headers = {'headers': expected_headers, 'body': expected_body}
 
-        self.mox.StubOutWithMock(self.client, "request")
-        self.mox.StubOutWithMock(utils, "http_log_req")
+        mock_request.return_value = (resp_200, json.dumps(KS_TOKEN_RESULT))
+        self.client.do_request('/resource', 'GET', body=body)
 
-        res200 = get_response(200)
-
-        utils.http_log_req(mox.IgnoreArg(), mox.IgnoreArg(), mox.Func(
-            verify_no_credentials))
-        self.client.request(
-            mox.IsA(str), mox.IsA(str), body=mox.Func(verify_credentials),
-            headers=mox.IgnoreArg()
-        ).AndReturn((res200, json.dumps(KS_TOKEN_RESULT)))
-        utils.http_log_req(mox.IgnoreArg(), mox.IgnoreArg(), mox.IgnoreArg())
-        self.client.request(
-            mox.IsA(str), mox.IsA(str), headers=mox.IsA(dict)
-        ).AndReturn((res200, ''))
-        self.mox.ReplayAll()
-
-        self.client.do_request('/resource', 'GET')
+        args, kwargs = mock_http_log_req.call_args
+        # Check that credentials are stripped while logging.
+        self.assertEqual(_headers, args[2])
 
 
 class CLITestAuthKeystoneWithId(CLITestAuthKeystone):

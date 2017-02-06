@@ -13,7 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import mox
+import mock
 import testtools
 
 from tackerclient.client import HTTPClient
@@ -25,60 +25,47 @@ AUTH_TOKEN = 'test_token'
 END_URL = 'test_url'
 METHOD = 'GET'
 URL = 'http://test.test:1234/v1.0/test'
+headers = {'User-Agent': 'python-tackerclient'}
 
 
 class TestHTTPClient(testtools.TestCase):
+
     def setUp(self):
+
         super(TestHTTPClient, self).setUp()
-
-        self.mox = mox.Mox()
-        self.mox.StubOutWithMock(HTTPClient, 'request')
-        self.addCleanup(self.mox.UnsetStubs)
-
+        self.addCleanup(mock.patch.stopall)
         self.http = HTTPClient(token=AUTH_TOKEN, endpoint_url=END_URL)
 
-    def test_request_error(self):
-        HTTPClient.request(
-            URL, METHOD, headers=mox.IgnoreArg()
-        ).AndRaise(Exception('error msg'))
-        self.mox.ReplayAll()
+    @mock.patch('tackerclient.client.HTTPClient.request')
+    def test_request_error(self, mock_request):
 
+        mock_request.side_effect = Exception('error msg')
         self.assertRaises(
             exceptions.ConnectionFailed,
             self.http._cs_request,
             URL, METHOD
         )
-        self.mox.VerifyAll()
 
-    def test_request_success(self):
+    @mock.patch('tackerclient.client.HTTPClient.request')
+    def test_request_success(self, mock_request):
+
         rv_should_be = MyResp(200), 'test content'
-
-        HTTPClient.request(
-            URL, METHOD, headers=mox.IgnoreArg()
-        ).AndReturn(rv_should_be)
-        self.mox.ReplayAll()
-
+        mock_request.return_value = rv_should_be
         self.assertEqual(rv_should_be, self.http._cs_request(URL, METHOD))
-        self.mox.VerifyAll()
 
-    def test_request_unauthorized(self):
-        rv_should_be = MyResp(401), 'unauthorized message'
-        HTTPClient.request(
-            URL, METHOD, headers=mox.IgnoreArg()
-        ).AndReturn(rv_should_be)
-        self.mox.ReplayAll()
+    @mock.patch('tackerclient.client.HTTPClient.request')
+    def test_request_unauthorized(self, mock_request):
+
+        mock_request.return_value = MyResp(401), 'unauthorized message'
 
         e = self.assertRaises(exceptions.Unauthorized,
                               self.http._cs_request, URL, METHOD)
         self.assertEqual('unauthorized message', str(e))
-        self.mox.VerifyAll()
+        mock_request.assert_called_with(URL, METHOD, headers=headers)
 
-    def test_request_forbidden_is_returned_to_caller(self):
+    @mock.patch('tackerclient.client.HTTPClient.request')
+    def test_request_forbidden_is_returned_to_caller(self, mock_request):
+
         rv_should_be = MyResp(403), 'forbidden message'
-        HTTPClient.request(
-            URL, METHOD, headers=mox.IgnoreArg()
-        ).AndReturn(rv_should_be)
-        self.mox.ReplayAll()
-
+        mock_request.return_value = rv_should_be
         self.assertEqual(rv_should_be, self.http._cs_request(URL, METHOD))
-        self.mox.VerifyAll()

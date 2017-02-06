@@ -21,7 +21,8 @@ import six
 import sys
 
 import fixtures
-import mox
+from keystoneclient import session
+import mock
 import testtools
 from testtools import matchers
 
@@ -36,6 +37,7 @@ DEFAULT_TENANT_NAME = 'tenant_name'
 DEFAULT_AUTH_URL = 'http://127.0.0.1:5000/v1.0/'
 DEFAULT_TOKEN = '3bcc3d3a03f44e3d8377f9247b0ad155'
 DEFAULT_URL = 'http://tacker.example.org:9890/'
+DEFAULT_API_VERSION = '1.0'
 
 
 class ShellTest(testtools.TestCase):
@@ -50,7 +52,6 @@ class ShellTest(testtools.TestCase):
     # Patch os.environ to avoid required auth info.
     def setUp(self):
         super(ShellTest, self).setUp()
-        self.mox = mox.Mox()
         for var in self.FAKE_ENV:
             self.useFixture(
                 fixtures.EnvironmentVariable(
@@ -63,7 +64,7 @@ class ShellTest(testtools.TestCase):
         try:
             sys.stdout = six.StringIO()
             sys.stderr = six.StringIO()
-            _shell = openstack_shell.TackerShell('1.0')
+            _shell = openstack_shell.TackerShell(DEFAULT_API_VERSION)
             _shell.run(argstr.split())
         except SystemExit:
             exc_type, exc_value, exc_traceback = sys.exc_info()
@@ -103,7 +104,7 @@ class ShellTest(testtools.TestCase):
 
     def test_help_command(self):
         required = 'usage:'
-        help_text, stderr = self.shell('help network-create')
+        help_text, stderr = self.shell('help vnfd-create')
         self.assertThat(
             help_text,
             matchers.MatchesRegex(required))
@@ -114,15 +115,27 @@ class ShellTest(testtools.TestCase):
         stdout, stderr = self.shell('--os-auth-strategy fake '
                                     'vnfd-list')
         self.assertFalse(stdout)
-        self.assertEqual('You must provide a service URL via '
-                         'either --os-url or env[OS_URL]', stderr.strip())
 
     def test_auth(self):
-        tacker_shell = openstack_shell.TackerShell('1.0')
-        self.addCleanup(self.mox.UnsetStubs)
-        self.mox.StubOutWithMock(clientmanager.ClientManager, '__init__')
-        self.mox.StubOutWithMock(tacker_shell, 'run_subcommand')
-        clientmanager.ClientManager.__init__(
+        with mock.patch.object(openstack_shell.TackerShell,
+                               'run_subcommand'), \
+                mock.patch.object(session, 'Session'), \
+                mock.patch.object(clientmanager, 'ClientManager') as mock_cmgr:
+
+            shell = openstack_shell.TackerShell(DEFAULT_API_VERSION)
+            shell.options = mock.Mock()
+            auth_session = shell._get_keystone_session()
+
+            cmdline = ('--os-username test '
+                       '--os-password test '
+                       '--os-tenant-name test '
+                       '--os-auth-url http://127.0.0.1:5000/ '
+                       '--os-auth-strategy keystone vnfd-list')
+            shell.authenticate_user()
+            shell.run(cmdline.split())
+
+        mock_cmgr.assert_called_with(
+            raise_errors=False, retries=0, timeout=None,
             token='', url='', auth_url='http://127.0.0.1:5000/',
             tenant_name='test', tenant_id='tenant_id',
             username='test', user_id='',
@@ -131,38 +144,26 @@ class ShellTest(testtools.TestCase):
             auth_strategy='keystone',
             service_type='nfv-orchestration',
             endpoint_type='publicURL', insecure=False, ca_cert=None,
-            log_credentials=True)
-        tacker_shell.run_subcommand(['vnfd-list'])
-        self.mox.ReplayAll()
-        cmdline = ('--os-username test '
-                   '--os-password test '
-                   '--os-tenant-name test '
-                   '--os-auth-url http://127.0.0.1:5000/ '
-                   '--os-auth-strategy keystone vnfd-list')
-        tacker_shell.run(cmdline.split())
-        self.mox.VerifyAll()
+            log_credentials=True, session=auth_session, auth=auth_session.auth)
 
     def test_build_option_parser(self):
-        tacker_shell = openstack_shell.TackerShell('1.0')
-        result = tacker_shell.build_option_parser('descr', '1.0')
+        tacker_shell = openstack_shell.TackerShell(DEFAULT_API_VERSION)
+        result = tacker_shell.build_option_parser('descr', DEFAULT_API_VERSION)
         self.assertIsInstance(result, argparse.ArgumentParser)
 
-    def test_main_with_unicode(self):
-        self.mox.StubOutClassWithMocks(openstack_shell, 'TackerShell')
-        qshell_mock = openstack_shell.TackerShell('1.0')
+    @mock.patch.object(openstack_shell.TackerShell, 'run')
+    def test_main_with_unicode(self, mock_run):
+        mock_run.return_value = 0
         unicode_text = u'\u7f51\u7edc'
         argv = ['net-list', unicode_text, unicode_text.encode('utf-8')]
-        qshell_mock.run([u'net-list', unicode_text,
-                         unicode_text]).AndReturn(0)
-        self.mox.ReplayAll()
         ret = openstack_shell.main(argv=argv)
-        self.mox.VerifyAll()
-        self.mox.UnsetStubs()
-        self.assertEqual(ret, 0)
+        mock_run.assert_called_once_with([u'net-list', unicode_text,
+                                          unicode_text])
+        self.assertEqual(0, ret)
 
     def test_endpoint_option(self):
-        shell = openstack_shell.TackerShell('1.0')
-        parser = shell.build_option_parser('descr', '1.0')
+        shell = openstack_shell.TackerShell(DEFAULT_API_VERSION)
+        parser = shell.build_option_parser('descr', DEFAULT_API_VERSION)
 
         # Neither $OS_ENDPOINT_TYPE nor --endpoint-type
         namespace = parser.parse_args([])
@@ -177,8 +178,8 @@ class ShellTest(testtools.TestCase):
                                                "public")
         self.useFixture(fixture)
 
-        shell = openstack_shell.TackerShell('1.0')
-        parser = shell.build_option_parser('descr', '1.0')
+        shell = openstack_shell.TackerShell(DEFAULT_API_VERSION)
+        parser = shell.build_option_parser('descr', DEFAULT_API_VERSION)
 
         # $OS_ENDPOINT_TYPE but not --endpoint-type
         namespace = parser.parse_args([])

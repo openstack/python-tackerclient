@@ -587,7 +587,7 @@ class CLITestV10Base(testtools.TestCase):
             resstr = self.client.serialize(expected_res)
             path = getattr(self.client, resource + "_path")
             with mock.patch.object(self.client.httpclient, 'request') as\
-                mock_req:
+                    mock_req:
                 mock_req.return_value = (MyResp(200), resstr)
                 args.extend(['--request-format', self.format])
                 cmd_parser = cmd.get_parser("show_" + resource)
@@ -645,36 +645,27 @@ class ClientV1TestJson(CLITestV10Base):
     def test_do_request_unicode(self):
         self.client.format = self.format
         unicode_text = u'\u7f51\u7edc'
-        # url with unicode
         action = u'/test'
-        expected_action = action.encode('utf-8')
-        # query string with unicode
         params = {'test': unicode_text}
-        expect_query = urllib.urlencode({'test':
-                                         unicode_text.encode('utf-8')})
-        # request body with unicode
         body = params
         expect_body = self.client.serialize(body)
-        # headers with unicode
         self.client.httpclient.auth_token = unicode_text
-        expected_auth_token = unicode_text.encode('utf-8')
         with mock.patch.object(self.client.httpclient, 'request') as mock_req:
             mock_req.return_value = (MyResp(200), expect_body)
             res_body = self.client.do_request('PUT', action, body=body,
                                               params=params)
-            mock_req.assert_called_once_with(
-                end_url(expected_action, query=expect_query,
-                        format=self.format),
-                'PUT', body=expect_body,
-                headers=test_utils.ContainsKeyValue('X-Auth-Token',
-                                                    expected_auth_token))
+            expected_uri = u'localurl/v1.0/test.json?test=%E7%BD%91%E7%BB%9C'
+            mock_req.assert_called_with(
+                expected_uri, 'PUT', body=expect_body,
+                headers={'X-Auth-Token': unicode_text,
+                         'User-Agent': 'python-tackerclient'})
         # test response with unicode
         self.assertEqual(res_body, body)
 
     def test_do_request_error_without_response_body(self):
         self.client.format = self.format
         params = {'test': 'value'}
-        expect_query = urllib.urlencode(params)
+        expect_query = urlparse.urlencode(params)
         self.client.httpclient.auth_token = 'token'
         with mock.patch.object(self.client.httpclient, 'request') as mock_req:
             mock_req.return_value = (MyResp(400, reason='An error'), '')
@@ -692,9 +683,9 @@ class ClientV1TestJson(CLITestV10Base):
 class CLITestV10ExceptionHandler(CLITestV10Base):
 
     def _test_exception_handler_v10(
-        self, expected_exception, status_code, expected_msg,
-        error_type=None, error_msg=None, error_detail=None,
-        error_content=None):
+            self, expected_exception, status_code, expected_msg,
+            error_type=None, error_msg=None, error_detail=None,
+            error_content=None):
         if error_content is None:
             error_content = {'TackerError': {'type': error_type,
                                              'message': error_msg,
@@ -704,13 +695,15 @@ class CLITestV10ExceptionHandler(CLITestV10Base):
                               client.exception_handler_v10,
                               status_code, error_content)
         self.assertEqual(status_code, e.status_code)
+        self.assertEqual(expected_exception.__name__,
+                         e.__class__.__name__)
 
         if expected_msg is None:
             if error_detail:
                 expected_msg = '\n'.join([error_msg, error_detail])
             else:
                 expected_msg = error_msg
-        self.assertEqual(expected_msg, str(e))
+        self.assertEqual(expected_msg, e.message)
 
     def test_exception_handler_v10_ip_address_in_use(self):
         err_msg = ('Unable to complete operation for network '
