@@ -16,7 +16,6 @@ import yaml
 
 from oslo_serialization import jsonutils
 
-from tackerclient.common import utils
 from tackerclient.i18n import _
 from tackerclient.tacker import v1_0 as tackerV10
 
@@ -42,9 +41,7 @@ class CreateVNFFGD(tackerV10.CreateCommand):
     remove_output_fields = ["attributes"]
 
     def add_known_arguments(self, parser):
-        group = parser.add_mutually_exclusive_group(required=True)
-        group.add_argument('--vnffgd-file', help=_('Specify VNFFGD file'))
-        group.add_argument('--vnffgd', help=_('Specify VNFFGD (DEPRECATED)'))
+        parser.add_argument('--vnffgd-file', help=_('Specify VNFFGD file'))
         parser.add_argument(
             'name', metavar='NAME',
             help=_('Set a name for the VNFFGD'))
@@ -58,14 +55,6 @@ class CreateVNFFGD(tackerV10.CreateCommand):
             with open(parsed_args.vnffgd_file) as f:
                 vnffgd = yaml.safe_load(f.read())
                 body[self.resource]['template'] = {'vnffgd': vnffgd}
-        if parsed_args.vnffgd:
-            # TODO(sridhar_ram): Only file based input supported starting
-            #       Ocata, remove all direct inputs in Pike
-            utils.deprecate_warning(what="Direct VNFFGD template input",
-                                    as_of="O",
-                                    remove_in=1)
-            body[self.resource]['template'] = {
-                'vnffgd': yaml.safe_load(parsed_args.vnffgd)}
         tackerV10.update_dict(parsed_args, body[self.resource],
                               ['tenant_id', 'name', 'description'])
         return body

@@ -10,6 +10,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from mock import mock_open
+from mock import patch
 import sys
 
 from tackerclient.tacker.v1_0.nfvo import vnffgd
@@ -24,7 +26,10 @@ class CLITestV10VmVNFFGDJSON(test_cli10.CLITestV10Base):
         plurals = {'vnffgds': 'vnffgd'}
         super(CLITestV10VmVNFFGDJSON, self).setUp(plurals=plurals)
 
-    def test_create_vnffgd_all_params(self):
+    @patch("tackerclient.tacker.v1_0.nfvo.vnffgd.open",
+           side_effect=mock_open(read_data="vnffgd"),
+           create=True)
+    def test_create_vnffgd_all_params(self, mo):
         cmd = vnffgd.CreateVNFFGD(test_cli10.MyApp(sys.stdout), None)
         my_id = 'my-id'
         name = 'my-name'
@@ -33,7 +38,7 @@ class CLITestV10VmVNFFGDJSON(test_cli10.CLITestV10Base):
         description = 'vnffgd description'
         args = [
             name,
-            '--vnffgd', 'vnffgd',
+            '--vnffgd-file', 'vnffgd_file',
             '--description', description,
         ]
         position_names = ['name', 'description']
@@ -46,7 +51,10 @@ class CLITestV10VmVNFFGDJSON(test_cli10.CLITestV10Base):
                                    args, position_names, position_values,
                                    extra_body=extra_body)
 
-    def test_create_vnffgd_with_mandatory_params(self):
+    @patch("tackerclient.tacker.v1_0.nfvo.vnffgd.open",
+           side_effect=mock_open(read_data="vnffgd"),
+           create=True)
+    def test_create_vnffgd_with_mandatory_params(self, mo):
         cmd = vnffgd.CreateVNFFGD(test_cli10.MyApp(sys.stdout), None)
         my_id = 'my-id'
         name = 'my-name'
@@ -54,7 +62,7 @@ class CLITestV10VmVNFFGDJSON(test_cli10.CLITestV10Base):
         attr_val = 'vnffgd'
         args = [
             name,
-            '--vnffgd', 'vnffgd',
+            '--vnffgd-file', 'vnffgd_file',
         ]
         position_names = ['name']
         position_values = [name]
