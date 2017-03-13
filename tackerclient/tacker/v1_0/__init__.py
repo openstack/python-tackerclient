@@ -560,7 +560,7 @@ class DeleteCommand(TackerCommand):
             msg += err_msg
             raise exceptions.CommandError(msg)
         else:
-            print((_('All %(resource)s(s) %(msg)s successfully')
+            print((_('All specified %(resource)s(s) %(msg)s successfully')
                    % {'msg': self.deleted_msg.get(self.resource, 'deleted'),
                       'resource': self.resource}))
         return

@@ -617,7 +617,7 @@ class CLITestV10Base(testtools.TestCase):
                 headers=test_utils.ContainsKeyValue('X-Auth-Token', TOKEN))
         mock_get.assert_called_once_with()
         _str = self.fake_stdout.make_string()
-        msg = 'All %(resource)s(s) %(msg)s successfully\n' % {
+        msg = 'All specified %(resource)s(s) %(msg)s successfully\n' % {
             'msg': deleted_msg.get(resource, 'deleted'),
             'resource': resource}
         self.assertEqual(msg, _str)
