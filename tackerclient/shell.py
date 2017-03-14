@@ -24,7 +24,6 @@ import argparse
 import getpass
 import inspect
 import itertools
-import logging
 import os
 import sys
 
@@ -33,6 +32,7 @@ from keystoneclient.auth.identity import v3 as v3_auth
 from keystoneclient import discover
 from keystoneclient import exceptions as ks_exc
 from keystoneclient import session
+from oslo_log import log as logging
 from oslo_utils import encodeutils
 import six.moves.urllib.parse as urlparse
 

@@ -13,10 +13,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import logging
 from xml.etree import ElementTree as etree
 from xml.parsers import expat
 
+from oslo_log import log as logging
 from oslo_serialization import jsonutils
 import six
 

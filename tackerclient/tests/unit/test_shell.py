@@ -14,7 +14,6 @@
 #    under the License.
 
 import argparse
-import logging
 import os
 import re
 import six
@@ -22,6 +21,7 @@ import sys
 
 import fixtures
 import mox
+from oslo_log import log as logging
 import testtools
 from testtools import matchers
 
