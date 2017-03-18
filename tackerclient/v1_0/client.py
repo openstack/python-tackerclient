@@ -15,9 +15,9 @@
 #    under the License.
 #
 
+import logging
 import time
 
-from oslo_log import log as logging
 import requests
 import six.moves.urllib.parse as urlparse
 
