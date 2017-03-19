@@ -18,9 +18,9 @@
 """Utilities and helper functions."""
 
 import argparse
+import logging
 import os
 
-from oslo_log import log as logging
 from oslo_log import versionutils
 from oslo_utils import encodeutils
 from oslo_utils import importutils

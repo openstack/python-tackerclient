@@ -18,12 +18,12 @@ from __future__ import print_function
 
 import abc
 import argparse
+import logging
 import re
 
 from cliff.formatters import table
 from cliff import lister
 from cliff import show
-from oslo_log import log as logging
 from oslo_serialization import jsonutils
 import six
 

@@ -18,11 +18,11 @@ try:
     import json
 except ImportError:
     import simplejson as json
+import logging
 import os
 
 from keystoneclient import access
 from keystoneclient import adapter
-from oslo_log import log as logging
 import requests
 
 from tackerclient.common import exceptions
@@ -33,13 +33,13 @@ _logger = logging.getLogger(__name__)
 
 if os.environ.get('TACKERCLIENT_DEBUG'):
     ch = logging.StreamHandler()
-    _logger.logger.setLevel(logging.DEBUG)
+    _logger.setLevel(logging.DEBUG)
     _logger.addHandler(ch)
     _requests_log_level = logging.DEBUG
 else:
     _requests_log_level = logging.WARNING
 
-logging.getLogger("requests").logger.setLevel(_requests_log_level)
+logging.getLogger("requests").setLevel(_requests_log_level)
 MAX_URI_LEN = 8192
 
 
