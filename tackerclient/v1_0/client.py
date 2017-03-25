@@ -259,7 +259,7 @@ class ClientBase(object):
         """Call do_request with the default retry configuration.
 
         Only idempotent requests should retry failed connection attempts.
-        :raises: ConnectionFailed if the maximum # of retries is exceeded
+        :raises ConnectionFailed: if the maximum # of retries is exceeded
         """
         max_attempts = self.retries + 1
         for i in range(max_attempts):
