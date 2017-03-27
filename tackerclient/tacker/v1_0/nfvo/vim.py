@@ -80,7 +80,7 @@ class CreateVIM(tackerV10.CreateCommand):
         vim_utils.args2body_vim(config_param, vim_obj)
         tackerV10.update_dict(parsed_args, body[self.resource],
                               ['tenant_id', 'name', 'description',
-                              'is_default'])
+                               'is_default'])
         return body
 
 
@@ -92,7 +92,7 @@ class UpdateVIM(tackerV10.UpdateCommand):
     def add_known_arguments(self, parser):
         parser.add_argument(
             '--config-file',
-            required=True,
+            required=False,
             help=_('YAML file with VIM configuration parameters'))
         parser.add_argument(
             '--name',
@@ -108,17 +108,15 @@ class UpdateVIM(tackerV10.UpdateCommand):
 
     def args2body(self, parsed_args):
         body = {self.resource: {}}
+        config_param = None
         # config arg passed as data overrides config yaml when both args passed
         if parsed_args.config_file:
             with open(parsed_args.config_file) as f:
                 config_yaml = f.read()
             config_param = yaml.load(config_yaml)
-        if 'auth_url' in config_param:
-            raise exceptions.TackerClientException(message='Auth URL cannot '
-                                                           'be updated',
-                                                   status_code=404)
         vim_obj = body[self.resource]
-        vim_utils.args2body_vim(config_param, vim_obj)
+        if config_param is not None:
+            vim_utils.args2body_vim(config_param, vim_obj)
         tackerV10.update_dict(parsed_args, body[self.resource],
                               ['tenant_id', 'name', 'description',
                                'is_default'])
