@@ -17,7 +17,6 @@
 
 import yaml
 
-from tackerclient.common import utils
 from tackerclient.i18n import _
 from tackerclient.tacker import v1_0 as tackerV10
 
@@ -77,9 +76,6 @@ class CreateVNF(tackerV10.CreateCommand):
             '--config-file',
             help=_('YAML file with VNF configuration'))
         parser.add_argument(
-            '--config',
-            help=_('Specify config yaml data (DEPRECATED)'))
-        parser.add_argument(
             '--param-file',
             help=_('Specify parameter yaml file'))
 
@@ -94,15 +90,6 @@ class CreateVNF(tackerV10.CreateCommand):
             config = yaml.load(
                 config_yaml, Loader=yaml.SafeLoader)
 
-        if parsed_args.config:
-            # TODO(sridhar_ram): Only file based input supported starting
-            #       Ocata, remove all direct inputs in Pike
-            utils.deprecate_warning(what="Direct config YAML input", as_of="O",
-                                    remove_in=1)
-            config = parsed_args.config
-            if isinstance(config, str) or isinstance(config, unicode):
-                config_str = parsed_args.config.decode('unicode_escape')
-                config = yaml.load(config_str, Loader=yaml.SafeLoader)
         if config:
             args['attributes']['config'] = config
         if parsed_args.vim_region_name:
