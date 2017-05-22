@@ -30,8 +30,8 @@ class ListVIM(tackerV10.ListCommand):
     """List VIMs that belong to a given tenant."""
 
     resource = _VIM
-    list_columns = ['id', 'tenant_id', 'name', 'type', 'description',
-                    'auth_url', 'placement_attr', 'auth_cred', 'status']
+    list_columns = ['id', 'tenant_id', 'name', 'type', 'is_default',
+                    'placement_attr', 'status']
 
 
 class ShowVIM(tackerV10.ShowCommand):
