@@ -35,10 +35,10 @@ class CLITestV10VIMJSON(test_cli10.CLITestV10Base):
         plurals = {'vims': 'vim'}
         super(CLITestV10VIMJSON, self).setUp(plurals=plurals)
         self.vim_project = {
-            'name': 'abc', 'id': '',
+            'name': 'abc',
             'project_domain_name': 'prj_domain_name'}
-        self.auth_cred = {'username': 'xyz', 'password': '12345', 'user_id':
-                          '', 'user_domain_name': 'user_domain_name'}
+        self.auth_cred = {'username': 'xyz', 'password': '12345',
+                          'user_domain_name': 'user_domain_name'}
         self.auth_url = 'http://1.2.3.4:5000'
 
     def test_register_vim_all_params(self):
