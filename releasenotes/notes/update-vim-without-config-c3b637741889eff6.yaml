@@ -1,0 +1,3 @@
+---
+features:
+  - VIM can be updated without config-file argument in tacker vim-update command
