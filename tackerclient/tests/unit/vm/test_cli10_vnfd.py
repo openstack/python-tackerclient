@@ -18,6 +18,7 @@ from mock import mock_open
 from mock import patch
 import sys
 
+from tackerclient.common.exceptions import InvalidInput
 from tackerclient.tacker.v1_0.vnfm import vnfd
 from tackerclient.tests.unit import test_cli10
 
@@ -72,6 +73,30 @@ class CLITestV10VmVNFDJSON(test_cli10.CLITestV10Base):
         self._test_create_resource(self._RESOURCE, cmd, name, my_id,
                                    args, position_names, position_values,
                                    extra_body=extra_body)
+
+    @patch("tackerclient.tacker.v1_0.vnfm.vnfd.open",
+           side_effect=mock_open(read_data=""),
+           create=True)
+    def test_create_vnfd_with_empty_file(self, mo):
+        cmd = vnfd.CreateVNFD(
+            test_cli10.MyApp(sys.stdout), None)
+        name = 'my_name'
+        my_id = 'my-id'
+        args = [name, '--vnfd-file', 'vnfd-file', ]
+        position_names = ['name']
+        position_values = [name]
+        extra_body = {
+            'service_types': [{'service_type': 'vnfd'}],
+            'attributes': {'vnfd': 'vnfd'}
+        }
+        err = None
+        try:
+            self._test_create_resource(self._RESOURCE, cmd, name, my_id,
+                                       args, position_names, position_values,
+                                       extra_body=extra_body)
+        except InvalidInput:
+            err = True
+        self.assertEqual(True, err)
 
     def test_list_vnfds(self):
         cmd = vnfd.ListVNFD(test_cli10.MyApp(sys.stdout), None)

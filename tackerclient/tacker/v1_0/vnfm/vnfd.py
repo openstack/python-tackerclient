@@ -20,6 +20,7 @@ from __future__ import print_function
 from oslo_serialization import jsonutils
 import yaml
 
+from tackerclient.common import exceptions
 from tackerclient.i18n import _
 from tackerclient.tacker import v1_0 as tackerV10
 
@@ -75,13 +76,17 @@ class CreateVNFD(tackerV10.CreateCommand):
     def args2body(self, parsed_args):
         body = {self.resource: {}}
         vnfd = None
-        if parsed_args.vnfd_file:
-            with open(parsed_args.vnfd_file) as f:
-                vnfd = f.read()
+        if not parsed_args.vnfd_file:
+            raise exceptions.InvalidInput("Invalid input for vnfd file")
+        with open(parsed_args.vnfd_file) as f:
+            vnfd = f.read()
+            try:
                 vnfd = yaml.load(vnfd, Loader=yaml.SafeLoader)
-        if vnfd:
+            except yaml.YAMLError as e:
+                raise exceptions.InvalidInput(e)
+            if not vnfd:
+                raise exceptions.InvalidInput("vnfd file is empty")
             body[self.resource]['attributes'] = {'vnfd': vnfd}
-
         tackerV10.update_dict(parsed_args, body[self.resource],
                               ['tenant_id', 'name', 'description'])
         return body

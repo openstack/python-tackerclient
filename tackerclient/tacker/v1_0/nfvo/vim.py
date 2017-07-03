@@ -67,7 +67,11 @@ class CreateVIM(tackerV10.CreateCommand):
         if parsed_args.config_file:
             with open(parsed_args.config_file) as f:
                 vim_config = f.read()
-                config_param = yaml.load(vim_config, Loader=yaml.SafeLoader)
+                try:
+                    config_param = yaml.load(vim_config,
+                                             Loader=yaml.SafeLoader)
+                except yaml.YAMLError as e:
+                    raise exceptions.InvalidInput(e)
         vim_obj = body[self.resource]
         try:
             auth_url = config_param.pop('auth_url')
@@ -113,7 +117,10 @@ class UpdateVIM(tackerV10.UpdateCommand):
         if parsed_args.config_file:
             with open(parsed_args.config_file) as f:
                 config_yaml = f.read()
-            config_param = yaml.load(config_yaml)
+            try:
+                config_param = yaml.load(config_yaml)
+            except yaml.YAMLError as e:
+                raise exceptions.InvalidInput(e)
         vim_obj = body[self.resource]
         if config_param is not None:
             vim_utils.args2body_vim(config_param, vim_obj)

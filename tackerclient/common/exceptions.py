@@ -203,6 +203,10 @@ class InvalidContentType(TackerClientException):
     message = _("Invalid content type %(content_type)s.")
 
 
+class InvalidInput(TackerClientException):
+    message = _("Invalid input: %(reason)s")
+
+
 # Command line exceptions
 
 class TackerCLIError(TackerException):
