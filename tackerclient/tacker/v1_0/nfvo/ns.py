@@ -12,6 +12,7 @@
 
 import yaml
 
+from tackerclient.common import exceptions
 from tackerclient.i18n import _
 from tackerclient.tacker import v1_0 as tackerV10
 
@@ -91,8 +92,11 @@ class CreateNS(tackerV10.CreateCommand):
         if parsed_args.param_file:
             with open(parsed_args.param_file) as f:
                 param_yaml = f.read()
-            args['attributes']['param_values'] = yaml.load(
-                param_yaml, Loader=yaml.SafeLoader)
+            try:
+                args['attributes']['param_values'] = yaml.load(
+                    param_yaml, Loader=yaml.SafeLoader)
+            except yaml.YAMLError as e:
+                raise exceptions.InvalidInput(e)
         tackerV10.update_dict(parsed_args, body[self.resource],
                               ['tenant_id', 'name', 'description',
                                'nsd_id', 'vim_id'])

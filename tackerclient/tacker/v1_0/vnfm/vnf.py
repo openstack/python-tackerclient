@@ -17,6 +17,7 @@
 
 import yaml
 
+from tackerclient.common import exceptions
 from tackerclient.i18n import _
 from tackerclient.tacker import v1_0 as tackerV10
 
@@ -87,8 +88,11 @@ class CreateVNF(tackerV10.CreateCommand):
         if parsed_args.config_file:
             with open(parsed_args.config_file) as f:
                 config_yaml = f.read()
-            config = yaml.load(
-                config_yaml, Loader=yaml.SafeLoader)
+            try:
+                config = yaml.load(
+                    config_yaml, Loader=yaml.SafeLoader)
+            except yaml.YAMLError as e:
+                raise exceptions.InvalidInput(e)
 
         if config:
             args['attributes']['config'] = config
@@ -113,14 +117,20 @@ class CreateVNF(tackerV10.CreateCommand):
         elif parsed_args.vnfd_template:
             with open(parsed_args.vnfd_template) as f:
                 template = f.read()
-            args['vnfd_template'] = yaml.load(
-                template, Loader=yaml.SafeLoader)
+            try:
+                args['vnfd_template'] = yaml.load(
+                    template, Loader=yaml.SafeLoader)
+            except yaml.YAMLError as e:
+                raise exceptions.InvalidInput(e)
 
         if parsed_args.param_file:
             with open(parsed_args.param_file) as f:
                 param_yaml = f.read()
-            args['attributes']['param_values'] = yaml.load(
-                param_yaml, Loader=yaml.SafeLoader)
+            try:
+                args['attributes']['param_values'] = yaml.load(
+                    param_yaml, Loader=yaml.SafeLoader)
+            except yaml.YAMLError as e:
+                raise exceptions.InvalidInput(e)
         tackerV10.update_dict(parsed_args, body[self.resource],
                               ['tenant_id', 'name', 'description',
                                'vnfd_id', 'vim_id'])
@@ -147,12 +157,18 @@ class UpdateVNF(tackerV10.UpdateCommand):
         if parsed_args.config_file:
             with open(parsed_args.config_file) as f:
                 config_yaml = f.read()
-            config = yaml.load(config_yaml, Loader=yaml.SafeLoader)
+            try:
+                config = yaml.load(config_yaml, Loader=yaml.SafeLoader)
+            except yaml.YAMLError as e:
+                raise exceptions.InvalidInput(e)
         if parsed_args.config:
             config = parsed_args.config
             if isinstance(config, str) or isinstance(config, unicode):
                 config_str = parsed_args.config.decode('unicode_escape')
-                config = yaml.load(config_str, Loader=yaml.SafeLoader)
+                try:
+                    config = yaml.load(config_str, Loader=yaml.SafeLoader)
+                except yaml.YAMLError as e:
+                    raise exceptions.InvalidInput(e)
         if config:
             body[self.resource]['attributes'] = {'config': config}
         tackerV10.update_dict(parsed_args, body[self.resource], ['tenant_id'])
