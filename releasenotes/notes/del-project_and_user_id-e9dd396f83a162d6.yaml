@@ -1,0 +1,6 @@
+---
+features:
+  -
+    As user gives input of project and user name in vim_config.yaml,
+    delete the user and project id from the vim specific commands
+    output.
