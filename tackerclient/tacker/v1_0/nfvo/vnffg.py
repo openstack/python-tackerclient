@@ -96,7 +96,9 @@ class CreateVNFFG(tackerV10.CreateCommand):
             help=_('List of logical VNFD name to VNF instance name mapping.  '
                    'Example: VNF1:my_vnf1,VNF2:my_vnf2'))
         parser.add_argument(
-            '--symmetrical', metavar='{True,False}',
+            '--symmetrical',
+            action='store_true',
+            default=False,
             help=_('Should a reverse path be created for the NFP'))
         parser.add_argument(
             '--param-file',
