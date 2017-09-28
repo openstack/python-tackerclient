@@ -92,6 +92,9 @@ class CreateVNFFG(tackerV10.CreateCommand):
         vnffgd_group.add_argument(
             '--vnffgd-name',
             help=_('VNFFGD Name to use as template to create VNFFG'))
+        vnffgd_group.add_argument(
+            '--vnffgd-template',
+            help=_('VNFFGD file to create VNFFG'))
         parser.add_argument(
             '--vnf-mapping',
             help=_('List of logical VNFD name to VNF instance name mapping.  '
@@ -130,6 +133,16 @@ class CreateVNFFG(tackerV10.CreateCommand):
                                                           parsed_args.
                                                           vnffgd_name)
             parsed_args.vnffgd_id = _id
+        elif parsed_args.vnffgd_template:
+            with open(parsed_args.vnffgd_template) as f:
+                template = f.read()
+            try:
+                args['vnffgd_template'] = yaml.load(
+                    template, Loader=yaml.SafeLoader)
+            except yaml.YAMLError as e:
+                raise exceptions.InvalidInput(e)
+            if not args['vnffgd_template']:
+                raise exceptions.InvalidInput('The vnffgd file is empty')
 
         if parsed_args.param_file:
             with open(parsed_args.param_file) as f:

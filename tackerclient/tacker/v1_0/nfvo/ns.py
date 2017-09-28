@@ -52,6 +52,9 @@ class CreateNS(tackerV10.CreateCommand):
             '--nsd-id',
             help=_('NSD ID to use as template to create NS'))
         nsd_group.add_argument(
+            '--nsd-template',
+            help=_('NSD file to create NS'))
+        nsd_group.add_argument(
             '--nsd-name',
             help=_('NSD name to use as template to create NS'))
         vim_group = parser.add_mutually_exclusive_group()
@@ -89,6 +92,17 @@ class CreateNS(tackerV10.CreateCommand):
                                                               parsed_args.
                                                               nsd_name)
                 parsed_args.nsd_id = _id
+        elif parsed_args.nsd_template:
+            with open(parsed_args.nsd_template) as f:
+                template = f.read()
+            try:
+                args['nsd_template'] = yaml.load(
+                    template, Loader=yaml.SafeLoader)
+            except yaml.YAMLError as e:
+                raise exceptions.InvalidInput(e)
+            if not args['nsd_template']:
+                raise exceptions.InvalidInput('The nsd file is empty')
+
         if parsed_args.param_file:
             with open(parsed_args.param_file) as f:
                 param_yaml = f.read()
