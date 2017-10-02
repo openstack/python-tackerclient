@@ -28,22 +28,59 @@ class TestVIMUtils(testtools.TestCase):
                         'username': sentinel.usrname1,
                         'password': sentinel.password1,
                         'project_domain_name': sentinel.prj_domain_name1,
-                        'user_domain_name': sentinel.user_domain.name, }
+                        'user_domain_name': sentinel.user_domain.name,
+                        'type': 'openstack'}
         vim = {}
         auth_cred = config_param.copy()
         auth_cred.pop('project_name')
         auth_cred.pop('project_domain_name')
+        auth_cred.pop('type')
         expected_vim = {'auth_cred': auth_cred,
                         'vim_project':
                             {'name': sentinel.prj_name,
-                             'project_domain_name': sentinel.prj_domain_name1}}
+                             'project_domain_name': sentinel.prj_domain_name1},
+                        'type': 'openstack'}
+        vim_utils.args2body_vim(config_param.copy(), vim)
+        self.assertEqual(expected_vim, vim)
+
+    def test_args2body_kubernetes_vim(self):
+        config_param = {'username': sentinel.usrname1,
+                        'password': sentinel.password1,
+                        'ssl_ca_cert': 'abcxyz',
+                        'project_name': sentinel.prj_name,
+                        'type': 'kubernetes'}
+        vim = {}
+        auth_cred = config_param.copy()
+        auth_cred.pop('project_name')
+        auth_cred.pop('type')
+        expected_vim = {'auth_cred': auth_cred,
+                        'vim_project':
+                            {'name': sentinel.prj_name},
+                        'type': 'kubernetes'}
+        vim_utils.args2body_vim(config_param.copy(), vim)
+        self.assertEqual(expected_vim, vim)
+
+    def test_args2body_kubernetes_vim_bearer(self):
+        config_param = {'bearer_token': sentinel.bearer_token,
+                        'ssl_ca_cert': None,
+                        'project_name': sentinel.prj_name,
+                        'type': 'kubernetes'}
+        vim = {}
+        auth_cred = config_param.copy()
+        auth_cred.pop('project_name')
+        auth_cred.pop('type')
+        expected_vim = {'auth_cred': auth_cred,
+                        'vim_project':
+                            {'name': sentinel.prj_name},
+                        'type': 'kubernetes'}
         vim_utils.args2body_vim(config_param.copy(), vim)
         self.assertEqual(expected_vim, vim)
 
     def test_args2body_vim_no_project(self):
         config_param = {'username': sentinel.usrname1,
                         'password': sentinel.password1,
-                        'user_domain_name': sentinel.user_domain.name, }
+                        'user_domain_name': sentinel.user_domain.name,
+                        'type': 'openstack'}
         vim = {}
         self.assertRaises(exceptions.TackerClientException,
                           vim_utils.args2body_vim,

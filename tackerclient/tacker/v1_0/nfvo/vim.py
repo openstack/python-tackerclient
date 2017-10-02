@@ -80,7 +80,6 @@ class CreateVIM(tackerV10.CreateCommand):
                                                            'specified',
                                                    status_code=404)
         vim_obj['auth_url'] = vim_utils.validate_auth_url(auth_url).geturl()
-        vim_obj['type'] = config_param.pop('type', 'openstack')
         vim_utils.args2body_vim(config_param, vim_obj)
         tackerV10.update_dict(parsed_args, body[self.resource],
                               ['tenant_id', 'name', 'description',
@@ -127,6 +126,9 @@ class UpdateVIM(tackerV10.UpdateCommand):
         tackerV10.update_dict(parsed_args, body[self.resource],
                               ['tenant_id', 'name', 'description',
                                'is_default'])
+        # type attribute is read-only, it can't be updated, so remove it
+        # in update method
+        body['vim'].pop('type')
         return body
 
 

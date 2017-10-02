@@ -24,17 +24,58 @@ def args2body_vim(config_param, vim):
     :param vim: vim request object
     :return: vim body with args populated
     """
-    vim['vim_project'] = {'name': config_param.pop('project_name', ''),
-                          'project_domain_name':
-                              config_param.pop('project_domain_name', '')}
-    if not vim['vim_project']['name']:
-        raise exceptions.TackerClientException(message='Project name '
-                                                       'must be specified',
-                                               status_code=404)
-    vim['auth_cred'] = {'username': config_param.pop('username', ''),
-                        'password': config_param.pop('password', ''),
-                        'user_domain_name':
-                            config_param.pop('user_domain_name', '')}
+    vim_type = ['openstack', 'kubernetes']
+    if 'type' in config_param:
+        vim['type'] = config_param.pop('type', '')
+        if not vim['type'] in vim_type:
+            raise exceptions.TackerClientException(
+                message='Supported VIM types: openstack, kubernetes',
+                status_code=400)
+    else:
+        vim['type'] = 'openstack'
+    if vim['type'] == 'openstack':
+        vim['vim_project'] = {
+            'name': config_param.pop('project_name', ''),
+            'project_domain_name':
+                config_param.pop('project_domain_name', '')}
+        if not vim['vim_project']['name']:
+            raise exceptions.TackerClientException(
+                message='Project name must be specified',
+                status_code=404)
+        vim['auth_cred'] = {'username': config_param.pop('username', ''),
+                            'password': config_param.pop('password', ''),
+                            'user_domain_name':
+                                config_param.pop('user_domain_name', '')}
+    elif vim['type'] == 'kubernetes':
+        vim['vim_project'] = {
+            'name': config_param.pop('project_name', '')}
+        if not vim['vim_project']['name']:
+            raise exceptions.TackerClientException(
+                message='Project name must be specified in Kubernetes VIM,'
+                        'it is namespace in Kubernetes environment',
+                status_code=404)
+        if ('username' in config_param) and ('password' in config_param):
+            vim['auth_cred'] = {
+                'username': config_param.pop('username', ''),
+                'password': config_param.pop('password', '')}
+        elif 'bearer_token' in config_param:
+            vim['auth_cred'] = {
+                'bearer_token': config_param.pop('bearer_token', '')}
+        else:
+            raise exceptions.TackerClientException(
+                message='username and password or bearer_token must be'
+                        'provided',
+                status_code=404)
+        if 'ssl_ca_cert' in config_param:
+            ssl_ca_cert = config_param.pop('ssl_ca_cert', '')
+            if ssl_ca_cert == 'None':
+                vim['auth_cred']['ssl_ca_cert'] = None
+            else:
+                vim['auth_cred']['ssl_ca_cert'] = ssl_ca_cert
+        else:
+            raise exceptions.TackerClientException(
+                message='ssl_ca_cert must be provided or leave it with None',
+                status_code=404)
 
 
 def validate_auth_url(url):

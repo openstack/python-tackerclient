@@ -1,0 +1,5 @@
+username: 'xyz'
+password: '12345'
+ssl_ca_cert: 'abcxyz'
+project_name: 'default'
+type: 'kubernetes'

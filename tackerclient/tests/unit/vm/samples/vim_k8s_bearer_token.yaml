@@ -1,0 +1,5 @@
+auth_url: 'https://1.2.3.4:6443'
+bearer_token: 'xyz'
+ssl_ca_cert: None
+project_name: 'default'
+type: 'kubernetes'
