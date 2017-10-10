@@ -98,7 +98,8 @@ class CLITestV10VmVNFFGJSON(test_cli10.CLITestV10Base):
         value = 'new-value'
         self._test_update_resource(self._RESOURCE, cmd, my_id,
                                    [my_id, '--%s' % key, value],
-                                   {key: value}, get_client_called_count=2)
+                                   {'symmetrical': False, key: value},
+                                   get_client_called_count=2)
 
     def test_delete_vnffg(self):
         cmd = vnffg.DeleteVNFFG(test_cli10.MyApp(sys.stdout), None)

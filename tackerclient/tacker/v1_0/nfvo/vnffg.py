@@ -170,7 +170,9 @@ class UpdateVNFFG(tackerV10.UpdateCommand):
             help=_('List of logical VNFD name to VNF instance name mapping.  '
                    'Example: VNF1:my_vnf1,VNF2:my_vnf2'))
         parser.add_argument(
-            '--symmetrical', metavar='{True,False}',
+            '--symmetrical',
+            action='store_true',
+            default=False,
             help=_('Should a reverse path be created for the NFP'))
 
     def args2body(self, parsed_args):
