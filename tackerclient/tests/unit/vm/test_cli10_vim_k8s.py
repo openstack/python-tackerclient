@@ -34,13 +34,11 @@ class CLITestV10VIMJSON(test_cli10.CLITestV10Base):
     def setUp(self):
         plurals = {'vims': 'vim'}
         super(CLITestV10VIMJSON, self).setUp(plurals=plurals)
-        self.vim_project = {
-            'name': 'abc',
-            'project_domain_name': 'prj_domain_name'}
+        self.vim_project = {'name': 'default'}
         self.auth_cred = {'username': 'xyz', 'password': '12345',
-                          'user_domain_name': 'user_domain_name'}
-        self.auth_url = 'http://1.2.3.4:5000'
-        self.type = 'openstack'
+                          'ssl_ca_cert': 'abcxyz'}
+        self.auth_url = 'https://1.2.3.4:6443'
+        self.type = 'kubernetes'
 
     def test_register_vim_all_params(self):
         cmd = vim.CreateVIM(test_cli10.MyApp(sys.stdout), None)
@@ -48,7 +46,7 @@ class CLITestV10VIMJSON(test_cli10.CLITestV10Base):
         my_id = 'my-id'
         description = 'Vim Description'
         vim_config = utils.get_file_path(
-            'tests/unit/vm/samples/vim_config.yaml')
+            'tests/unit/vm/samples/vim_k8s_config.yaml')
         args = [
             name,
             '--config-file', vim_config,
@@ -56,7 +54,7 @@ class CLITestV10VIMJSON(test_cli10.CLITestV10Base):
         position_names = ['auth_cred', 'vim_project', 'auth_url', 'type']
         position_values = [self.auth_cred, self.vim_project,
                            self.auth_url, self.type]
-        extra_body = {'type': 'openstack', 'name': name,
+        extra_body = {'type': 'kubernetes', 'name': name,
                       'description': description, 'is_default': False}
         self._test_create_resource(self._RESOURCE, cmd, None, my_id,
                                    args, position_names, position_values,
@@ -68,7 +66,7 @@ class CLITestV10VIMJSON(test_cli10.CLITestV10Base):
         name = 'test_vim'
         description = 'Vim Description'
         vim_config = utils.get_file_path(
-            'tests/unit/vm/samples/vim_config_without_auth_url.yaml')
+            'tests/unit/vm/samples/vim_k8s_config_without_auth_url.yaml')
         args = [
             name,
             '--config-file', vim_config,
@@ -76,7 +74,7 @@ class CLITestV10VIMJSON(test_cli10.CLITestV10Base):
         position_names = ['auth_cred', 'vim_project', 'auth_url', 'type']
         position_values = [self.auth_cred, self.vim_project,
                            self.auth_url, self.type]
-        extra_body = {'type': 'openstack', 'name': name,
+        extra_body = {'type': 'kubernetes', 'name': name,
                       'description': description, 'is_default': False}
         message = 'Auth URL must be specified'
         ex = self.assertRaises(exceptions.TackerClientException,
@@ -93,7 +91,7 @@ class CLITestV10VIMJSON(test_cli10.CLITestV10Base):
         my_id = 'my-id'
 
         vim_config = utils.get_file_path(
-            'tests/unit/vm/samples/vim_config.yaml')
+            'tests/unit/vm/samples/vim_k8s_config.yaml')
         args = [
             name,
             '--config-file', vim_config,
@@ -105,7 +103,7 @@ class CLITestV10VIMJSON(test_cli10.CLITestV10Base):
             self.auth_url,
             self.type
         ]
-        extra_body = {'type': 'openstack', 'name': name, 'is_default': False}
+        extra_body = {'type': 'kubernetes', 'name': name, 'is_default': False}
         self._test_create_resource(self._RESOURCE, cmd, name, my_id, args,
                                    position_names, position_values,
                                    extra_body=extra_body)
@@ -129,8 +127,9 @@ class CLITestV10VIMJSON(test_cli10.CLITestV10Base):
     def test_update_vim_all_params(self):
         cmd = vim.UpdateVIM(test_cli10.MyApp(sys.stdout), None)
         update_config = utils.get_file_path(
-            'tests/unit/vm/samples/vim_config_without_auth_url.yaml')
+            'tests/unit/vm/samples/vim_k8s_config_without_auth_url.yaml')
         my_id = 'my-id'
+        name = 'new_name'
         name = 'new_name'
         description = 'new_description'
         is_default = 'True'
@@ -150,7 +149,7 @@ class CLITestV10VIMJSON(test_cli10.CLITestV10Base):
     def test_update_vim_with_mandatory_params(self):
         cmd = vim.UpdateVIM(test_cli10.MyApp(sys.stdout), None)
         update_config = utils.get_file_path(
-            'tests/unit/vm/samples/vim_config_without_auth_url.yaml')
+            'tests/unit/vm/samples/vim_k8s_config_without_auth_url.yaml')
         my_id = 'my-id'
         args = [
             my_id,

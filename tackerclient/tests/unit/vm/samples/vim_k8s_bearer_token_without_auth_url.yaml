@@ -1,0 +1,4 @@
+bearer_token: 'xyz'
+ssl_ca_cert: None
+project_name: 'default'
+type: 'kubernetes'
