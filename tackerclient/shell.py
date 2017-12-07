@@ -50,6 +50,7 @@ from tackerclient.tacker.v1_0 import extension
 from tackerclient.tacker.v1_0.nfvo import ns
 from tackerclient.tacker.v1_0.nfvo import nsd
 from tackerclient.tacker.v1_0.nfvo import vim
+from tackerclient.tacker.v1_0.nfvo import vnfcluster
 from tackerclient.tacker.v1_0.nfvo import vnffg
 from tackerclient.tacker.v1_0.nfvo import vnffgd
 from tackerclient.tacker.v1_0.vnfm import vnf
@@ -168,6 +169,16 @@ COMMAND_V1 = {
     'ns-list': ns.ListNS,
     'ns-delete': ns.DeleteNS,
     'ns-show': ns.ShowNS,
+
+    'cluster-create': vnfcluster.CreateCluster,
+    'cluster-delete': vnfcluster.DeleteCluster,
+    'cluster-list': vnfcluster.ListCluster,
+    'cluster-show': vnfcluster.ShowCluster,
+
+    'cluster-member-add': vnfcluster.AddClusterMember,
+    'cluster-member-show': vnfcluster.ShowClusterMember,
+    'cluster-member-list': vnfcluster.ListClusterMember,
+    'cluster-member-delete': vnfcluster.DeleteClusterMember,
 }
 
 COMMANDS = {'1.0': COMMAND_V1}
