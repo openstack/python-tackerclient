@@ -166,6 +166,10 @@ class UpdateVNFFG(tackerV10.UpdateCommand):
 
     def add_known_arguments(self, parser):
         parser.add_argument(
+            '--vnffgd-template',
+            help=_('VNFFGD file to update VNFFG')
+        )
+        parser.add_argument(
             '--vnf-mapping',
             help=_('List of logical VNFD name to VNF instance name mapping.  '
                    'Example: VNF1:my_vnf1,VNF2:my_vnf2'))
@@ -176,7 +180,8 @@ class UpdateVNFFG(tackerV10.UpdateCommand):
             help=_('Should a reverse path be created for the NFP'))
 
     def args2body(self, parsed_args):
-        body = {self.resource: {}}
+        args = {}
+        body = {self.resource: args}
 
         tacker_client = self.get_client()
         tacker_client.format = parsed_args.request_format
@@ -191,6 +196,17 @@ class UpdateVNFFG(tackerV10.UpdateCommand):
                         tacker_client, 'vnf', vnf)
 
             parsed_args.vnf_mapping = _vnf_mapping
+
+        if parsed_args.vnffgd_template:
+            with open(parsed_args.vnffgd_template) as f:
+                template = f.read()
+            try:
+                args['vnffgd_template'] = yaml.load(
+                    template, Loader=yaml.SafeLoader)
+            except yaml.YAMLError as e:
+                raise exceptions.InvalidInput(e)
+            if not args['vnffgd_template']:
+                raise exceptions.InvalidInput('The vnffgd template is empty')
 
         tackerV10.update_dict(parsed_args, body[self.resource],
                               ['tenant_id', 'vnf_mapping', 'symmetrical'])

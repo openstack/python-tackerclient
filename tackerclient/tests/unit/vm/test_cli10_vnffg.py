@@ -16,6 +16,7 @@
 
 import sys
 
+from tackerclient.common import utils
 from tackerclient.tacker.v1_0.nfvo import vnffg
 from tackerclient.tests.unit import test_cli10
 
@@ -94,11 +95,22 @@ class CLITestV10VmVNFFGJSON(test_cli10.CLITestV10Base):
     def test_update_vnffg(self):
         cmd = vnffg.UpdateVNFFG(test_cli10.MyApp(sys.stdout), None)
         my_id = 'my-id'
-        key = 'new_key'
-        value = 'new-value'
+        update_vnffg = utils.get_file_path(
+            'tests/unit/vm/samples/vnffg_update_file.yaml')
+        vnf_mapping = 'VNFD1:VNF1'
+        args = [
+            my_id,
+            '--vnf-mapping', vnf_mapping,
+            '--vnffgd-template', str(update_vnffg),
+            '--symmetrical'
+        ]
+        extra_fields = {
+            "vnf_mapping": {"VNFD1": "VNF1"},
+            "vnffgd_template": "abcxyz",
+            "symmetrical": True
+        }
         self._test_update_resource(self._RESOURCE, cmd, my_id,
-                                   [my_id, '--%s' % key, value],
-                                   {'symmetrical': False, key: value},
+                                   args, extra_fields,
                                    get_client_called_count=2)
 
     def test_delete_vnffg(self):
