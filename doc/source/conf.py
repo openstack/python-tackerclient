@@ -1,13 +1,22 @@
-project = 'python-tackerclient'
+# -*- coding: utf-8 -*-
+#
 
 # -- General configuration ---------------------------------------------
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc',
-              'sphinx.ext.intersphinx',
-              'openstackdocstheme'
+extensions = [
+    'sphinx.ext.autodoc',
+    'reno.sphinxext',
+    'openstackdocstheme',
+    'cliff.sphinxext',
 ]
+
+# openstackdocstheme options
+repository_name = 'openstack/python-tackerclient'
+bug_project = 'python-tackerclient'
+bug_tag = 'doc'
+html_last_updated_fmt = '%Y-%m-%d %H:%M'
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -38,29 +47,8 @@ pygments_style = 'sphinx'
 html_theme = 'openstackdocs'
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = '%sdoc' % project
+htmlhelp_basename = 'tackerclientdoc'
 
+# -- Options for cliff.sphinxext plugin ---------------------------------------
 
-# If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
-# using the given strftime format.
-# html_last_updated_fmt = '%b %d, %Y'
-html_last_updated_fmt = '%Y-%m-%d %H:%M'
-
-# Grouping the document tree into LaTeX files. List of tuples
-# (source start file, target name, title, author,
-#  documentclass [howto/manual]).
-latex_documents = [
-  ('index',
-    '%s.tex' % project,
-    u'%s Documentation' % project,
-    u'OpenStack Foundation', 'manual'),
-]
-
-# Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {'http://docs.python.org/': None}
-
-
-# -- Options for openstackdocstheme -------------------------------------------
-repository_name = 'openstack/python-tackerclient'
-bug_project = 'python-tackerclient'
-bug_tag = ''
+autoprogram_cliff_application = 'openstack'
