@@ -38,7 +38,8 @@ class CLITestV10VIMJSON(test_cli10.CLITestV10Base):
             'name': 'abc',
             'project_domain_name': 'prj_domain_name'}
         self.auth_cred = {'username': 'xyz', 'password': '12345',
-                          'user_domain_name': 'user_domain_name'}
+                          'user_domain_name': 'user_domain_name',
+                          'cert_verify': 'True'}
         self.auth_url = 'http://1.2.3.4:5000'
         self.type = 'openstack'
 
@@ -49,6 +50,30 @@ class CLITestV10VIMJSON(test_cli10.CLITestV10Base):
         description = 'Vim Description'
         vim_config = utils.get_file_path(
             'tests/unit/vm/samples/vim_config.yaml')
+        args = [
+            name,
+            '--config-file', vim_config,
+            '--description', description]
+        position_names = ['auth_cred', 'vim_project', 'auth_url', 'type']
+        position_values = [self.auth_cred, self.vim_project,
+                           self.auth_url, self.type]
+        extra_body = {'type': 'openstack', 'name': name,
+                      'description': description, 'is_default': False}
+        self._test_create_resource(self._RESOURCE, cmd, None, my_id,
+                                   args, position_names, position_values,
+                                   extra_body=extra_body)
+
+    def test_register_vim_with_false_cert_verify(self):
+        cmd = vim.CreateVIM(test_cli10.MyApp(sys.stdout), None)
+        name = 'my-name'
+        my_id = 'my-id'
+        # change cert_verify to False
+        self.auth_cred = {'username': 'xyz', 'password': '12345',
+                          'user_domain_name': 'user_domain_name',
+                          'cert_verify': 'False'}
+        description = 'Vim Description'
+        vim_config = utils.get_file_path(
+            'tests/unit/vm/samples/vim_config_with_false_cert_verify.yaml')
         args = [
             name,
             '--config-file', vim_config,

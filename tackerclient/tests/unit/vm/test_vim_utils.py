@@ -29,6 +29,7 @@ class TestVIMUtils(testtools.TestCase):
                         'password': sentinel.password1,
                         'project_domain_name': sentinel.prj_domain_name1,
                         'user_domain_name': sentinel.user_domain.name,
+                        'cert_verify': 'True',
                         'type': 'openstack'}
         vim = {}
         auth_cred = config_param.copy()
@@ -80,6 +81,7 @@ class TestVIMUtils(testtools.TestCase):
         config_param = {'username': sentinel.usrname1,
                         'password': sentinel.password1,
                         'user_domain_name': sentinel.user_domain.name,
+                        'cert_verify': 'True',
                         'type': 'openstack'}
         vim = {}
         self.assertRaises(exceptions.TackerClientException,
