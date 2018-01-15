@@ -28,6 +28,7 @@ class TestVIMUtils(testtools.TestCase):
                         'username': sentinel.usrname1,
                         'password': sentinel.password1,
                         'project_domain_name': sentinel.prj_domain_name1,
+                        'cert_verify': 'True',
                         'user_domain_name': sentinel.user_domain.name, }
         vim = {}
         auth_cred = config_param.copy()
@@ -43,6 +44,7 @@ class TestVIMUtils(testtools.TestCase):
     def test_args2body_vim_no_project(self):
         config_param = {'username': sentinel.usrname1,
                         'password': sentinel.password1,
+                        'cert_verify': 'True',
                         'user_domain_name': sentinel.user_domain.name, }
         vim = {}
         self.assertRaises(exceptions.TackerClientException,

@@ -24,6 +24,7 @@ def args2body_vim(config_param, vim):
     :param vim: vim request object
     :return: vim body with args populated
     """
+    cert_verify_type = ['True', 'False']
     vim['vim_project'] = {'name': config_param.pop('project_name', ''),
                           'project_domain_name':
                               config_param.pop('project_domain_name', '')}
@@ -31,10 +32,16 @@ def args2body_vim(config_param, vim):
         raise exceptions.TackerClientException(message='Project name '
                                                        'must be specified',
                                                status_code=404)
+    cert_verify = config_param.pop('cert_verify', 'True')
+    if cert_verify not in cert_verify_type:
+        raise exceptions.TackerClientException(
+            message='Supported cert_verify types: True, False',
+            status_code=400)
     vim['auth_cred'] = {'username': config_param.pop('username', ''),
                         'password': config_param.pop('password', ''),
                         'user_domain_name':
-                            config_param.pop('user_domain_name', '')}
+                            config_param.pop('user_domain_name', ''),
+                        'cert_verify': cert_verify}
 
 
 def validate_auth_url(url):
