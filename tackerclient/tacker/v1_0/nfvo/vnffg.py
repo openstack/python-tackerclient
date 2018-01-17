@@ -29,6 +29,18 @@ class ListFC(tackerV10.ListCommand):
     resource = _FC
     list_columns = ['id', 'status', 'nfp_id', 'chain_id']
 
+    def extend_list(self, data, parsed_args):
+        """Update the list_columns list.
+
+        This method update the list_columns list by adding the
+        'name' column in case the retrieved FC list from the tacker
+        server side contains the names of the FCs.
+        """
+        for item in data:
+            if 'name' in item:
+                self.list_columns.insert(1, 'name')
+                break
+
 
 class ShowFC(tackerV10.ShowCommand):
     """Show information of a given FC."""
