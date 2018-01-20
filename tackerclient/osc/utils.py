@@ -26,6 +26,7 @@ from keystoneclient import exceptions as identity_exc
 from keystoneclient.v3 import domains
 from keystoneclient.v3 import projects
 from osc_lib import utils
+from oslo_serialization import jsonutils
 
 from tackerclient.i18n import _
 
@@ -33,6 +34,18 @@ from tackerclient.i18n import _
 LIST_BOTH = 'both'
 LIST_SHORT_ONLY = 'short_only'
 LIST_LONG_ONLY = 'long_only'
+
+
+def format_dict_with_indention(data):
+    """Return a formatted string of key value pairs
+
+    :param data: a dict
+    :rtype: a string formatted to key='value'
+    """
+
+    if data is None:
+        return None
+    return jsonutils.dumps(data, indent=4)
 
 
 def get_column_definitions(attr_map, long_listing):
