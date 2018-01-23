@@ -128,7 +128,7 @@ class UpdateVIM(tackerV10.UpdateCommand):
                                'is_default'])
         # type attribute is read-only, it can't be updated, so remove it
         # in update method
-        body['vim'].pop('type')
+        body['vim'].pop('type', None)
         return body
 
 
