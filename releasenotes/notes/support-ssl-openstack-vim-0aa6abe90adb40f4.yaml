@@ -1,0 +1,4 @@
+---
+features:
+  - |
+    Support cert_verify key in vim config file.
