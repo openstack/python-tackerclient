@@ -368,6 +368,11 @@ class Client(ClientBase):
     nss_path = '/nss'
     ns_path = '/nss/%s'
 
+    clusters_path = '/clusters'
+    cluster_path = '/clusters/%s'
+    cluster_members_path = '/clustermembers'
+    cluster_member_path = '/clustermembers/%s'
+
     # API has no way to report plurals, so we have to hard code them
     # EXTED_PLURALS = {}
 
@@ -662,3 +667,44 @@ class Client(ClientBase):
     @APIParamsCall
     def delete_ns(self, ns):
         return self.delete(self.ns_path % ns)
+
+    @APIParamsCall
+    def create_cluster(self, body=None):
+        return self.post(self.clusters_path, body)
+
+    @APIParamsCall
+    def list_clusters(self, retrieve_all=True, **_params):
+        clusters = self.list('clusters', self.clusters_path,
+                             retrieve_all, **_params)
+        return clusters
+
+    @APIParamsCall
+    def show_cluster(self, cluster, **_params):
+        member = self.get(self.cluster_path % cluster,
+                          params=_params)
+        return member
+
+    @APIParamsCall
+    def delete_cluster(self, cluster):
+        return self.delete(self.cluster_path % cluster)
+
+    @APIParamsCall
+    def create_clustermember(self, body=None):
+        return self.post(self.cluster_members_path, body)
+
+    @APIParamsCall
+    def list_clustermembers(self, retrieve_all=True, **_params):
+        cluster_members = self.list('clustermembers',
+                                    self.cluster_members_path,
+                                    retrieve_all, **_params)
+        return cluster_members
+
+    @APIParamsCall
+    def show_clustermember(self, clustermember, **_params):
+        member = self.get(self.cluster_member_path % clustermember,
+                          params=_params)
+        return member
+
+    @APIParamsCall
+    def delete_clustermember(self, clustermember):
+        return self.delete(self.cluster_member_path % clustermember)
