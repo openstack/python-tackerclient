@@ -35,7 +35,7 @@ class CLITestV10VIMJSON(test_cli10.CLITestV10Base):
         plurals = {'vims': 'vim'}
         super(CLITestV10VIMJSON, self).setUp(plurals=plurals)
         self.vim_project = {'name': 'default'}
-        self.auth_cred = {'bearer_token': 'xyz', 'ssl_ca_cert': None}
+        self.auth_cred = {'bearer_token': 'xyz', 'ssl_ca_cert': "None"}
         self.auth_url = 'https://1.2.3.4:6443'
         self.type = 'kubernetes'
 

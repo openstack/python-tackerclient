@@ -63,7 +63,7 @@ class TestVIMUtils(testtools.TestCase):
 
     def test_args2body_kubernetes_vim_bearer(self):
         config_param = {'bearer_token': sentinel.bearer_token,
-                        'ssl_ca_cert': None,
+                        'ssl_ca_cert': "None",
                         'project_name': sentinel.prj_name,
                         'type': 'kubernetes'}
         vim = {}
