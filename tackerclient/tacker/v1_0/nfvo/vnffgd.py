@@ -91,7 +91,7 @@ class ShowTemplateVNFFGD(tackerV10.ShowCommand):
         template = None
         data = self.get_data(parsed_args)
         try:
-            attributes_index = data[0].index('attributes')
+            attributes_index = data[0].index('template')
             attributes_json = data[1][attributes_index]
             template = jsonutils.loads(attributes_json).get('vnffgd', None)
         except (IndexError, TypeError, ValueError) as e:
