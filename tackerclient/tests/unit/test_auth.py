@@ -163,7 +163,7 @@ class CLITestAuthKeystone(testtools.TestCase):
         self.client.auth_token = TOKEN
         self.client.endpoint_url = ENDPOINT_URL
 
-        # If a token is expired, tacker server retruns 401
+        # If a token is expired, tacker server returns 401
         mock_request.return_value = (resp_401, '')
         self.assertRaises(exceptions.Unauthorized,
                           self.client.do_request,
@@ -184,7 +184,7 @@ class CLITestAuthKeystone(testtools.TestCase):
         self.client.auth_token = TOKEN
         self.client.endpoint_url = ENDPOINT_URL
 
-        # If a token is expired, tacker server retruns 401
+        # If a token is expired, tacker server returns 401
         mock_request.return_value = (resp_401, '')
         self.assertRaises(exceptions.NoAuthURLProvided,
                           self.client.do_request,
