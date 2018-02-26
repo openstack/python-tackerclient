@@ -56,6 +56,9 @@ class CreateVNFD(command.ShowOne):
             'name', metavar='NAME',
             help=_('Name for VNFD'))
         parser.add_argument(
+            '--tenant-id', metavar='TENANT_ID',
+            help=_('The owner tenant ID or project ID'))
+        parser.add_argument(
             '--vnfd-file',
             required=True,
             help=_('YAML file with VNFD parameters'))
