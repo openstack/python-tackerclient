@@ -74,16 +74,9 @@ def args2body_vim(config_param, vim):
                 message='username and password or bearer_token must be'
                         'provided',
                 status_code=404)
-        if 'ssl_ca_cert' in config_param:
-            ssl_ca_cert = config_param.pop('ssl_ca_cert', '')
-            if ssl_ca_cert == 'None':
-                vim['auth_cred']['ssl_ca_cert'] = None
-            else:
-                vim['auth_cred']['ssl_ca_cert'] = ssl_ca_cert
-        else:
-            raise exceptions.TackerClientException(
-                message='ssl_ca_cert must be provided or leave it with None',
-                status_code=404)
+        ssl_ca_cert = config_param.pop('ssl_ca_cert', '')
+        if ssl_ca_cert:
+            vim['auth_cred']['ssl_ca_cert'] = ssl_ca_cert
 
 
 def validate_auth_url(url):
