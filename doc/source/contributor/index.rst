@@ -11,7 +11,6 @@
       License for the specific language governing permissions and limitations
       under the License.
 
-
       Convention for heading levels in Neutron devref:
       =======  Heading 0 (reserved for the title in a document)
       -------  Heading 1
@@ -28,4 +27,10 @@ In the Contributor Guide, you will find information on tackerclient's
 lower level programming details or APIs as well as the transition to
 OpenStack client.
 
-#TODO
+.. toctree::
+   :maxdepth: 2
+
+   contributing.rst
+   developing.rst
+
+

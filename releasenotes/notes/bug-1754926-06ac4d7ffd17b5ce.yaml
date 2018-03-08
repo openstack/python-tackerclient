@@ -1,0 +1,4 @@
+---
+fixes:
+  - |
+    Fix local test fail with InterpreterNotFound: pypy

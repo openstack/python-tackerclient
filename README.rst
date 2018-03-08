@@ -24,31 +24,45 @@ as stable/<branch> for any stable branch installation. For eg:
 stable/queens, stable/pike. If unspecified the default will be
 master branch.
 
-1. Clone tacker-client repository.
+Using python install
+--------------------
+1. Clone python-tackerclient repository.
 
   ::
 
-    cd ~/
-    git clone https://github.com/openstack/python-tackerclient -b <branch_name>
+    $ cd ~/
+    $ git clone https://github.com/openstack/python-tackerclient -b <branch_name>
 
 
-2. Install tacker-client.
-
-  ::
-
-    cd python-tackerclient
-    sudo python setup.py install
-
-
-You can also install the latest version by using following command:
+2. Install python-tackerclient.
 
   ::
 
-    pip install python-tackerclient
+    $ cd python-tackerclient
+    $ sudo python setup.py install
+
+
+Using pip
+---------
+
+You can also install the latest version by using ``pip`` command:
+
+  ::
+
+    $ pip install python-tackerclient
+
+
+Or, if it is needed to install ``python-tackerclient`` from master branch,
+type
+
+  ::
+
+    $ pip install git+https://github.com/openstack/python-tackerclient.git
 
 
 More Information
 ================
 
-[1] Tacker Documentation: https://docs.openstack.org/tacker/
-[2] Tacker Wiki: https://wiki.openstack.org/wiki/Tacker
+* Python-tackerclient documentation: https://docs.openstack.org/python-tackerclient/
+* Tacker Documentation: https://docs.openstack.org/tacker/
+* Tacker Wiki: https://wiki.openstack.org/wiki/Tacker

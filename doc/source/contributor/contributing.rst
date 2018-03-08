@@ -19,38 +19,8 @@
       '''''''  Heading 4
       (Avoid deeper levels because they do not render well.)
 
-=================================
-Python-TackerClient Documentation
-=================================
+============
+Contributing
+============
 
-This is a client for OpenStack NFV MANO (Tacker) API. It provides
-:doc:`Python API bindings <reference/index>` (the tackerclient module) and
-:doc:`command-line interface (CLI) <cli/index>`.
-
-Contents
---------
-
-.. toctree::
-   :maxdepth: 2
-
-   install/index
-   cli/index
-   contributor/index
-   reference/index
-
-
-Release Notes
--------------
-
-.. toctree::
-   :maxdepth: 1
-
-   Release Notes <http://docs.openstack.org/releasenotes/python-tackerclient>
-
-
-Indices and Tables
-------------------
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+.. include:: ../../../CONTRIBUTING.rst

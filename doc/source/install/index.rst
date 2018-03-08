@@ -11,7 +11,6 @@
       License for the specific language governing permissions and limitations
       under the License.
 
-
       Convention for heading levels in Neutron devref:
       =======  Heading 0 (reserved for the title in a document)
       -------  Heading 1
@@ -20,19 +19,51 @@
       '''''''  Heading 4
       (Avoid deeper levels because they do not render well.)
 
-=================
-Install Guide
-=================
+============
+Installation
+============
 
-To install ``python-tackerclient``, it is required to have ``pip``
-(in most cases). Make sure that ``pip`` is installed. Then type::
+**Note:** The paths we are using for configuration files in these steps
+are with reference to Ubuntu Operating System. The paths may vary for
+other Operating Systems.
+
+The branch_name which is used in commands, specify the branch_name
+as stable/<branch> for any stable branch installation. For eg:
+stable/queens, stable/pike. If unspecified the default will be
+master branch.
+
+Using python install
+====================
+1. Clone python-tackerclient repository.
+
+  ::
+
+    $ cd ~/
+    $ git clone https://github.com/openstack/python-tackerclient -b <branch_name>
+
+
+2. Install python-tackerclient.
+
+  ::
+
+    $ cd python-tackerclient
+    $ sudo python setup.py install
+
+
+Using pip
+=========
+
+You can also install the latest version by using ``pip`` command:
+
+  ::
 
     $ pip install python-tackerclient
 
+
 Or, if it is needed to install ``python-tackerclient`` from master branch,
-type::
+type
+
+  ::
 
     $ pip install git+https://github.com/openstack/python-tackerclient.git
 
-After ``python-tackerclient`` is installed you will see command ``tacker``
-in your environment.
