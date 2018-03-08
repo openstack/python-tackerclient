@@ -1,0 +1,4 @@
+---
+features:
+  - |
+    Add python-vnfd, vnf, nsd, ns, vnffgd, vnffg, event commands support.
