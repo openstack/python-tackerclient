@@ -14,6 +14,8 @@
 #    under the License.
 #
 
+from sys import stderr
+
 from cliff import command
 
 
@@ -23,6 +25,8 @@ class OpenStackCommand(command.Command):
     api = None
 
     def run(self, parsed_args):
+        stderr.write("Deprecated: tacker command line is deprecated, "
+                     "will be deleted after Rocky is released.\n")
         if not self.api:
             return
         else:
