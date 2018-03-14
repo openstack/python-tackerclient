@@ -230,6 +230,10 @@ class UpdateVNFFG(command.ShowOne):
     def get_parser(self, prog_name):
         parser = super(UpdateVNFFG, self).get_parser(prog_name)
         parser.add_argument(
+            _VNFFG,
+            metavar="<VNFFG>",
+            help=_('VNFFG to update (name or ID)'))
+        parser.add_argument(
             '--vnffgd-template',
             help=_('VNFFGD file to update VNFFG'))
         parser.add_argument(
@@ -286,13 +290,14 @@ class UpdateVNFFG(command.ShowOne):
                 raise exceptions.InvalidInput('The parameter file is empty')
             body[_VNFFG]['attributes'] = {'param_values': param_yaml}
         tackerV10.update_dict(parsed_args, body[self.resource],
-                              ['tenant_id', 'vnf_mapping',
-                               'symmetrical', 'description'])
+                              ['vnf_mapping', 'symmetrical', 'description'])
         return body
 
     def take_action(self, parsed_args):
         client = self.app.client_manager.tackerclient
-        vnffg = client.create_vnffg(self.args2body(parsed_args))
+        obj_id = tackerV10.find_resourceid_by_name_or_id(
+            client, _VNFFG, parsed_args.vnffg)
+        vnffg = client.update_vnffg(obj_id, self.args2body(parsed_args))
         display_columns, columns = _get_columns(vnffg[_VNFFG])
         data = utils.get_item_properties(
             sdk_utils.DictModel(vnffg[_VNFFG]),
