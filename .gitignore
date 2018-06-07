@@ -20,6 +20,7 @@ run_tests.log
 .idea/
 .tox/
 .venv/
+.stestr/
 
 # Files created by releasenotes build
 releasenotes/build
