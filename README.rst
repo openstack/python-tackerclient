@@ -66,3 +66,4 @@ More Information
 * Python-tackerclient documentation: https://docs.openstack.org/python-tackerclient/
 * Tacker Documentation: https://docs.openstack.org/tacker/
 * Tacker Wiki: https://wiki.openstack.org/wiki/Tacker
+* Release Notes: https://docs.openstack.org/releasenotes/python-tackerclient
