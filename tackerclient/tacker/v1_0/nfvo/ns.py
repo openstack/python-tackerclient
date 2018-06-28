@@ -25,7 +25,8 @@ class ListNS(tackerV10.ListCommand):
     """List NS that belong to a given tenant."""
 
     resource = _NS
-    list_columns = ['id', 'name', 'nsd_id', 'mgmt_urls', 'status']
+    list_columns = ['id', 'name', 'nsd_id', 'vnf_ids', 'vnffg_ids',
+                    'mgmt_urls', 'status']
 
 
 class ShowNS(tackerV10.ShowCommand):

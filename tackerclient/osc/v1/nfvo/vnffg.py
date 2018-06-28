@@ -39,6 +39,7 @@ DEFAULT_ERROR_REASON_LENGTH = 100
 _attr_map_vnffg = (
     ('id', 'ID', tacker_osc_utils.LIST_BOTH),
     ('name', 'Name', tacker_osc_utils.LIST_BOTH),
+    ('ns_id', 'NS ID', tacker_osc_utils.LIST_BOTH),
     ('vnffgd_id', 'VNFFGD ID', tacker_osc_utils.LIST_BOTH),
     ('status', 'Status', tacker_osc_utils.LIST_BOTH),
     ('description', 'Description', tacker_osc_utils.LIST_LONG_ONLY),

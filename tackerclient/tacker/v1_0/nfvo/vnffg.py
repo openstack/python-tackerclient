@@ -78,7 +78,8 @@ class ListVNFFG(tackerV10.ListCommand):
     """List VNFFGs that belong to a given tenant."""
 
     resource = _VNFFG
-    list_columns = ['id', 'name', 'description', 'status', 'vnffgd_id']
+    list_columns = ['id', 'name', 'ns_id',
+                    'description', 'status', 'vnffgd_id']
 
 
 class ShowVNFFG(tackerV10.ShowCommand):
