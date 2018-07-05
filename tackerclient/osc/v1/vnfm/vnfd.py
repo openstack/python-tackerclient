@@ -77,7 +77,8 @@ class CreateVNFD(command.ShowOne):
             try:
                 vnfd = yaml.load(vnfd, Loader=yaml.SafeLoader)
             except yaml.YAMLError as e:
-                raise exceptions.InvalidInput(e)
+                msg = _("yaml failed to load vnfd file. %s") % e
+                raise exceptions.InvalidInput(msg)
             if not vnfd:
                 raise exceptions.InvalidInput("vnfd file is empty")
             body[_VNFD]['attributes'] = {'vnfd': vnfd}
