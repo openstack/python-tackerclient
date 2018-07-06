@@ -1,0 +1,7 @@
+---
+deprecations:
+  - |
+    tacker CLI is deprecated, will be deleted after Rocky release.
+    Use `openstack CLI`_ instead.
+
+    .. _openstack CLI: https://docs.openstack.org/python-tackerclient/latest/cli/index.html
