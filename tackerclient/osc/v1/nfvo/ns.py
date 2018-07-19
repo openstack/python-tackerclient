@@ -28,8 +28,9 @@ from tackerclient.tacker import v1_0 as tackerV10
 _attr_map = (
     ('id', 'ID', tacker_osc_utils.LIST_BOTH),
     ('name', 'Name', tacker_osc_utils.LIST_BOTH),
-    ('nsd_id', 'NSD ID',
-     tacker_osc_utils.LIST_BOTH),
+    ('nsd_id', 'NSD ID', tacker_osc_utils.LIST_BOTH),
+    ('vnf_ids', 'VNF IDs', tacker_osc_utils.LIST_BOTH),
+    ('vnffg_ids', 'VNFFG IDs', tacker_osc_utils.LIST_BOTH),
     ('mgmt_urls', 'Mgmt Urls', tacker_osc_utils.LIST_BOTH),
     ('status', 'Status', tacker_osc_utils.LIST_BOTH),
 )
