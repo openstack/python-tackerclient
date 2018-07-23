@@ -26,7 +26,7 @@ master branch.
 
 Using python install
 --------------------
-1. Clone python-tackerclient repository.
+Clone python-tackerclient repository.
 
   ::
 
@@ -34,7 +34,7 @@ Using python install
     $ git clone https://github.com/openstack/python-tackerclient -b <branch_name>
 
 
-2. Install python-tackerclient.
+Install python-tackerclient.
 
   ::
 
