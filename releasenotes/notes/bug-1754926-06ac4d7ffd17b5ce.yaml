@@ -1,4 +1,4 @@
 ---
 fixes:
   - |
-    Fix local test fail with InterpreterNotFound: pypy
+    Fix local test fail with pypy.
