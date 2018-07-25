@@ -1,0 +1,4 @@
+---
+fixes:
+  - |
+    The VNFFGD CLI cannot show the VNFFGD template.
