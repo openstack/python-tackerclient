@@ -1,0 +1,9 @@
+---
+features:
+  - |
+    Add 'vnf_ids' and 'vnffg_ids' fields in outputs from network
+    service list command. Users can know which VNFs or VNFFGs,
+    belongs to specific NS.
+    Add 'ns_id' field to VNFFG list command, that shows the
+    network service the current VNFFG belongs to.
+
