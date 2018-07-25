@@ -1,0 +1,4 @@
+---
+fixes:
+  - |
+    Fix the VNFFG update osc command misusing create_vnffg function.
