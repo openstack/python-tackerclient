@@ -187,10 +187,16 @@ class CLITestV10VmVNFJSON(test_cli10.CLITestV10Base):
                                    [my_id, '--%s' % key, value],
                                    {key: value})
 
-    def test_delete_vnf(self):
+    def test_delete_vnf_without_force(self):
         cmd = vnf.DeleteVNF(test_cli10.MyApp(sys.stdout), None)
         my_id = 'my-id'
         args = [my_id]
+        self._test_delete_resource(self._RESOURCE, cmd, my_id, args)
+
+    def test_delete_vnf_with_force(self):
+        cmd = vnf.DeleteVNF(test_cli10.MyApp(sys.stdout), None)
+        my_id = 'my-id'
+        args = [my_id, '--force']
         self._test_delete_resource(self._RESOURCE, cmd, my_id, args)
 
     def test_list_vnf_resources(self):

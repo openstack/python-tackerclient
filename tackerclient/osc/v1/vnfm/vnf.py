@@ -189,18 +189,32 @@ class DeleteVNF(command.Command):
             metavar="<VNF>",
             nargs="+",
             help=_("VNF(s) to delete (name or ID)"))
+        parser.add_argument(
+            '--force',
+            default=False,
+            action='store_true',
+            help=_('Force delete VNF instance'))
         return parser
+
+    def args2body(self, parsed_args):
+        body = dict()
+        if parsed_args.force:
+            body[_VNF] = dict()
+            body[_VNF]['attributes'] = dict()
+            body[_VNF]['attributes']['force'] = True
+        return body
 
     def take_action(self, parsed_args):
         client = self.app.client_manager.tackerclient
         failure = False
         deleted_ids = []
         failed_items = {}
+        body = self.args2body(parsed_args)
         for resource_id in parsed_args.vnf:
             try:
                 obj = tackerV10.find_resourceid_by_name_or_id(
                     client, _VNF, resource_id)
-                client.delete_vnf(obj)
+                client.delete_vnf(obj, body)
                 deleted_ids.append(resource_id)
             except Exception as e:
                 failure = True

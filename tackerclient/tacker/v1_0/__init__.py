@@ -520,6 +520,7 @@ class DeleteCommand(TackerCommand):
             'ids', nargs='+',
             metavar=self.resource.upper(),
             help=help_str % self.resource)
+        self.add_known_arguments(parser)
         return parser
 
     def run(self, parsed_args):
@@ -530,6 +531,8 @@ class DeleteCommand(TackerCommand):
         tacker_client.format = parsed_args.request_format
         obj_deleter = getattr(tacker_client,
                               "delete_%s" % self.resource)
+        body = self.args2body(parsed_args)
+
         for resource_id in parsed_args.ids:
             try:
                 if self.allow_names:
@@ -537,7 +540,10 @@ class DeleteCommand(TackerCommand):
                         tacker_client, self.resource, resource_id)
                 else:
                     _id = resource_id
-                obj_deleter(_id)
+                if body:
+                    obj_deleter(_id, body)
+                else:
+                    obj_deleter(_id)
                 deleted_ids.append(resource_id)
             except Exception as e:
                 failure = True

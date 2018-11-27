@@ -611,10 +611,18 @@ class CLITestV10Base(testtools.TestCase):
             args.extend(['--request-format', self.format])
             cmd_parser = cmd.get_parser("delete_" + resource)
             shell.run_command(cmd, cmd_parser, args)
-            mock_req.assert_called_once_with(
-                end_url(path % myid, format=self.format), 'DELETE',
-                body=None,
-                headers=test_utils.ContainsKeyValue('X-Auth-Token', TOKEN))
+            if '--force' in args:
+                body_str = '{"' + resource + \
+                           '": {"attributes": {"force": true}}}'
+                mock_req.assert_called_once_with(
+                    end_url(path % myid, format=self.format), 'DELETE',
+                    body=body_str,
+                    headers=test_utils.ContainsKeyValue('X-Auth-Token', TOKEN))
+            else:
+                mock_req.assert_called_once_with(
+                    end_url(path % myid, format=self.format), 'DELETE',
+                    body=None,
+                    headers=test_utils.ContainsKeyValue('X-Auth-Token', TOKEN))
         mock_get.assert_called_once_with()
         _str = self.fake_stdout.make_string()
         msg = 'All specified %(resource)s(s) %(msg)s successfully\n' % {
