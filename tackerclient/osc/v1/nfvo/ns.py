@@ -156,18 +156,32 @@ class DeleteNS(command.Command):
             nargs="+",
             help=_("NS(s) to delete (name or ID)")
         )
+        parser.add_argument(
+            '--force',
+            default=False,
+            action='store_true',
+            help=_('Force delete Network Service')
+        )
         return parser
+
+    def args2body(self, parsed_args):
+        if parsed_args.force:
+            body = {_NS: {'attributes': {'force': True}}}
+        else:
+            body = dict()
+        return body
 
     def take_action(self, parsed_args):
         client = self.app.client_manager.tackerclient
         failure = False
         deleted_ids = []
         failed_items = {}
+        body = self.args2body(parsed_args)
         for resource_id in parsed_args.ns:
             try:
                 obj = tackerV10.find_resourceid_by_name_or_id(
                     client, _NS, resource_id)
-                client.delete_ns(obj)
+                client.delete_ns(obj, body)
                 deleted_ids.append(resource_id)
             except Exception as e:
                 failure = True

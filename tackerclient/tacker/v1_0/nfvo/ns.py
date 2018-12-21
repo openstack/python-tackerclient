@@ -123,3 +123,17 @@ class DeleteNS(tackerV10.DeleteCommand):
 
     resource = _NS
     deleted_msg = {'ns': 'delete initiated'}
+
+    def add_known_arguments(self, parser):
+        parser.add_argument(
+            '--force',
+            default=False,
+            action='store_true',
+            help=_('Force delete Network Service'))
+
+    def args2body(self, parsed_args):
+        if parsed_args.force:
+            body = {self.resource: {'attributes': {'force': True}}}
+        else:
+            body = dict()
+        return body

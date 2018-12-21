@@ -665,8 +665,8 @@ class Client(ClientBase):
         return self.post(self.nss_path, body=body)
 
     @APIParamsCall
-    def delete_ns(self, ns):
-        return self.delete(self.ns_path % ns)
+    def delete_ns(self, ns, body=None):
+        return self.delete(self.ns_path % ns, body=body)
 
     @APIParamsCall
     def create_cluster(self, body=None):
