@@ -26,7 +26,7 @@ class ListNS(tackerV10.ListCommand):
 
     resource = _NS
     list_columns = ['id', 'name', 'nsd_id', 'vnf_ids', 'vnffg_ids',
-                    'mgmt_urls', 'status']
+                    'mgmt_ip_addresses', 'status']
 
 
 class ShowNS(tackerV10.ShowCommand):

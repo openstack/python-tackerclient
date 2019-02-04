@@ -30,7 +30,7 @@ class ListVNF(tackerV10.ListCommand):
     """List VNF that belong to a given tenant."""
 
     resource = _VNF
-    list_columns = ['id', 'name', 'mgmt_url', 'status',
+    list_columns = ['id', 'name', 'mgmt_ip_address', 'status',
                     'vim_id', 'vnfd_id']
 
 

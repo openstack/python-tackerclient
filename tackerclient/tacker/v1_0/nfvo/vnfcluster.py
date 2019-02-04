@@ -176,7 +176,7 @@ class ListClusterMember(tackerV10.ListCommand):
         return body
 
     list_columns = ['id', 'name', 'cluster_id', 'role', 'vnf_id',
-                    'vim_id', 'mgmt_url', 'lb_member_id']
+                    'vim_id', 'mgmt_ip_address', 'lb_member_id']
 
 
 class DeleteClusterMember(tackerV10.DeleteCommand):

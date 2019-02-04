@@ -28,7 +28,7 @@ from tackerclient.tacker import v1_0 as tackerV10
 _attr_map = (
     ('id', 'ID', tacker_osc_utils.LIST_BOTH),
     ('name', 'Name', tacker_osc_utils.LIST_BOTH),
-    ('mgmt_url', 'Mgmt Url',
+    ('mgmt_ip_address', 'Mgmt Ip Address',
      tacker_osc_utils.LIST_BOTH),
     ('status', 'Status', tacker_osc_utils.LIST_BOTH),
     ('vim_id', 'VIM ID', tacker_osc_utils.LIST_BOTH),
