@@ -438,8 +438,8 @@ class Client(ClientBase):
         return self.post(self.vnfs_path, body=body)
 
     @APIParamsCall
-    def delete_vnf(self, vnf):
-        return self.delete(self.vnf_path % vnf)
+    def delete_vnf(self, vnf, body=None):
+        return self.delete(self.vnf_path % vnf, body=body)
 
     @APIParamsCall
     def update_vnf(self, vnf, body):

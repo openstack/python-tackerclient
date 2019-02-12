@@ -179,7 +179,22 @@ class DeleteVNF(tackerV10.DeleteCommand):
     """Delete given VNF(s)."""
 
     resource = _VNF
+    remove_output_fields = ["attributes"]
     deleted_msg = {'vnf': 'delete initiated'}
+
+    def add_known_arguments(self, parser):
+        parser.add_argument(
+            '--force',
+            default=False,
+            action='store_true',
+            help=_('Force delete VNF instance'))
+
+    def args2body(self, parsed_args):
+        body = dict()
+        if parsed_args.force:
+            body[self.resource] = dict()
+            body[self.resource]['attributes'] = {'force': True}
+        return body
 
 
 class ListVNFResources(tackerV10.ListCommand):
