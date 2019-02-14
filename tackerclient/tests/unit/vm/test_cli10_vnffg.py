@@ -113,8 +113,14 @@ class CLITestV10VmVNFFGJSON(test_cli10.CLITestV10Base):
                                    args, extra_fields,
                                    get_client_called_count=2)
 
-    def test_delete_vnffg(self):
+    def test_delete_vnffg_without_force(self):
         cmd = vnffg.DeleteVNFFG(test_cli10.MyApp(sys.stdout), None)
         my_id = 'my-id'
         args = [my_id]
+        self._test_delete_resource(self._RESOURCE, cmd, my_id, args)
+
+    def test_delete_vnffg_with_force(self):
+        cmd = vnffg.DeleteVNFFG(test_cli10.MyApp(sys.stdout), None)
+        my_id = 'my-id'
+        args = [my_id, '--force']
         self._test_delete_resource(self._RESOURCE, cmd, my_id, args)

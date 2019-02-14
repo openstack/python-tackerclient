@@ -232,3 +232,18 @@ class DeleteVNFFG(tackerV10.DeleteCommand):
     """Delete a given VNFFG."""
 
     resource = _VNFFG
+    remove_output_fields = ["attributes"]
+
+    def add_known_arguments(self, parser):
+        parser.add_argument(
+            '--force',
+            default=False,
+            action='store_true',
+            help=_('Force delete VNFFG'))
+
+    def args2body(self, parsed_args):
+        body = dict()
+        if parsed_args.force:
+            body[self.resource] = dict()
+            body[self.resource]['attributes'] = {'force': True}
+        return body

@@ -626,8 +626,8 @@ class LegacyClient(ClientBase):
         return self.post(self.vnffgs_path, body=body)
 
     @APIParamsCall
-    def delete_vnffg(self, vnffg):
-        return self.delete(self.vnffg_path % vnffg)
+    def delete_vnffg(self, vnffg, body=None):
+        return self.delete(self.vnffg_path % vnffg, body=body)
 
     @APIParamsCall
     def update_vnffg(self, vnffg, body):
