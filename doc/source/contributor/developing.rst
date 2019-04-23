@@ -27,9 +27,9 @@ Project Info
 ============
 
 * **Free software:** under the `Apache license <http://www.apache.org/licenses/LICENSE-2.0>`_
-* **Tacker Service:** http://git.openstack.org/cgit/openstack/tacker
-* **Tacker Client Library:** http://git.openstack.org/cgit/openstack/python-tackerclient
-* **Tacker Service Bugs:** http://bugs.launchpad.net/tacker
+* **Tacker Service:** https://opendev.org/openstack/tacker
+* **Tacker Client Library:** https://opendev.org/openstack/python-tackerclient
+* **Tacker Service Bugs:** https://bugs.launchpad.net/tacker
 * **Client Bugs:** https://bugs.launchpad.net/python-tackerclient
 * **Blueprints:** https://blueprints.launchpad.net/tacker
 
