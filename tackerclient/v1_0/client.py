@@ -726,6 +726,7 @@ class VnfPackageClient(ClientBase):
     """
 
     vnfpackages_path = '/vnfpkgm/v1/vnf_packages'
+    vnfpackage_path = '/vnfpkgm/v1/vnf_packages/%s'
 
     def build_action(self, action):
         return action
@@ -733,6 +734,20 @@ class VnfPackageClient(ClientBase):
     @APIParamsCall
     def create_vnf_package(self, body):
         return self.post(self.vnfpackages_path, body=body)
+
+    @APIParamsCall
+    def list_vnf_packages(self, retrieve_all=True, **_params):
+        vnf_package = self.list("vnf_packages", self.vnfpackages_path,
+                                retrieve_all, **_params)
+        return vnf_package
+
+    @APIParamsCall
+    def show_vnf_package(self, vnf_package, **_params):
+        return self.get(self.vnfpackage_path % vnf_package, params=_params)
+
+    @APIParamsCall
+    def delete_vnf_package(self, vnf_package):
+        return self.delete(self.vnfpackage_path % vnf_package)
 
 
 class Client(object):
@@ -945,3 +960,13 @@ class Client(object):
 
     def create_vnf_package(self, body):
         return self.vnf_package_client.create_vnf_package(body)
+
+    def list_vnf_packages(self, retrieve_all=True, **_params):
+        return self.vnf_package_client.list_vnf_packages(
+            retrieve_all=retrieve_all, **_params)
+
+    def show_vnf_package(self, vnf_package, **_params):
+        return self.vnf_package_client.show_vnf_package(vnf_package, **_params)
+
+    def delete_vnf_package(self, vnf_package):
+        return self.vnf_package_client.delete_vnf_package(vnf_package)
