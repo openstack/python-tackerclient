@@ -192,9 +192,9 @@ class CLITestV10Base(testtools.TestCase):
     def setUp(self, plurals={}):
         """Prepare the test environment."""
         super(CLITestV10Base, self).setUp()
-        client.Client.EXTED_PLURALS.update(constants.PLURALS)
-        client.Client.EXTED_PLURALS.update(plurals)
-        self.metadata = {'plurals': client.Client.EXTED_PLURALS,
+        client.LegacyClient.EXTED_PLURALS.update(constants.PLURALS)
+        client.LegacyClient.EXTED_PLURALS.update(plurals)
+        self.metadata = {'plurals': client.LegacyClient.EXTED_PLURALS,
                          'xmlns': constants.XML_NS_V10,
                          constants.EXT_NS: {'prefix':
                                             'http://xxxx.yy.com'}}
@@ -207,7 +207,8 @@ class CLITestV10Base(testtools.TestCase):
         self.useFixture(fixtures.MonkeyPatch(
             'tackerclient.tacker.v1_0.find_resourceid_by_id',
             self._find_resourceid))
-        self.client = client.Client(token=TOKEN, endpoint_url=self.endurl)
+        self.client = client.LegacyClient(token=TOKEN,
+                                          endpoint_url=self.endurl)
 
     @mock.patch.object(TackerCommand, 'get_client')
     def _test_create_resource(self, resource, cmd,
@@ -685,7 +686,7 @@ class ClientV1TestJson(CLITestV10Base):
             error = self.assertRaises(exceptions.TackerClientException,
                                       self.client.do_request, 'PUT', '/test',
                                       body='', params=params)
-            self.assertEqual("An error", str(error))
+            self.assertEqual("400-tackerFault", str(error))
 
 
 class CLITestV10ExceptionHandler(CLITestV10Base):
@@ -779,11 +780,11 @@ class CLITestV10ExceptionHandler(CLITestV10Base):
         error_content = {'message': 'This is an error message'}
         self._test_exception_handler_v10(
             exceptions.TackerClientException, 500,
-            expected_msg='This is an error message',
+            expected_msg='500-tackerFault',
             error_content=error_content)
 
     def test_exception_handler_v10_error_dict_not_contain_message(self):
-        error_content = {'error': 'This is an error message'}
+        error_content = 'tackerFault'
         expected_msg = '%s-%s' % (500, error_content)
         self._test_exception_handler_v10(
             exceptions.TackerClientException, 500,

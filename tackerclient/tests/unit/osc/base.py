@@ -1,0 +1,48 @@
+# Copyright (C) 2019 NTT DATA
+# All Rights Reserved.
+#
+#    Licensed under the Apache License, Version 2.0 (the "License"); you may
+#    not use this file except in compliance with the License. You may obtain
+#    a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+#    License for the specific language governing permissions and limitations
+#    under the License.
+
+import mock
+from requests_mock.contrib import fixture as requests_mock_fixture
+import testtools
+
+
+class FixturedTestCase(testtools.TestCase):
+    client_fixture_class = None
+
+    def setUp(self):
+        super(FixturedTestCase, self).setUp()
+        self.app = mock.MagicMock()
+        if self.client_fixture_class:
+            self.requests_mock = self.useFixture(requests_mock_fixture.
+                                                 Fixture())
+            fix = self.client_fixture_class(self.requests_mock)
+            self.cs = self.useFixture(fix).client
+
+    def check_parser(self, cmd, args, verify_args):
+        cmd_parser = cmd.get_parser('check_parser')
+        try:
+            parsed_args = cmd_parser.parse_args(args)
+        except SystemExit:
+            raise ParserException
+        for av in verify_args:
+            attr, value = av
+            if attr:
+                self.assertIn(attr, parsed_args)
+                self.assertEqual(getattr(parsed_args, attr), value)
+        return parsed_args
+
+
+class ParserException(Exception):
+    pass

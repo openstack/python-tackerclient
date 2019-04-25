@@ -31,6 +31,18 @@ from tackerclient.i18n import _
 _logger = logging.getLogger(__name__)
 DEFAULT_DESC_LENGTH = 25
 DEFAULT_ERROR_REASON_LENGTH = 100
+STATUS_CODE_MAP = {
+    400: "badRequest",
+    401: "unauthorized",
+    403: "forbidden",
+    404: "itemNotFound",
+    405: "badMethod",
+    409: "conflictingRequest",
+    413: "overLimit",
+    415: "badMediaType",
+    429: "overLimit",
+    501: "notImplemented",
+    503: "serviceUnavailable"}
 
 
 def exception_handler_v10(status_code, error_content):
@@ -45,6 +57,9 @@ def exception_handler_v10(status_code, error_content):
     error_dict = None
     if isinstance(error_content, dict):
         error_dict = error_content.get('TackerError')
+        if not error_dict:
+            error_content = error_content.get(STATUS_CODE_MAP.get(status_code),
+                                              'tackerFault')
     # Find real error type
     bad_tacker_error_flag = False
     if error_dict:
@@ -141,17 +156,6 @@ class ClientBase(object):
     :param session: Keystone client auth session to use. (optional)
     :param auth: Keystone auth plugin to use. (optional)
 
-    Example::
-
-        from tackerclient.v1_0 import client
-        tacker = client.Client(username=USER,
-                                password=PASS,
-                                tenant_name=TENANT_NAME,
-                                auth_url=KEYSTONE_URL)
-
-        nets = tacker.list_networks()
-        ...
-
     """
 
     # API has no way to report plurals, so we have to hard code them
@@ -182,15 +186,19 @@ class ClientBase(object):
         # Raise the appropriate exception
         exception_handler_v10(status_code, des_error_body)
 
-    def do_request(self, method, action, body=None, headers=None, params=None):
-        # Add format and tenant_id
+    def build_action(self, action):
         action += ".%s" % self.format
         action = self.action_prefix + action
+        return action
+
+    def do_request(self, method, action, body=None, headers=None, params=None):
+        action = self.build_action(action)
+        # Add format and tenant_id
         if type(params) is dict and params:
             params = utils.safe_encode_dict(params)
             action += '?' + urlparse.urlencode(params, doseq=1)
 
-        if body:
+        if body or body == {}:
             body = self.serialize(body)
 
         resp, replybody = self.httpclient.do_request(
@@ -329,7 +337,7 @@ class ClientBase(object):
                 break
 
 
-class Client(ClientBase):
+class LegacyClient(ClientBase):
 
     extensions_path = "/extensions"
     extension_path = "/extensions/%s"
@@ -708,3 +716,232 @@ class Client(ClientBase):
     @APIParamsCall
     def delete_clustermember(self, clustermember):
         return self.delete(self.cluster_member_path % clustermember)
+
+
+class VnfPackageClient(ClientBase):
+    """Client for vnfpackage APIs.
+
+    Purpose of this class is to create required request url for vnfpackage
+    APIs.
+    """
+
+    vnfpackages_path = '/vnfpkgm/v1/vnf_packages'
+
+    def build_action(self, action):
+        return action
+
+    @APIParamsCall
+    def create_vnf_package(self, body):
+        return self.post(self.vnfpackages_path, body=body)
+
+
+class Client(object):
+    """Unified interface to interact with multiple applications of tacker service.
+
+    This class is a single entry point to interact with legacy tacker apis and
+    vnf packages apis.
+
+        Example::
+
+        from tackerclient.v1_0 import client
+        tacker = client.Client(username=USER,
+                                password=PASS,
+                                tenant_name=TENANT_NAME,
+                                auth_url=KEYSTONE_URL)
+
+        vnf_package = tacker.create_vnf_package(...)
+        nsd = tacker.create_nsd(...)
+
+    """
+
+    def __init__(self, **kwargs):
+        self.vnf_package_client = VnfPackageClient(**kwargs)
+        self.legacy_client = LegacyClient(**kwargs)
+
+    # LegacyClient methods
+
+    def list_extensions(self, **_params):
+        return self.legacy_client.list_extensions(**_params)
+
+    def show_extension(self, ext_alias, **_params):
+        """Fetch a list of all exts on server side."""
+        return self.legacy_client.show_extension(ext_alias, **_params)
+
+    def list_vnfds(self, retrieve_all=True, **_params):
+        return self.legacy_client.list_vnfds(retrieve_all=retrieve_all,
+                                             **_params)
+
+    def show_vnfd(self, vnfd, **_params):
+        return self.legacy_client.show_vnfd(vnfd, **_params)
+
+    def create_vnfd(self, body):
+        return self.legacy_client.create_vnfd(body)
+
+    def delete_vnfd(self, vnfd):
+        return self.legacy_client.delete_vnfd(vnfd)
+
+    def list_vnfs(self, retrieve_all=True, **_params):
+        return self.legacy_client.list_vnfs(retrieve_all=retrieve_all,
+                                            **_params)
+
+    def show_vnf(self, vnf, **_params):
+        return self.legacy_client.show_vnf(vnf, **_params)
+
+    def create_vnf(self, body):
+        return self.legacy_client.create_vnf(body)
+
+    def delete_vnf(self, vnf, body=None):
+        return self.legacy_client.delete_vnf(vnf, body=body)
+
+    def update_vnf(self, vnf, body):
+        return self.legacy_client.update_vnf(vnf, body)
+
+    def list_vnf_resources(self, vnf, retrieve_all=True, **_params):
+        return self.legacy_client.list_vnf_resources(
+            vnf, retrieve_all=retrieve_all, **_params)
+
+    def scale_vnf(self, vnf, body=None):
+        return self.legacy_client.scale_vnf(vnf, body=body)
+
+    def show_vim(self, vim, **_params):
+        return self.legacy_client.show_vim(vim, **_params)
+
+    def create_vim(self, body):
+        return self.legacy_client.create_vim(body)
+
+    def delete_vim(self, vim):
+        return self.legacy_client.delete_vim(vim)
+
+    def update_vim(self, vim, body):
+        return self.legacy_client.update_vim(vim, body)
+
+    def list_vims(self, retrieve_all=True, **_params):
+        return self.legacy_client.list_vims(retrieve_all=retrieve_all,
+                                            **_params)
+
+    def list_events(self, retrieve_all=True, **_params):
+        return self.legacy_client.list_events(retrieve_all=retrieve_all,
+                                              **_params)
+
+    def list_vnf_events(self, retrieve_all=True, **_params):
+        return self.legacy_client.list_vnf_events(
+            retrieve_all=retrieve_all, **_params)
+
+    def list_vnfd_events(self, retrieve_all=True, **_params):
+        return self.legacy_client.list_vnfd_events(
+            retrieve_all=retrieve_all, **_params)
+
+    def list_vim_events(self, retrieve_all=True, **_params):
+        return self.legacy_client.list_vim_events(
+            retrieve_all=retrieve_all, **_params)
+
+    def show_event(self, event_id, **_params):
+        return self.legacy_client.show_event(event_id, **_params)
+
+    def create_vnffgd(self, body):
+        return self.legacy_client.create_vnffgd(body)
+
+    def list_vnffgds(self, retrieve_all=True, **_params):
+        return self.legacy_client.list_vnffgds(retrieve_all=retrieve_all,
+                                               **_params)
+
+    def show_vnffgd(self, vnffgd, **_params):
+        return self.legacy_client.show_vnffgd(vnffgd, **_params)
+
+    def delete_vnffgd(self, vnffgd):
+        return self.legacy_client.delete_vnffgd(vnffgd)
+
+    def list_vnffgs(self, retrieve_all=True, **_params):
+        return self.legacy_client.list_vnffgs(retrieve_all=retrieve_all,
+                                              **_params)
+
+    def show_vnffg(self, vnffg, **_params):
+        return self.legacy_client.show_vnffg(vnffg, **_params)
+
+    def create_vnffg(self, body):
+        return self.legacy_client.create_vnffg(body)
+
+    def delete_vnffg(self, vnffg):
+        return self.legacy_client.delete_vnffg(vnffg)
+
+    def update_vnffg(self, vnffg, body):
+        return self.legacy_client.update_vnffg(vnffg, body)
+
+    def list_sfcs(self, retrieve_all=True, **_params):
+        return self.legacy_client.list_sfcs(retrieve_all=retrieve_all,
+                                            **_params)
+
+    def show_sfc(self, chain, **_params):
+        return self.legacy_client.show_sfc(chain, **_params)
+
+    def list_nfps(self, retrieve_all=True, **_params):
+        return self.legacy_client.list_nfps(retrieve_all=retrieve_all,
+                                            **_params)
+
+    def show_nfp(self, nfp, **_params):
+        return self.legacy_client.show_nfp(nfp, **_params)
+
+    def list_classifiers(self, retrieve_all=True, **_params):
+        return self.legacy_client.list_classifiers(
+            retrieve_all=retrieve_all, **_params)
+
+    def show_classifier(self, classifier, **_params):
+        return self.legacy_client.show_classifier(classifier, **_params)
+
+    def list_nsds(self, retrieve_all=True, **_params):
+        return self.legacy_client.list_nsds(retrieve_all=retrieve_all,
+                                            **_params)
+
+    def show_nsd(self, nsd, **_params):
+        return self.legacy_client.show_nsd(nsd, **_params)
+
+    def create_nsd(self, body):
+        return self.legacy_client.create_nsd(body)
+
+    def delete_nsd(self, nsd):
+        return self.legacy_client.delete_nsd(nsd)
+
+    def list_nss(self, retrieve_all=True, **_params):
+        return self.legacy_client.list_nss(retrieve_all=retrieve_all,
+                                           **_params)
+
+    def show_ns(self, ns, **_params):
+        return self.legacy_client.show_ns(ns, **_params)
+
+    def create_ns(self, body):
+        return self.legacy_client.create_ns(body)
+
+    def delete_ns(self, ns):
+        return self.legacy_client.delete_ns(ns)
+
+    def create_cluster(self, body=None):
+        return self.legacy_client.create_cluster(body=body)
+
+    def list_clusters(self, retrieve_all=True, **_params):
+        return self.legacy_client.list_clusters(retrieve_all=retrieve_all,
+                                                **_params)
+
+    def show_cluster(self, cluster, **_params):
+        return self.legacy_client.show_cluster(cluster, **_params)
+
+    def delete_cluster(self, cluster):
+        return self.legacy_client.delete_cluster(cluster)
+
+    def create_clustermember(self, body=None):
+        return self.legacy_client.create_clustermember(body=body)
+
+    def list_clustermembers(self, retrieve_all=True, **_params):
+        return self.legacy_client.list_clustermembers(
+            retrieve_all=retrieve_all, **_params)
+
+    def show_clustermember(self, clustermember, **_params):
+        return self.legacy_client.show_clustermember(clustermember,
+                                                     **_params)
+
+    def delete_clustermember(self, clustermember):
+        return self.legacy_client.delete_clustermember(clustermember)
+
+    # VnfPackageClient methods
+
+    def create_vnf_package(self, body):
+        return self.vnf_package_client.create_vnf_package(body)

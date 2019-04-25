@@ -3,6 +3,7 @@ Babel==2.3.4
 cliff==2.8.0
 cmd2==0.8.0
 coverage==4.0
+ddt==1.0.1
 debtcollector==1.2.0
 decorator==3.4.0
 deprecation==1.0
@@ -49,6 +50,7 @@ python-subunit==1.0.0
 pytz==2013.6
 PyYAML==3.12
 requests==2.14.2
+requests-mock==1.2.0
 requestsexceptions==1.2.0
 rfc3986==0.3.1
 simplejson==3.5.1
