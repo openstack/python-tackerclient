@@ -392,7 +392,7 @@ class UpdateVNF(command.ShowOne):
                     raise exceptions.InvalidInput(e)
         if config:
             body[_VNF]['attributes'] = {'config': config}
-        tackerV10.update_dict(parsed_args, body[_VNF])
+        tackerV10.update_dict(parsed_args, body[_VNF], ['tenant_id'])
         return body
 
     def take_action(self, parsed_args):
