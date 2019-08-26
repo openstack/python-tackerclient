@@ -1,0 +1,4 @@
+TOSCA-Meta-File-Version: 1.0
+Created-by: Hiroyuki JO
+CSAR-Version: 1.1
+Entry-Definitions: Definitions/helloworld3_top.vnfd.yaml

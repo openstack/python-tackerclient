@@ -227,6 +227,8 @@ class ClientBase(object):
         """
         if data is None:
             return None
+        elif self.format == 'zip':
+            return data
         elif type(data) is dict:
             return serializer.Serializer(
                 self.get_attr_metadata()).serialize(data, self.content_type())
@@ -236,7 +238,7 @@ class ClientBase(object):
 
     def deserialize(self, data, status_code):
         """Deserializes an XML or JSON string into a dictionary."""
-        if status_code == 204:
+        if status_code in (204, 202):
             return data
         return serializer.Serializer(self.get_attr_metadata()).deserialize(
             data, self.content_type())['body']
@@ -737,9 +739,9 @@ class VnfPackageClient(ClientBase):
 
     @APIParamsCall
     def list_vnf_packages(self, retrieve_all=True, **_params):
-        vnf_package = self.list("vnf_packages", self.vnfpackages_path,
-                                retrieve_all, **_params)
-        return vnf_package
+        vnf_packages = self.list("vnf_packages", self.vnfpackages_path,
+                                 retrieve_all, **_params)
+        return vnf_packages
 
     @APIParamsCall
     def show_vnf_package(self, vnf_package, **_params):
@@ -748,6 +750,24 @@ class VnfPackageClient(ClientBase):
     @APIParamsCall
     def delete_vnf_package(self, vnf_package):
         return self.delete(self.vnfpackage_path % vnf_package)
+
+    @APIParamsCall
+    def upload_vnf_package(self, vnf_package, file_data=None, **attrs):
+        if attrs.get('url'):
+            json = {'addressInformation': attrs.get('url')}
+            for key in ['userName', 'password']:
+                if attrs.get(key):
+                    json.update({key: attrs.get(key)})
+            return self.post(
+                '{base_path}/{id}/package_content/upload_from_uri'.format(
+                    id=vnf_package, base_path=self.vnfpackages_path),
+                body=json)
+        else:
+            self.format = 'zip'
+            return self.put('{base_path}/{id}/package_content'.format(
+                id=vnf_package,
+                base_path=self.vnfpackages_path),
+                body=file_data)
 
 
 class Client(object):
@@ -967,6 +987,10 @@ class Client(object):
 
     def show_vnf_package(self, vnf_package, **_params):
         return self.vnf_package_client.show_vnf_package(vnf_package, **_params)
+
+    def upload_vnf_package(self, vnf_package, file_data=None, **_params):
+        return self.vnf_package_client.upload_vnf_package(
+            vnf_package, file_data=file_data, **_params)
 
     def delete_vnf_package(self, vnf_package):
         return self.vnf_package_client.delete_vnf_package(vnf_package)

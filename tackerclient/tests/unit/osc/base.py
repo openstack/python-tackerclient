@@ -43,6 +43,14 @@ class FixturedTestCase(testtools.TestCase):
                 self.assertEqual(getattr(parsed_args, attr), value)
         return parsed_args
 
+    def assertNotCalled(self, m, msg=None):
+        """Assert a function was not called"""
+
+        if m.called:
+            if not msg:
+                msg = 'method %s should not have been called' % m
+            self.fail(msg)
+
 
 class ParserException(Exception):
     pass

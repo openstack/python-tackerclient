@@ -141,6 +141,66 @@ class ShowVnfPackage(command.ShowOne):
         return (display_columns, data)
 
 
+class UploadVnfPackage(command.Command):
+    _description = _("Upload VNF Package")
+
+    def get_parser(self, prog_name):
+        LOG.debug('get_parser(%s)', prog_name)
+        parser = super(UploadVnfPackage, self).get_parser(prog_name)
+        parser.add_argument(
+            'vnf_package',
+            metavar="<vnf-package>",
+            help=_("VNF package ID")
+        )
+        file_source = parser.add_mutually_exclusive_group(required=True)
+        file_source.add_argument(
+            "--path",
+            metavar="<file>",
+            help=_("Upload VNF CSAR package from local file"),
+        )
+        file_source.add_argument(
+            "--url",
+            metavar="<Uri>",
+            help=_("Uri of the VNF package content"),
+        )
+        parser.add_argument(
+            "--user-name",
+            metavar="<user-name>",
+            help=_("User name for authentication"),
+        )
+        parser.add_argument(
+            "--password",
+            metavar="<password>",
+            help=_("Password for authentication"),
+        )
+        return parser
+
+    def take_action(self, parsed_args):
+        client = self.app.client_manager.tackerclient
+        attrs = {}
+        if parsed_args.user_name:
+            attrs['userName'] = parsed_args.user_name
+
+        if parsed_args.password:
+            attrs['password'] = parsed_args.password
+
+        if parsed_args.url:
+            attrs['url'] = parsed_args.url
+
+        file_data = None
+        try:
+            if parsed_args.path:
+                file_data = open(parsed_args.path, 'rb')
+            result = client.upload_vnf_package(parsed_args.vnf_package,
+                                               file_data, **attrs)
+            if not result:
+                print((_('Upload request for VNF package %(id)s has been'
+                         ' accepted.') % {'id': parsed_args.vnf_package}))
+        finally:
+            if file_data:
+                file_data.close()
+
+
 class DeleteVnfPackage(command.Command):
     """Vnf package delete
 

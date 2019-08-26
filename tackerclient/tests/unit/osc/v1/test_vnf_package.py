@@ -13,6 +13,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import os
+import shutil
+import tempfile
+
 import ddt
 import mock
 
@@ -22,6 +26,16 @@ from tackerclient.osc.v1.vnfpkgm import vnf_package
 from tackerclient.tests.unit.osc import base
 from tackerclient.tests.unit.osc.v1.fixture_data import client
 from tackerclient.tests.unit.osc.v1 import vnf_package_fakes
+from tackerclient.v1_0 import client as proxy_client
+
+
+def _create_zip():
+    vnf_package_path = ('./tackerclient/tests//unit/osc/v1/fixture_data/'
+                        'sample_vnf_package')
+    tmpdir = tempfile.mkdtemp()
+    tmparchive = os.path.join(tmpdir, 'sample_vnf_package')
+    zip_file = shutil.make_archive(tmparchive, 'zip', vnf_package_path)
+    return zip_file, tmpdir
 
 
 def _get_columns_vnf_package(action='list', vnf_package_obj=None):
@@ -213,3 +227,102 @@ class TestDeleteVnfPackage(TestVnfPackage):
         self.assertRaises(exceptions.CommandError,
                           self.delete_vnf_package.take_action,
                           parsed_args)
+
+
+@ddt.ddt
+class TestUploadVnfPackage(TestVnfPackage):
+
+    # The new vnf package created.
+    _vnf_package = vnf_package_fakes.vnf_package_obj(
+        attrs={'userDefinedData': {'Test_key': 'Test_value'}})
+
+    def setUp(self):
+        super(TestUploadVnfPackage, self).setUp()
+        self.upload_vnf_package = vnf_package.UploadVnfPackage(
+            self.app, self.app_args, cmd_name='vnf package upload')
+
+    def test_upload_no_options(self):
+        self.assertRaises(base.ParserException, self.check_parser,
+                          self.upload_vnf_package, [], [])
+
+    def _mock_request_url_for_upload(self, method, status_code=202, body={}):
+        if method == 'PUT':
+            self.header = {'content-type': 'application/zip'}
+            url = (self.url + '/vnfpkgm/v1/vnf_packages/' +
+                   self._vnf_package['id'] + '/package_content')
+        else:
+            url = (self.url + '/vnfpkgm/v1/vnf_packages/' +
+                   self._vnf_package['id'] + '/package_content/'
+                                             'upload_from_uri')
+
+        self.requests_mock.register_uri(method, url, json=body,
+                                        headers=self.header,
+                                        status_code=status_code)
+
+    def _get_arglist_and_verifylist(self, method, path):
+        if method == 'path':
+            arglist = [
+                self._vnf_package['id'],
+                "--path", path
+            ]
+            verifylist = [
+                ('path', path),
+                ('vnf_package', self._vnf_package['id'])
+            ]
+        else:
+            arglist = [
+                self._vnf_package['id'],
+                "--url", "http://uri:8000/test.zip",
+                "--user-name", "Test_username",
+                "--password", "Test_passoword",
+            ]
+            verifylist = [
+                ('url', "http://uri:8000/test.zip"),
+                ('user_name', 'Test_username'),
+                ('password', 'Test_passoword'),
+                ('vnf_package', self._vnf_package['id'])
+            ]
+        return arglist, verifylist
+
+    @ddt.data('path', 'url')
+    def test_upload_vnf_package(self, method):
+        path = None
+        if method == 'path':
+            zip_file, temp_dir = _create_zip()
+            path = zip_file
+
+        arglist, verifylist = self._get_arglist_and_verifylist(method,
+                                                               path)
+        parsed_args = self.check_parser(self.upload_vnf_package, arglist,
+                                        verifylist)
+        with mock.patch.object(proxy_client.ClientBase,
+                               '_handle_fault_response') as m:
+            if method == 'url':
+                self._mock_request_url_for_upload('POST')
+                self.upload_vnf_package.take_action(parsed_args)
+            else:
+                self._mock_request_url_for_upload('PUT')
+                self.upload_vnf_package.take_action(parsed_args)
+                # Delete temporary folder
+                shutil.rmtree(temp_dir)
+        # check no fault response is received
+        self.assertNotCalled(m)
+
+    def test_upload_vnf_package_with_conflict_error(self):
+        # Scenario in which vnf package is already in on-boarded state
+        zip_file, temp_dir = _create_zip()
+        arglist, verifylist = self._get_arglist_and_verifylist('path',
+                                                               zip_file)
+
+        parsed_args = self.check_parser(self.upload_vnf_package, arglist,
+                                        verifylist)
+
+        body = {"conflictingRequest": {
+            "message": "VNF Package " + self._vnf_package['id'] +
+                       " onboarding state is not CREATED", "code": 409}}
+        self._mock_request_url_for_upload('PUT', status_code=409, body=body)
+
+        self.assertRaises(exceptions.TackerClientException,
+                          self.upload_vnf_package.take_action, parsed_args)
+        # Delete temporary folder
+        shutil.rmtree(temp_dir)
