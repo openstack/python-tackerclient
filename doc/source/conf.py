@@ -82,3 +82,7 @@ man_pages = [
 repository_name = 'openstack/python-tackerclient'
 bug_project = 'python-tackerclient'
 bug_tag = 'doc'
+
+# -- Options for cliff.sphinxext plugin ---------------------------------------
+
+autoprogram_cliff_application = 'openstack'
