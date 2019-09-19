@@ -795,6 +795,26 @@ class Client(object):
 
     # LegacyClient methods
 
+    def delete(self, action, body=None, headers=None, params=None):
+        return self.legacy_client.delete(action, body=body, headers=headers,
+                                         params=params)
+
+    def get(self, action, body=None, headers=None, params=None):
+        return self.legacy_client.get(action, body=body, headers=headers,
+                                      params=params)
+
+    def post(self, action, body=None, headers=None, params=None):
+        return self.legacy_client.post(action, body=body, headers=headers,
+                                       params=params)
+
+    def put(self, action, body=None, headers=None, params=None):
+        return self.legacy_client.put(action, body=body, headers=headers,
+                                      params=params)
+
+    def list(self, collection, path, retrieve_all=True, **params):
+        return self.legacy_client.list(collection, path,
+                                       retrieve_all=retrieve_all, **params)
+
     def list_extensions(self, **_params):
         return self.legacy_client.list_extensions(**_params)
 
