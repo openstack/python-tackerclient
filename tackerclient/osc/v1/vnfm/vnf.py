@@ -410,7 +410,7 @@ class UpdateVNF(command.ShowOne):
         return (display_columns, data)
 
 
-class ScaleVNF(command.ShowOne):
+class ScaleVNF(command.Command):
     _description = _("Scale a VNF.")
 
     def get_parser(self, prog_name):
@@ -430,13 +430,6 @@ class ScaleVNF(command.ShowOne):
     def args2body(self, parsed_args):
         args = {}
         body = {"scale": args}
-        client = self.app.client_manager.tackerclient
-        client.format = parsed_args.request_format
-        _id = tackerV10.find_resourceid_by_name_or_id(
-            client, 'vnf',
-            parsed_args.vnf)
-        parsed_args.vnf_id = _id
-        args['vnf_id'] = parsed_args.vnf_id
         args['type'] = parsed_args.scaling_type
         args['policy'] = parsed_args.scaling_policy_name
         return body
@@ -445,12 +438,5 @@ class ScaleVNF(command.ShowOne):
         client = self.app.client_manager.tackerclient
         obj_id = tackerV10.find_resourceid_by_name_or_id(
             client, _VNF, parsed_args.vnf)
-        vnf = client.scale_vnf(obj_id, self.args2body(parsed_args))
-        if vnf[_VNF]['attributes'].get('monitoring_policy'):
-            vnf[_VNF]['attributes']['monitoring_policy'] =\
-                _break_string(vnf[_VNF]['attributes']['monitoring_policy'])
-        display_columns, columns = _get_columns(vnf[_VNF])
-        data = utils.get_item_properties(
-            sdk_utils.DictModel(vnf[_VNF]),
-            columns)
-        return (display_columns, data)
+        client.scale_vnf(obj_id, self.args2body(parsed_args))
+        return
