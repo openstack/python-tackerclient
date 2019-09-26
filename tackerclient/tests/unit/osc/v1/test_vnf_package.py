@@ -13,12 +13,15 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import filecmp
 import os
 import shutil
+import sys
 import tempfile
 
 import ddt
 import mock
+import zipfile
 
 from tackerclient.common import exceptions
 from tackerclient.osc import utils as tacker_osc_utils
@@ -421,3 +424,139 @@ class TestUpdateVnfPackage(TestVnfPackage):
                                         verifylist)
         self.assertRaises(SystemExit, self.update_vnf_package.take_action,
                           parsed_args)
+
+
+@ddt.ddt
+class TestDownloadVnfPackage(TestVnfPackage):
+
+    # The new vnf package created.
+    _vnf_package = vnf_package_fakes.vnf_package_obj(
+        attrs={'userDefinedData': {'Test_key': 'Test_value'}})
+
+    def setUp(self):
+        super(TestDownloadVnfPackage, self).setUp()
+        self.download_vnf_package = vnf_package.DownloadVnfPackage(
+            self.app, self.app_args, cmd_name='vnf package download')
+
+    def test_download_no_options(self):
+        self.assertRaises(base.ParserException, self.check_parser,
+                          self.download_vnf_package, [], [])
+
+    def _mock_request_url_for_download_vnfd(self, content_type, vnfd_data):
+        self.header = {'content-type': content_type}
+        url = os.path.join(self.url, 'vnfpkgm/v1/vnf_packages',
+                           self._vnf_package['id'], 'vnfd')
+
+        if content_type == 'text/plain':
+            self.requests_mock.register_uri('GET', url,
+                                            headers=self.header,
+                                            text=vnfd_data)
+        else:
+            self.requests_mock.register_uri('GET', url,
+                                            headers=self.header,
+                                            content=vnfd_data)
+
+    def _get_arglist_and_verifylist(self, accept_type, file_name):
+        arglist = [
+            self._vnf_package['id'],
+            '--vnfd',
+            '--type', accept_type,
+            '--file', file_name
+        ]
+        verifylist = [
+            ('type', accept_type),
+            ('vnfd', True),
+            ('vnf_package', self._vnf_package['id']),
+            ('file', file_name)
+        ]
+        return arglist, verifylist
+
+    def test_download_vnfd_from_vnf_package_for_type_text_plain(self):
+        test_file = ('./tackerclient/tests//unit/osc/v1/fixture_data/'
+                     'sample_vnf_package/Definitions/'
+                     'etsi_nfv_sol001_common_types.yaml')
+
+        local_file = tempfile.NamedTemporaryFile(suffix='vnfd_data.yaml')
+        vnfd_data = open(test_file, 'r').read()
+        arglist, verifylist = self._get_arglist_and_verifylist(
+            'text/plain', local_file.name)
+        parsed_args = self.check_parser(self.download_vnf_package, arglist,
+                                        verifylist)
+        self._mock_request_url_for_download_vnfd('text/plain', vnfd_data)
+        self.download_vnf_package.take_action(parsed_args)
+        self.assertTrue(filecmp.cmp(test_file, local_file.name),
+                        "Downloaded contents don't match test file")
+
+    @ddt.data('application/zip', 'both')
+    def test_download_vnfd_from_vnf_package(self, accept_type):
+        test_file, temp_dir = _create_zip()
+        # File in which VNFD data will be stored.
+        # For testing purpose we are creating temporary zip file.
+        local_file = tempfile.NamedTemporaryFile(suffix='vnfd_data.zip')
+        vnfd_data = open(test_file, 'rb').read()
+        arglist, verifylist = self._get_arglist_and_verifylist(
+            accept_type, local_file.name)
+        parsed_args = self.check_parser(self.download_vnf_package, arglist,
+                                        verifylist)
+        # When --type argument is set to 'both', then 'Accept' header in
+        # request is set to 'text/plain,application/zip' now it is up to the
+        # NFVO to choose the format to return for a single-file VNFD and for
+        # a multi-file VNFD, a ZIP file shall be returned. Here we have taken
+        # the example of multi-file vnfd hence its retuning zip file and
+        # setting the 'Content-Type' as 'application/zip' in response header.
+        self._mock_request_url_for_download_vnfd('application/zip', vnfd_data)
+        self.download_vnf_package.take_action(parsed_args)
+        self.assertTrue(filecmp.cmp(test_file, local_file.name),
+                        "Downloaded contents don't match test file")
+        self.assertTrue(self._check_valid_zip_file(local_file.name))
+        shutil.rmtree(temp_dir)
+
+    def _check_valid_zip_file(self, zip_file):
+        with zipfile.ZipFile(zip_file) as zf:
+            ret = zf.testzip()
+        return False if ret else True
+
+    @mock.patch('builtins.print')
+    def test_download_vnfd_from_vnf_package_without_file_arg(self, mock_print):
+        # --file argument is optional when --type is set to 'text/plain'.
+        arglist = [
+            self._vnf_package['id'],
+            '--vnfd',
+            '--type', 'text/plain',
+        ]
+        verifylist = [
+            ('type', 'text/plain'),
+            ('vnfd', True),
+            ('vnf_package', self._vnf_package['id']),
+        ]
+        parsed_args = self.check_parser(self.download_vnf_package, arglist,
+                                        verifylist)
+        test_file = ('./tackerclient/tests//unit/osc/v1/fixture_data/'
+                     'sample_vnf_package/Definitions/'
+                     'etsi_nfv_sol001_common_types.yaml')
+
+        vnfd_data = open(test_file, 'r').read()
+        self._mock_request_url_for_download_vnfd('text/plain', vnfd_data)
+        self.download_vnf_package.take_action(parsed_args)
+        mock_print.assert_called_once_with(vnfd_data)
+
+    @ddt.data('application/zip', 'both')
+    def test_download_vnfd_from_vnf_package_failed_with_no_file_arg(
+            self, accept_type):
+        arglist = [
+            self._vnf_package['id'],
+            '--vnfd',
+            '--type', accept_type,
+        ]
+        verifylist = [
+            ('type', accept_type),
+            ('vnfd', True),
+            ('vnf_package', self._vnf_package['id']),
+        ]
+        parsed_args = self.check_parser(self.download_vnf_package, arglist,
+                                        verifylist)
+        with mock.patch.object(sys.stdout, "isatty") as mock_isatty:
+            mock_isatty.return_value = True
+            self.assertRaises(SystemExit,
+                              self.download_vnf_package.take_action,
+                              parsed_args)

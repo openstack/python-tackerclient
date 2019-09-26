@@ -14,6 +14,7 @@
 #    under the License.
 
 import logging
+import sys
 
 from osc_lib.cli import parseractions
 from osc_lib.command import command
@@ -256,6 +257,66 @@ class DeleteVnfPackage(command.Command):
             print((_('All specified %(resource)s(s) deleted successfully')
                    % {'resource': self.resource}))
         return
+
+
+class DownloadVnfPackage(command.Command):
+    _description = _("Read VNFD of an on-boarded VNF Package")
+
+    def get_parser(self, prog_name):
+        parser = super(DownloadVnfPackage, self).get_parser(prog_name)
+        parser.add_argument(
+            "vnf_package",
+            metavar="<vnf-package>",
+            help=_("VNF package ID")
+        )
+        parser.add_argument(
+            "--file",
+            metavar="<FILE>",
+            help=_("Local file to save downloaded vnfd data. "
+                   "If this is not specified and there is no redirection "
+                   "then vnfd data will not be saved.")
+        )
+        parser.add_argument(
+            "--vnfd",
+            action="store_true",
+            default=False,
+            help=_("Download VNFD of an on-boarded vnf package."),
+        )
+        parser.add_argument(
+            "--type",
+            default="application/zip",
+            metavar="<type>",
+            choices=["text/plain", "application/zip", "both"],
+            help=_("Provide text/plain when VNFD is implemented as a single "
+                   "YAML file otherwise  use application/zip. If you are not "
+                   "aware whether VNFD is a single or multiple yaml files, "
+                   "then you can specify 'both' option value. "
+                   "Provide this option only when --vnfd is set.")
+        )
+        return parser
+
+    def take_action(self, parsed_args):
+        client = self.app.client_manager.tackerclient
+        if parsed_args.vnfd:
+            if sys.stdout.isatty() and not (parsed_args.file and
+                                            parsed_args.type != "text/plain"):
+                msg = ("No redirection or local file specified for downloaded "
+                       "VNFD data. Please specify a local file with --file to "
+                       "save downloaded VNFD data or use redirection.")
+                sdk_utils.exit(msg)
+
+            body = client.download_vnfd_from_vnf_package(
+                parsed_args.vnf_package, parsed_args.type)
+
+            if parsed_args.file:
+                sdk_utils.save_data(body, parsed_args.file)
+            else:
+                print(body)
+
+        else:
+            msg = ("Currently only download vnfd from on-boarded vnf package "
+                   "is supported. use --vnfd")
+            sdk_utils.exit(msg)
 
 
 class UpdateVnfPackage(command.ShowOne):

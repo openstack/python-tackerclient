@@ -205,8 +205,11 @@ class ClientBase(object):
             action, method, body=body,
             content_type=self.content_type())
 
-        if ('application/json' in resp.headers.get('Content-Type',
-                                                   'application/json')):
+        if 'application/zip' == resp.headers.get('Content-Type'):
+            self.format = 'zip'
+        elif 'text/plain' == resp.headers.get('Content-Type'):
+            self.format = 'text'
+        else:
             self.format = 'json'
 
         status_code = resp.status_code
@@ -231,7 +234,7 @@ class ClientBase(object):
         """
         if data is None:
             return None
-        elif self.format == 'zip':
+        elif self.format in ('zip', 'text'):
             return data
         elif type(data) is dict:
             return serializer.Serializer(
@@ -242,7 +245,7 @@ class ClientBase(object):
 
     def deserialize(self, data, status_code):
         """Deserializes an XML or JSON string into a dictionary."""
-        if status_code in (204, 202):
+        if status_code in (204, 202) or self.format in ('zip', 'text'):
             return data
         return serializer.Serializer(self.get_attr_metadata()).deserialize(
             data, self.content_type())['body']
@@ -261,12 +264,17 @@ class ClientBase(object):
                 constants.EXT_NS: ns}
 
     def content_type(self, _format=None):
-        """Returns the mime-type for either 'xml' or 'json'.
+        """Returns the mime-type for either 'xml', 'json, 'text', or 'zip'.
 
         Defaults to the currently set format.
         """
         _format = _format or self.format
-        return "application/%s" % (_format)
+        if self.format == 'text':
+            return "text/plain"
+        elif self.format == 'both':
+            return "text/plain,application/zip"
+        else:
+            return "application/%s" % (_format)
 
     def retry_request(self, method, action, body=None,
                       headers=None, params=None):
@@ -745,6 +753,7 @@ class VnfPackageClient(ClientBase):
 
     vnfpackages_path = '/vnfpkgm/v1/vnf_packages'
     vnfpackage_path = '/vnfpkgm/v1/vnf_packages/%s'
+    vnfpackage_vnfd_path = '/vnfpkgm/v1/vnf_packages/%s/vnfd'
 
     def build_action(self, action):
         return action
@@ -784,6 +793,31 @@ class VnfPackageClient(ClientBase):
                 id=vnf_package,
                 base_path=self.vnfpackages_path),
                 body=file_data)
+
+    @APIParamsCall
+    def download_vnfd_from_vnf_package(self, vnf_package, accept):
+        """Read VNFD of an on-boarded VNF Package.
+
+        :param vnf_package: The value can be either the ID of a vnf package
+                            or a :class:`~openstack.nfv_orchestration.v1.
+                            vnf_package` instance.
+        :param accept: Valid values are 'text/plain', 'application/zip' and
+                       'both'. According to these values 'Accept' header will
+                        be set as 'text/plain', 'application/zip',
+                       'text/plain,application/zip' respectively.
+
+        :returns: If the VNFD is implemented in the form of multiple files,
+                  a ZIP file embedding these files shall be returned.
+                  If the VNFD is implemented as a single file, either that
+                  file or a ZIP file embedding that file shall be returned.
+        """
+        if accept == 'text/plain':
+            self.format = 'text'
+        elif accept == 'application/zip':
+            self.format = 'zip'
+        else:
+            self.format = 'both'
+        return self.get(self.vnfpackage_vnfd_path % vnf_package)
 
     @APIParamsCall
     def update_vnf_package(self, vnf_package, body):
@@ -1110,3 +1144,7 @@ class Client(object):
 
     def update_vnf_package(self, vnf_package, body):
         return self.vnf_package_client.update_vnf_package(vnf_package, body)
+
+    def download_vnfd_from_vnf_package(self, vnf_package, accept):
+        return self.vnf_package_client.download_vnfd_from_vnf_package(
+            vnf_package, accept)

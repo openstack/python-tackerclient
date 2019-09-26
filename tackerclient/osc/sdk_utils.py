@@ -106,6 +106,23 @@ class DictModel(dict):
         return ', '.join(sorted(pairs))
 
 
+def save_data(data, path):
+    """Save data to the specified path.
+
+    :param data: binary or string data
+    :param path: file path to save data
+    """
+    if path is None:
+        vnfpackage = getattr(sys.stdout, 'buffer', sys.stdout)
+    else:
+        mode = 'wb' if isinstance(data, bytes) else 'w'
+        vnfpackage = open(path, mode)
+    try:
+        vnfpackage.write(data)
+    finally:
+        vnfpackage.close()
+
+
 def exit(msg=None, exit_code=1):
     if msg:
         print(encodeutils.safe_decode(msg))

@@ -144,6 +144,8 @@ class HTTPClient(object):
             verify=self.verify_cert,
             timeout=self.timeout,
             **kwargs)
+        if resp.headers.get('content-type') == 'application/zip':
+            return resp, resp.content
 
         return resp, resp.text
 
@@ -163,6 +165,7 @@ class HTTPClient(object):
         # re-authenticate and try again. If it still fails, bail.
         try:
             kwargs.setdefault('headers', {})
+            kwargs.setdefault('content_type', kwargs.get('content_type'))
             if self.auth_token is None:
                 self.auth_token = ""
             kwargs['headers']['X-Auth-Token'] = self.auth_token
@@ -290,6 +293,10 @@ class SessionClient(adapter.Adapter):
             headers.setdefault('Content-Type', content_type)
 
         resp = super(SessionClient, self).request(*args, **kwargs)
+
+        if resp.headers.get('content-type') == 'application/zip':
+            return resp, resp.content
+
         return resp, resp.text
 
     def _check_uri_length(self, url):
