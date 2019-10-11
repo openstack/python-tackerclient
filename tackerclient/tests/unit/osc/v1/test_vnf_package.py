@@ -326,3 +326,34 @@ class TestUploadVnfPackage(TestVnfPackage):
                           self.upload_vnf_package.take_action, parsed_args)
         # Delete temporary folder
         shutil.rmtree(temp_dir)
+
+    def test_upload_vnf_package_failed_with_404_not_found(self):
+        # Scenario in which vnf package is not found
+        zip_file, temp_dir = _create_zip()
+        arglist = [
+            'dumy-id',
+            "--path", zip_file
+        ]
+        verifylist = [
+            ('path', zip_file),
+            ('vnf_package', 'dumy-id')
+        ]
+
+        parsed_args = self.check_parser(self.upload_vnf_package, arglist,
+                                        verifylist)
+
+        error_message = "Can not find requested vnf package: dummy-id"
+        body = {"itemNotFound": {"message": error_message, "code": 404}}
+        url = self.url + '/vnfpkgm/v1/vnf_packages/dumy-id/package_content'
+
+        self.requests_mock.register_uri(
+            'PUT', url, json=body,
+            status_code=404)
+
+        exception = self.assertRaises(
+            exceptions.TackerClientException,
+            self.upload_vnf_package.take_action, parsed_args)
+
+        self.assertEqual(error_message, exception.message)
+        # Delete temporary folder
+        shutil.rmtree(temp_dir)
