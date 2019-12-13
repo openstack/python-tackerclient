@@ -16,6 +16,7 @@
 import json
 import logging
 import os
+import time
 
 from osc_lib.cli import format_columns
 from osc_lib.command import command
@@ -33,6 +34,12 @@ _mixed_case_fields = ('vnfInstanceName', 'vnfInstanceDescription', 'vnfdId',
                       'vimConnectionInfo', 'instantiatedVnfInfo')
 
 _VNF_INSTANCE = 'vnf_instance'
+
+VNF_INSTANCE_TERMINATION_TIMEOUT = 300
+
+EXTRA_WAITING_TIME = 10
+
+SLEEP_TIME = 1
 
 
 def _get_columns(vnflcm_obj, action=None):
@@ -186,3 +193,143 @@ class InstantiateVnfLcm(command.Command):
         if not result:
             print((_('Instantiate request for VNF Instance %(id)s has been'
                      ' accepted.') % {'id': parsed_args.vnf_instance}))
+
+
+class TerminateVnfLcm(command.Command):
+    _description = _("Terminate a VNF instance")
+
+    def get_parser(self, prog_name):
+        parser = super(TerminateVnfLcm, self).get_parser(prog_name)
+        parser.add_argument(
+            _VNF_INSTANCE,
+            metavar="<vnf-instance>",
+            help=_("VNF instance ID to terminate"))
+        parser.add_argument(
+            "--termination-type",
+            default='GRACEFUL',
+            metavar="<termination-type>",
+            choices=['GRACEFUL', 'FORCEFUL'],
+            help=_("Termination type can be 'GRACEFUL' or 'FORCEFUL'. "
+                   "Default is 'GRACEFUL'"))
+        parser.add_argument(
+            '--graceful-termination-timeout',
+            metavar="<graceful-termination-timeout>",
+            type=int,
+            help=_('This attribute is only applicable in case of graceful '
+                   'termination. It defines the time to wait for the VNF to be'
+                   ' taken out of service before shutting down the VNF and '
+                   'releasing the resources. The unit is seconds.'))
+        parser.add_argument(
+            '--D',
+            action='store_true',
+            default=False,
+            help=_("Delete VNF Instance subsequently after it's termination"),
+        )
+        return parser
+
+    def args2body(self, parsed_args):
+        body = {}
+        body['terminationType'] = parsed_args.termination_type
+
+        if parsed_args.graceful_termination_timeout:
+            if parsed_args.termination_type == 'FORCEFUL':
+                exceptions.InvalidInput('--graceful-termination-timeout'
+                                        ' argument is invalid for "FORCEFUL"'
+                                        ' termination')
+            body['gracefulTerminationTimeout'] = parsed_args.\
+                graceful_termination_timeout
+
+        return body
+
+    def take_action(self, parsed_args):
+        client = self.app.client_manager.tackerclient
+        result = client.terminate_vnf_instance(parsed_args.vnf_instance,
+                                               self.args2body(parsed_args))
+        if not result:
+            print(_("Terminate request for VNF Instance '%(id)s' has been"
+                  " accepted.") % {'id': parsed_args.vnf_instance})
+            if parsed_args.D:
+                print(_("Waiting for vnf instance to be terminated before "
+                      "deleting"))
+
+                self._wait_until_vnf_is_terminated(
+                    client, parsed_args.vnf_instance,
+                    graceful_timeout=parsed_args.graceful_termination_timeout)
+
+                result = client.delete_vnf_instance(parsed_args.vnf_instance)
+                if not result:
+                    print(_("VNF Instance '%(id)s' deleted successfully") %
+                          {'id': parsed_args.vnf_instance})
+
+    def _wait_until_vnf_is_terminated(self, client, vnf_instance_id,
+                                      graceful_timeout=None):
+        # wait until vnf instance 'instantiationState' is set to
+        # 'NOT_INSTANTIATED'
+        if graceful_timeout:
+            # If graceful_termination_timeout is provided,
+            # terminate vnf will start after this timeout period.
+            # Hence, it should wait for extra time of 10 seconds
+            # after this graceful_termination_timeout period.
+            timeout = graceful_timeout + EXTRA_WAITING_TIME
+        else:
+            timeout = VNF_INSTANCE_TERMINATION_TIMEOUT
+
+        start_time = int(time.time())
+        while True:
+            vnf_instance = client.show_vnf_instance(vnf_instance_id)
+            if vnf_instance['instantiationState'] == 'NOT_INSTANTIATED':
+                break
+
+            if ((int(time.time()) - start_time) > timeout):
+                msg = _("Couldn't verify vnf instance is terminated within "
+                        "'%(timeout)s' seconds. Unable to delete vnf instance "
+                        "%(id)s")
+                raise exceptions.CommandError(msg % {'timeout': timeout,
+                                              'id': vnf_instance_id})
+            time.sleep(SLEEP_TIME)
+
+
+class DeleteVnfLcm(command.Command):
+    """Vnf lcm delete
+
+    DeleteVnfLcm class supports bulk deletion of vnf instances, and error
+    handling.
+    """
+
+    _description = _("Delete VNF Instance(s)")
+
+    def get_parser(self, prog_name):
+        parser = super(DeleteVnfLcm, self).get_parser(prog_name)
+        parser.add_argument(
+            'vnf_instances',
+            metavar="<vnf-instance>",
+            nargs="+",
+            help=_("VNF instance ID(s) to delete"))
+        return parser
+
+    def take_action(self, parsed_args):
+        error_count = 0
+        client = self.app.client_manager.tackerclient
+        vnf_instances = parsed_args.vnf_instances
+        for vnf_instance in vnf_instances:
+            try:
+                client.delete_vnf_instance(vnf_instance)
+            except Exception as e:
+                error_count += 1
+                LOG.error(_("Failed to delete vnf instance with "
+                            "ID '%(vnf)s': %(e)s"),
+                          {'vnf': vnf_instance, 'e': e})
+
+        total = len(vnf_instances)
+        if (error_count > 0):
+            msg = (_("Failed to delete %(error_count)s of %(total)s "
+                     "vnf instances.") % {'error_count': error_count,
+                                          'total': total})
+            raise exceptions.CommandError(msg)
+        else:
+            if total > 1:
+                print(_('All specified vnf instances are deleted '
+                        'successfully'))
+            else:
+                print(_("Vnf instance '%s' deleted "
+                        "successfully") % vnf_instances[0])

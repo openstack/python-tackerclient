@@ -800,6 +800,15 @@ class VnfLCMClient(ClientBase):
         return self.post((self.vnf_instance_path + "/instantiate") % vnf_id,
                          body=body)
 
+    @APIParamsCall
+    def terminate_vnf_instance(self, vnf_id, body):
+        return self.post((self.vnf_instance_path + "/terminate") % vnf_id,
+                         body=body)
+
+    @APIParamsCall
+    def delete_vnf_instance(self, vnf_id):
+        return self.delete(self.vnf_instance_path % vnf_id)
+
 
 class Client(object):
     """Unified interface to interact with multiple applications of tacker service.
@@ -1058,3 +1067,9 @@ class Client(object):
 
     def instantiate_vnf_instance(self, vnf_id, body):
         return self.vnf_lcm_client.instantiate_vnf_instance(vnf_id, body)
+
+    def terminate_vnf_instance(self, vnf_id, body):
+        return self.vnf_lcm_client.terminate_vnf_instance(vnf_id, body)
+
+    def delete_vnf_instance(self, vnf_id):
+        return self.vnf_lcm_client.delete_vnf_instance(vnf_id)
