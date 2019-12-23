@@ -39,8 +39,16 @@ def _create_zip():
 
 
 def _get_columns_vnf_package(action='list', vnf_package_obj=None):
-    columns = ['ID', 'Onboarding State', 'Operational State', 'Usage State',
-               'User Defined Data', 'VNF Product Name']
+    columns = []
+    if action == 'update':
+        if vnf_package_obj.get('userDefinedData'):
+            columns.extend(['User Defined Data'])
+        if vnf_package_obj.get('operationalState'):
+            columns.extend(['Operational State'])
+        return columns
+
+    columns.extend(['ID', 'Onboarding State', 'Operational State',
+                    'Usage State', 'User Defined Data', 'VNF Product Name'])
 
     if action in ['show', 'create']:
         if vnf_package_obj and vnf_package_obj[
@@ -357,3 +365,59 @@ class TestUploadVnfPackage(TestVnfPackage):
         self.assertEqual(error_message, exception.message)
         # Delete temporary folder
         shutil.rmtree(temp_dir)
+
+
+@ddt.ddt
+class TestUpdateVnfPackage(TestVnfPackage):
+
+    def setUp(self):
+        super(TestUpdateVnfPackage, self).setUp()
+        self.update_vnf_package = vnf_package.UpdateVnfPackage(
+            self.app, self.app_args, cmd_name='vnf package update')
+
+    @ddt.data((["--user-data", 'Test_key=Test_value',
+                "--operational-state", 'DISABLED'],
+               [('user_data', {'Test_key': 'Test_value'}),
+                ('operational_state', 'DISABLED')]),
+              (["--user-data", 'Test_key=Test_value'],
+               [('user_data', {'Test_key': 'Test_value'})]),
+              (["--operational-state", 'DISABLED'],
+               [('operational_state', 'DISABLED')]))
+    @ddt.unpack
+    def test_take_action(self, arglist, verifylist):
+        vnf_package_obj = vnf_package_fakes.vnf_package_obj(
+            onboarded_state=True)
+        arglist.append(vnf_package_obj['id'])
+        verifylist.append(('vnf_package', vnf_package_obj['id']))
+
+        parsed_args = self.check_parser(self.update_vnf_package, arglist,
+                                        verifylist)
+        url = os.path.join(self.url, 'vnfpkgm/v1/vnf_packages',
+                           vnf_package_obj['id'])
+        fake_response = vnf_package_fakes.get_fake_update_vnf_package_obj(
+            arglist)
+        self.requests_mock.register_uri('PATCH', url,
+                                        json=fake_response,
+                                        headers=self.header)
+
+        columns, data = self.update_vnf_package.take_action(parsed_args)
+        self.assertItemsEqual(_get_columns_vnf_package(
+            vnf_package_obj=fake_response, action='update'), columns)
+        self.assertItemsEqual(
+            vnf_package_fakes.get_vnf_package_data(fake_response), data)
+
+    def test_update_no_options(self):
+        self.assertRaises(base.ParserException, self.check_parser,
+                          self.update_vnf_package, [], [])
+
+    def test_update_without_user_data_and_operational_state(self):
+        vnf_package_obj = vnf_package_fakes.vnf_package_obj(
+            onboarded_state=True)
+        arglist = [vnf_package_obj['id']]
+
+        verifylist = [('vnf_package', vnf_package_obj['id'])]
+
+        parsed_args = self.check_parser(self.update_vnf_package, arglist,
+                                        verifylist)
+        self.assertRaises(SystemExit, self.update_vnf_package.take_action,
+                          parsed_args)

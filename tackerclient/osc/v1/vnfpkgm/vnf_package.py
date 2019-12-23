@@ -256,3 +256,64 @@ class DeleteVnfPackage(command.Command):
             print((_('All specified %(resource)s(s) deleted successfully')
                    % {'resource': self.resource}))
         return
+
+
+class UpdateVnfPackage(command.ShowOne):
+    _description = _("Update information about an individual VNF package")
+
+    def get_parser(self, prog_name):
+        LOG.debug('get_parser(%s)', prog_name)
+        parser = super(UpdateVnfPackage, self).get_parser(prog_name)
+        parser.add_argument(
+            'vnf_package',
+            metavar="<vnf-package>",
+            help=_("VNF package ID")
+        )
+        parser.add_argument(
+            '--operational-state',
+            metavar="<operational-state>",
+            choices=['ENABLED', 'DISABLED'],
+            help=_("Change the operational state of VNF Package, Valid values"
+                   " are 'ENABLED' or 'DISABLED'.")
+        )
+        parser.add_argument(
+            '--user-data',
+            metavar='<key=value>',
+            action=parseractions.KeyValueAction,
+            help=_('User defined data for the VNF package '
+                   '(repeat option to set multiple user defined data)'),
+        )
+        return parser
+
+    def get_columns(self, updated_values):
+        column_map = {}
+        if updated_values.get('userDefinedData'):
+            column_map.update({'userDefinedData': 'User Defined Data'})
+
+        if updated_values.get('operationalState'):
+            column_map.update({'operationalState': 'Operational State'})
+
+        return sdk_utils.get_osc_show_columns_for_sdk_resource(updated_values,
+                                                               column_map)
+
+    def args2body(self, parsed_args):
+        body = {}
+        if not parsed_args.user_data and not parsed_args.operational_state:
+            msg = ('Provide at least one of the argument from "--user-data"'
+                   ' or "--operational-state"')
+            sdk_utils.exit(msg)
+        if parsed_args.user_data:
+            body["userDefinedData"] = parsed_args.user_data
+        if parsed_args.operational_state:
+            body["operationalState"] = parsed_args.operational_state
+        return body
+
+    def take_action(self, parsed_args):
+        client = self.app.client_manager.tackerclient
+        updated_values = client.update_vnf_package(
+            parsed_args.vnf_package, self.args2body(parsed_args))
+        display_columns, columns = self.get_columns(updated_values)
+        data = utils.get_item_properties(
+            sdk_utils.DictModel(updated_values),
+            columns, mixed_case_fields=_mixed_case_fields)
+        return (display_columns, data)

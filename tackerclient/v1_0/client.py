@@ -313,6 +313,10 @@ class ClientBase(object):
         return self.retry_request("PUT", action, body=body,
                                   headers=headers, params=params)
 
+    def patch(self, action, body=None, headers=None, params=None):
+        return self.retry_request("PATCH", action, body=body,
+                                  headers=headers, params=params)
+
     def list(self, collection, path, retrieve_all=True, **params):
         if retrieve_all:
             res = []
@@ -781,6 +785,10 @@ class VnfPackageClient(ClientBase):
                 base_path=self.vnfpackages_path),
                 body=file_data)
 
+    @APIParamsCall
+    def update_vnf_package(self, vnf_package, body):
+        return self.patch(self.vnfpackage_path % vnf_package, body=body)
+
 
 class VnfLCMClient(ClientBase):
     """Client for vnflcm APIs.
@@ -1099,3 +1107,6 @@ class Client(object):
 
     def delete_vnf_instance(self, vnf_id):
         return self.vnf_lcm_client.delete_vnf_instance(vnf_id)
+
+    def update_vnf_package(self, vnf_package, body):
+        return self.vnf_package_client.update_vnf_package(vnf_package, body)

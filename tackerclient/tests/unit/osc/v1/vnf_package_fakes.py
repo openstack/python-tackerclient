@@ -126,3 +126,16 @@ def create_vnf_packages(count=2):
         unique_id = uuidutils.generate_uuid()
         vnf_packages.append(vnf_package_obj(attrs={'id': unique_id}))
     return {'vnf_packages': vnf_packages}
+
+
+def get_fake_update_vnf_package_obj(arglist):
+    fake_update_vnf_package_dict = {}
+    if '--user-data' in arglist:
+        fake_update_vnf_package_dict.update(
+            {"userDefinedData": {'Test_key': 'Test_value'}})
+    if '--operational-state' in arglist:
+        fake_update_vnf_package_dict.update({
+            "operationalState": "DISABLED",
+        })
+
+    return fake_update_vnf_package_dict

@@ -10,6 +10,10 @@
 #   License for the specific language governing permissions and limitations
 #   under the License.
 
+import sys
+
+from oslo_utils import encodeutils
+
 
 def get_osc_show_columns_for_sdk_resource(
     sdk_resource,
@@ -100,3 +104,9 @@ class DictModel(dict):
     def __str__(self):
         pairs = ['%s=%s' % (k, v) for k, v in self.items()]
         return ', '.join(sorted(pairs))
+
+
+def exit(msg=None, exit_code=1):
+    if msg:
+        print(encodeutils.safe_decode(msg))
+    sys.exit(exit_code)
