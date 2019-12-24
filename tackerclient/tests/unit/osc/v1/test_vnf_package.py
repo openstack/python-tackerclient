@@ -560,3 +560,37 @@ class TestDownloadVnfPackage(TestVnfPackage):
             self.assertRaises(SystemExit,
                               self.download_vnf_package.take_action,
                               parsed_args)
+
+    def test_download_vnf_package(self):
+        file_name = 'vnf_package_data.zip'
+        test_file, temp_dir = _create_zip()
+
+        # file in which VNF Package data will be stored.
+        # for testing purpose we are creating temporary zip file.
+        local_file = tempfile.NamedTemporaryFile(suffix=file_name)
+        vnf_package_data = open(test_file, 'rb').read()
+
+        arglist = [
+            self._vnf_package['id'],
+            '--file', local_file.name
+        ]
+        verifylist = [
+            ('vnf_package', self._vnf_package['id']),
+            ('file', local_file.name)
+        ]
+
+        parsed_args = self.check_parser(self.download_vnf_package, arglist,
+                                        verifylist)
+
+        url = os.path.join(self.url, '/vnfpkgm/v1/vnf_packages',
+                           self._vnf_package['id'], 'package_content')
+
+        self.requests_mock.register_uri(
+            'GET', url, headers={'content-type': 'application/zip'},
+            content=vnf_package_data)
+
+        self.download_vnf_package.take_action(parsed_args)
+        self.assertTrue(filecmp.cmp(test_file, local_file.name),
+                        "Downloaded contents don't match test file")
+        self.assertTrue(self._check_valid_zip_file(local_file.name))
+        shutil.rmtree(temp_dir)

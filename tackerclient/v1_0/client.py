@@ -754,6 +754,7 @@ class VnfPackageClient(ClientBase):
     vnfpackages_path = '/vnfpkgm/v1/vnf_packages'
     vnfpackage_path = '/vnfpkgm/v1/vnf_packages/%s'
     vnfpackage_vnfd_path = '/vnfpkgm/v1/vnf_packages/%s/vnfd'
+    vnfpackage_download_path = '/vnfpkgm/v1/vnf_packages/%s/package_content'
 
     def build_action(self, action):
         return action
@@ -793,6 +794,11 @@ class VnfPackageClient(ClientBase):
                 id=vnf_package,
                 base_path=self.vnfpackages_path),
                 body=file_data)
+
+    @APIParamsCall
+    def download_vnf_package(self, vnf_package):
+        self.format = 'zip'
+        return self.get(self.vnfpackage_download_path % vnf_package)
 
     @APIParamsCall
     def download_vnfd_from_vnf_package(self, vnf_package, accept):
@@ -1148,3 +1154,6 @@ class Client(object):
     def download_vnfd_from_vnf_package(self, vnf_package, accept):
         return self.vnf_package_client.download_vnfd_from_vnf_package(
             vnf_package, accept)
+
+    def download_vnf_package(self, vnf_package):
+        return self.vnf_package_client.download_vnf_package(vnf_package)

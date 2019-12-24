@@ -260,7 +260,8 @@ class DeleteVnfPackage(command.Command):
 
 
 class DownloadVnfPackage(command.Command):
-    _description = _("Read VNFD of an on-boarded VNF Package")
+    _description = _("Download VNF package contents or VNFD of an on-boarded "
+                     "VNF package.")
 
     def get_parser(self, prog_name):
         parser = super(DownloadVnfPackage, self).get_parser(prog_name)
@@ -272,9 +273,9 @@ class DownloadVnfPackage(command.Command):
         parser.add_argument(
             "--file",
             metavar="<FILE>",
-            help=_("Local file to save downloaded vnfd data. "
+            help=_("Local file to save downloaded VNF Package or VNFD data. "
                    "If this is not specified and there is no redirection "
-                   "then vnfd data will not be saved.")
+                   "then data will not be saved.")
         )
         parser.add_argument(
             "--vnfd",
@@ -308,15 +309,13 @@ class DownloadVnfPackage(command.Command):
             body = client.download_vnfd_from_vnf_package(
                 parsed_args.vnf_package, parsed_args.type)
 
-            if parsed_args.file:
-                sdk_utils.save_data(body, parsed_args.file)
-            else:
+            if not parsed_args.file:
                 print(body)
-
+                return
         else:
-            msg = ("Currently only download vnfd from on-boarded vnf package "
-                   "is supported. use --vnfd")
-            sdk_utils.exit(msg)
+            body = client.download_vnf_package(parsed_args.vnf_package)
+
+        sdk_utils.save_data(body, parsed_args.file)
 
 
 class UpdateVnfPackage(command.ShowOne):
