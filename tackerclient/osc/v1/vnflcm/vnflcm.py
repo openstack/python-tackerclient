@@ -25,6 +25,17 @@ from osc_lib import utils
 from tackerclient.common import exceptions
 from tackerclient.i18n import _
 from tackerclient.osc import sdk_utils
+from tackerclient.osc import utils as tacker_osc_utils
+
+_attr_map = (
+    ('id', 'ID', tacker_osc_utils.LIST_BOTH),
+    ('vnfInstanceName', 'VNF Instance Name', tacker_osc_utils.LIST_BOTH),
+    ('instantiationState', 'Instantiation State', tacker_osc_utils.LIST_BOTH),
+    ('vnfProvider', 'VNF Provider', tacker_osc_utils.LIST_BOTH),
+    ('vnfSoftwareVersion', 'VNF Software Version', tacker_osc_utils.LIST_BOTH),
+    ('vnfProductName', 'VNF Product Name', tacker_osc_utils.LIST_BOTH),
+    ('vnfdId', 'VNFD ID', tacker_osc_utils.LIST_BOTH)
+)
 
 LOG = logging.getLogger(__name__)
 
@@ -147,6 +158,25 @@ class ShowVnfLcm(command.ShowOne):
             columns, mixed_case_fields=_mixed_case_fields,
             formatters={'instantiatedVnfInfo': format_columns.DictColumn})
         return (display_columns, data)
+
+
+class ListVnfLcm(command.Lister):
+    _description = _("List VNF Instance")
+
+    def get_parser(self, prog_name):
+        parser = super(ListVnfLcm, self).get_parser(prog_name)
+        return parser
+
+    def take_action(self, parsed_args):
+        _params = {}
+        client = self.app.client_manager.tackerclient
+        vnf_instances = client.list_vnf_instances(**_params)
+        headers, columns = tacker_osc_utils.get_column_definitions(
+            _attr_map, long_listing=True)
+        return (headers,
+                (utils.get_dict_properties(
+                    s, columns, mixed_case_fields=_mixed_case_fields,
+                ) for s in vnf_instances))
 
 
 def instantiate_vnf_args2body(file_path):

@@ -23,6 +23,7 @@ from oslo_utils.fixture import uuidsentinel
 import six
 
 from tackerclient.common import exceptions
+from tackerclient.osc import utils as tacker_osc_utils
 from tackerclient.osc.v1.vnflcm import vnflcm
 from tackerclient.tests.unit.osc import base
 from tackerclient.tests.unit.osc.v1.fixture_data import client
@@ -49,6 +50,10 @@ def _get_columns_vnflcm(action='create'):
                'VNF Software Version', 'VNFD ID', 'VNFD Version', 'Links']
     if action == 'show':
         columns.extend(['Instantiated Vnf Info', 'VIM Connection Info'])
+    if action == 'list':
+        columns = [ele for ele in columns if ele not in
+                   ['VNFD Version', 'VNF Instance Description']]
+        columns.remove('Links')
     return columns
 
 
@@ -140,6 +145,35 @@ class TestShowVnfLcm(TestVnfLcm):
         columns, data = (self.show_vnf_lcm.take_action(parsed_args))
         self.assertItemsEqual(_get_columns_vnflcm(action='show'),
                               columns)
+
+
+class TestListVnfLcm(TestVnfLcm):
+
+    vnf_instances = vnflcm_fakes.create_vnf_instances(count=3)
+
+    def setUp(self):
+        super(TestListVnfLcm, self).setUp()
+        self.list_vnf_instance = vnflcm.ListVnfLcm(
+            self.app, self.app_args, cmd_name='vnflcm list')
+
+    def test_take_action(self):
+        parsed_args = self.check_parser(self.list_vnf_instance, [], [])
+        self.requests_mock.register_uri(
+            'GET', os.path.join(self.url, 'vnflcm/v1/vnf_instances'),
+            json=self.vnf_instances, headers=self.header)
+        actual_columns, data = self.list_vnf_instance.take_action(parsed_args)
+
+        headers, columns = tacker_osc_utils.get_column_definitions(
+            vnflcm._attr_map, long_listing=True)
+
+        expected_data = []
+        for vnf_instance_obj in self.vnf_instances:
+            expected_data.append(vnflcm_fakes.get_vnflcm_data(
+                vnf_instance_obj, columns=columns, list_action=True))
+
+        self.assertItemsEqual(_get_columns_vnflcm(action='list'),
+                              actual_columns)
+        self.assertItemsEqual(expected_data, list(data))
 
 
 class TestInstantiateVnfLcm(TestVnfLcm):
