@@ -205,6 +205,10 @@ class ClientBase(object):
             action, method, body=body,
             content_type=self.content_type())
 
+        if ('application/json' in resp.headers.get('Content-Type',
+                                                   'application/json')):
+            self.format = 'json'
+
         status_code = resp.status_code
         if status_code in (requests.codes.ok,
                            requests.codes.created,
