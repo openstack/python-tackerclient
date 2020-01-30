@@ -815,6 +815,11 @@ class VnfLCMClient(ClientBase):
                          body=body)
 
     @APIParamsCall
+    def heal_vnf_instance(self, vnf_id, body):
+        return self.post((self.vnf_instance_path + "/heal") % vnf_id,
+                         body=body)
+
+    @APIParamsCall
     def terminate_vnf_instance(self, vnf_id, body):
         return self.post((self.vnf_instance_path + "/terminate") % vnf_id,
                          body=body)
@@ -1085,6 +1090,9 @@ class Client(object):
 
     def instantiate_vnf_instance(self, vnf_id, body):
         return self.vnf_lcm_client.instantiate_vnf_instance(vnf_id, body)
+
+    def heal_vnf_instance(self, vnf_id, body):
+        return self.vnf_lcm_client.heal_vnf_instance(vnf_id, body)
 
     def terminate_vnf_instance(self, vnf_id, body):
         return self.vnf_lcm_client.terminate_vnf_instance(vnf_id, body)

@@ -275,6 +275,67 @@ class TestInstantiateVnfLcm(TestVnfLcm):
 
 
 @ddt.ddt
+class TestHealVnfLcm(TestVnfLcm):
+
+    def setUp(self):
+        super(TestHealVnfLcm, self).setUp()
+        self.heal_vnf_lcm = vnflcm.HealVnfLcm(
+            self.app, self.app_args, cmd_name='vnflcm heal')
+
+    @ddt.data((['--cause', 'test-cause', "--vnfc-instance",
+                'vnfc-id-1', 'vnfc-id-2'],
+               [('cause', 'test-cause'),
+                ('vnfc_instance', ['vnfc-id-1', 'vnfc-id-2'])]),
+              (['--cause', 'test-cause'],
+               [('cause', 'test-cause')]),
+              (["--vnfc-instance", 'vnfc-id-1', 'vnfc-id-2'],
+               [('vnfc_instance', ['vnfc-id-1', 'vnfc-id-2'])]),
+              ([], []))
+    @ddt.unpack
+    def test_take_action(self, arglist, verifylist):
+        vnf_instance = vnflcm_fakes.vnf_instance_response()
+        arglist.insert(0, vnf_instance['id'])
+        verifylist.extend([('vnf_instance', vnf_instance['id'])])
+
+        # command param
+        parsed_args = self.check_parser(self.heal_vnf_lcm, arglist,
+                                        verifylist)
+
+        url = os.path.join(self.url, 'vnflcm/v1/vnf_instances',
+                           vnf_instance['id'], 'heal')
+        self.requests_mock.register_uri(
+            'POST', url, headers=self.header, json={})
+
+        sys.stdout = buffer = StringIO()
+        result_error = self.heal_vnf_lcm.take_action(parsed_args)
+
+        self.assertIsNone(result_error)
+        actual_message = buffer.getvalue().strip()
+
+        expected_message = ("Heal request for VNF Instance %s has been "
+                            "accepted.") % vnf_instance['id']
+        self.assertIn(expected_message, actual_message)
+
+    def test_take_action_vnf_instance_not_found(self):
+        vnf_instance = vnflcm_fakes.vnf_instance_response()
+        arglist = [vnf_instance['id']]
+        verifylist = [('vnf_instance', vnf_instance['id'])]
+
+        # command param
+        parsed_args = self.check_parser(self.heal_vnf_lcm, arglist,
+                                        verifylist)
+
+        url = os.path.join(self.url, 'vnflcm/v1/vnf_instances',
+                           vnf_instance['id'], 'heal')
+        self.requests_mock.register_uri(
+            'POST', url, headers=self.header, status_code=404, json={})
+
+        self.assertRaises(exceptions.TackerClientException,
+                          self.heal_vnf_lcm.take_action,
+                          parsed_args)
+
+
+@ddt.ddt
 class TestTerminateVnfLcm(TestVnfLcm):
 
     def setUp(self):

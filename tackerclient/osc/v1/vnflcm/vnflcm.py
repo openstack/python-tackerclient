@@ -225,6 +225,44 @@ class InstantiateVnfLcm(command.Command):
                      ' accepted.') % {'id': parsed_args.vnf_instance}))
 
 
+class HealVnfLcm(command.Command):
+    _description = _("Heal VNF Instance")
+
+    def get_parser(self, prog_name):
+        parser = super(HealVnfLcm, self).get_parser(prog_name)
+        parser.add_argument(
+            _VNF_INSTANCE,
+            metavar="<vnf-instance>",
+            help=_("VNF instance ID to heal"))
+        parser.add_argument(
+            '--cause',
+            help=_('Specify the reason why a healing procedure is required.'))
+        parser.add_argument(
+            '--vnfc-instance',
+            metavar="<vnfc-instance-id>",
+            nargs="+",
+            help=_("List of VNFC instances requiring a healing action.")
+        )
+        return parser
+
+    def args2body(self, parsed_args):
+        body = {}
+        if parsed_args.cause:
+            body['cause'] = parsed_args.cause
+        if parsed_args.vnfc_instance:
+            body['vnfcInstanceId'] = parsed_args.vnfc_instance
+
+        return body
+
+    def take_action(self, parsed_args):
+        client = self.app.client_manager.tackerclient
+        result = client.heal_vnf_instance(
+            parsed_args.vnf_instance, self.args2body(parsed_args))
+        if not result:
+            print((_('Heal request for VNF Instance %(id)s has been'
+                     ' accepted.') % {'id': parsed_args.vnf_instance}))
+
+
 class TerminateVnfLcm(command.Command):
     _description = _("Terminate a VNF instance")
 
