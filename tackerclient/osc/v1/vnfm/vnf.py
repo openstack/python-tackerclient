@@ -18,6 +18,7 @@ import yaml
 
 from osc_lib.command import command
 from osc_lib import utils
+from oslo_utils import encodeutils
 
 from tackerclient.common import exceptions
 from tackerclient.i18n import _
@@ -357,13 +358,16 @@ class UpdateVNF(command.ShowOne):
 
     def get_parser(self, prog_name):
         parser = super(UpdateVNF, self).get_parser(prog_name)
-        config_group = parser.add_mutually_exclusive_group(required=True)
-        config_group.add_argument(
+        group = parser.add_mutually_exclusive_group(required=True)
+        group.add_argument(
             '--config-file',
             help=_('YAML file with VNF configuration'))
-        config_group.add_argument(
+        group.add_argument(
             '--config',
-            help=_('Specify config YAML data'))
+            help=_('YAML data with VNF configuration'))
+        group.add_argument(
+            '--param-file',
+            help=_('YAML file with VNF parameter'))
         parser.add_argument(
             _VNF,
             metavar="<VNF>",
@@ -381,17 +385,33 @@ class UpdateVNF(command.ShowOne):
             try:
                 config = yaml.load(config_yaml, Loader=yaml.SafeLoader)
             except yaml.YAMLError as e:
-                raise exceptions.InvalidInput(e)
+                raise exceptions.InvalidInput(reason=e)
+            if not config:
+                raise exceptions.InvalidInput(
+                    reason='The config file is empty')
         if parsed_args.config:
-            config = parsed_args.config
-            if isinstance(config, str) or isinstance(config, unicode):
-                config_str = parsed_args.config.decode('unicode_escape')
-                try:
-                    config = yaml.load(config_str, Loader=yaml.SafeLoader)
-                except yaml.YAMLError as e:
-                    raise exceptions.InvalidInput(e)
+            decoded_config = encodeutils.safe_decode(parsed_args.config)
+            try:
+                config = yaml.load(decoded_config, Loader=yaml.SafeLoader)
+            except yaml.YAMLError as e:
+                raise exceptions.InvalidInput(reason=e)
+            if not config:
+                raise exceptions.InvalidInput(
+                    reason='The parameter is empty')
         if config:
             body[_VNF]['attributes'] = {'config': config}
+        if parsed_args.param_file:
+            with open(parsed_args.param_file) as f:
+                param_yaml = f.read()
+            try:
+                param = yaml.load(
+                    param_yaml, Loader=yaml.SafeLoader)
+            except yaml.YAMLError as e:
+                raise exceptions.InvalidInput(reason=e)
+            if not param:
+                raise exceptions.InvalidInput(
+                    reason='The parameter file is empty')
+            body[_VNF]['attributes'] = {'param_values': param}
         tackerV10.update_dict(parsed_args, body[_VNF], ['tenant_id'])
         return body
 
