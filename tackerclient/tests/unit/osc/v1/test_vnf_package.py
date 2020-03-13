@@ -95,9 +95,9 @@ class TestCreateVnfPackage(TestVnfPackage):
             json=json, headers=self.header)
 
         columns, data = (self.create_vnf_package.take_action(parsed_args))
-        self.assertItemsEqual(_get_columns_vnf_package(action='create'),
+        self.assertCountEqual(_get_columns_vnf_package(action='create'),
                               columns)
-        self.assertItemsEqual(vnf_package_fakes.get_vnf_package_data(json),
+        self.assertCountEqual(vnf_package_fakes.get_vnf_package_data(json),
                               data)
 
 
@@ -125,8 +125,8 @@ class TestListVnfPackage(TestVnfPackage):
             expected_data.append(vnf_package_fakes.get_vnf_package_data(
                 vnf_package_obj, columns=columns, list_action=True))
 
-        self.assertItemsEqual(_get_columns_vnf_package(), actual_columns)
-        self.assertItemsEqual(expected_data, list(data))
+        self.assertCountEqual(_get_columns_vnf_package(), actual_columns)
+        self.assertCountEqual(expected_data, list(data))
 
 
 @ddt.ddt
@@ -149,9 +149,9 @@ class TestShowVnfPackage(TestVnfPackage):
         self.requests_mock.register_uri('GET', url, json=vnf_package_obj,
                                         headers=self.header)
         columns, data = (self.show_vnf_package.take_action(parsed_args))
-        self.assertItemsEqual(_get_columns_vnf_package(
+        self.assertCountEqual(_get_columns_vnf_package(
             vnf_package_obj=vnf_package_obj, action='show'), columns)
-        self.assertItemsEqual(
+        self.assertCountEqual(
             vnf_package_fakes.get_vnf_package_data(vnf_package_obj), data)
 
     def test_show_no_options(self):
