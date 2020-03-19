@@ -51,17 +51,14 @@ def _get_columns_vnf_package(action='list', vnf_package_obj=None):
         return columns
 
     columns.extend(['ID', 'Onboarding State', 'Operational State',
-                    'Usage State', 'User Defined Data', 'VNF Product Name'])
+                    'Usage State', 'User Defined Data', 'Links'])
 
     if action in ['show', 'create']:
         if vnf_package_obj and vnf_package_obj[
             'onboardingState'] == 'ONBOARDED':
-            columns.extend(['Links', 'VNFD ID', 'VNF Provider',
-                            'VNF Software Version', 'VNFD Version',
-                            'Software Images'])
-        else:
-            columns.extend(['Links'])
-            columns.remove('VNF Product Name')
+            columns.extend(['VNFD ID', 'VNF Provider', 'VNF Software Version',
+                            'VNFD Version', 'Software Images',
+                            'VNF Product Name', 'Checksum'])
 
     return columns
 
@@ -106,37 +103,168 @@ class TestCreateVnfPackage(TestVnfPackage):
             json=json, headers=self.header)
 
         columns, data = (self.create_vnf_package.take_action(parsed_args))
-        self.assertCountEqual(_get_columns_vnf_package(action='create'),
-                              columns)
+        self.assertCountEqual(_get_columns_vnf_package(), columns)
         self.assertCountEqual(vnf_package_fakes.get_vnf_package_data(json),
                               data)
 
 
+@ddt.ddt
 class TestListVnfPackage(TestVnfPackage):
-
-    _vnf_packages = vnf_package_fakes.create_vnf_packages(count=3)
 
     def setUp(self):
         super(TestListVnfPackage, self).setUp()
         self.list_vnf_package = vnf_package.ListVnfPackage(
             self.app, self.app_args, cmd_name='vnf package list')
+        self._vnf_packages = self._get_vnf_packages()
 
-    def test_take_action(self):
+    def _get_vnf_packages(self, onboarded_vnf_package=False):
+        return vnf_package_fakes.create_vnf_packages(
+            count=3, onboarded_vnf_package=onboarded_vnf_package)
+
+    def get_list_columns(self, all_fields=False, exclude_fields=None,
+                         extra_fields=None):
+
+        columns = ['Id', 'Vnf Product Name', 'Onboarding State', 'Usage State',
+                   'Operational State']
+        complex_columns = ['Checksum', 'Software Images', 'User Defined Data']
+        simple_columns = ['Vnfd Version', 'Vnf Provider', 'Vnfd Id', 'Links',
+                          'Vnf Software Version']
+
+        if extra_fields:
+            columns.extend(extra_fields)
+
+        if exclude_fields:
+            columns.extend([field for field in complex_columns
+                           if field not in exclude_fields])
+        if all_fields:
+            columns.extend(complex_columns)
+            columns.extend(simple_columns)
+
+        return columns
+
+    def _get_mock_response_for_list_vnf_packages(
+            self, filter_attribute, json=None):
+        self.requests_mock.register_uri(
+            'GET', self.url + '/vnfpkgm/v1/vnf_packages?' + filter_attribute,
+            json=json if json else self._get_vnf_packages(),
+            headers=self.header)
+
+    def test_take_action_default_fields(self):
         parsed_args = self.check_parser(self.list_vnf_package, [], [])
         self.requests_mock.register_uri(
             'GET', self.url + '/vnfpkgm/v1/vnf_packages',
             json=self._vnf_packages, headers=self.header)
         actual_columns, data = self.list_vnf_package.take_action(parsed_args)
-
         expected_data = []
         headers, columns = tacker_osc_utils.get_column_definitions(
-            vnf_package._attr_map, long_listing=True)
+            self.list_vnf_package.get_attributes(), long_listing=True)
 
         for vnf_package_obj in self._vnf_packages['vnf_packages']:
             expected_data.append(vnf_package_fakes.get_vnf_package_data(
                 vnf_package_obj, columns=columns, list_action=True))
+        self.assertCountEqual(self.get_list_columns(), actual_columns)
+        self.assertCountEqual(expected_data, list(data))
 
-        self.assertCountEqual(_get_columns_vnf_package(), actual_columns)
+    @ddt.data('all_fields', 'exclude_default')
+    def test_take_action(self, arg):
+        parsed_args = self.check_parser(
+            self.list_vnf_package,
+            ["--" + arg, "--filter", '(eq,onboardingState,ONBOARDED)'],
+            [(arg, True), ('filter', '(eq,onboardingState,ONBOARDED)')])
+        vnf_packages = self._get_vnf_packages(onboarded_vnf_package=True)
+        self._get_mock_response_for_list_vnf_packages(
+            'filter=(eq,onboardingState,ONBOARDED)&' + arg, json=vnf_packages)
+
+        actual_columns, data = self.list_vnf_package.take_action(parsed_args)
+        expected_data = []
+        kwargs = {arg: True} if arg == 'all_fields' else {}
+        headers, columns = tacker_osc_utils.get_column_definitions(
+            self.list_vnf_package.get_attributes(**kwargs), long_listing=True)
+
+        for vnf_package_obj in vnf_packages['vnf_packages']:
+            expected_data.append(vnf_package_fakes.get_vnf_package_data(
+                vnf_package_obj, columns=columns, list_action=True, **kwargs))
+
+        self.assertCountEqual(self.get_list_columns(**kwargs), actual_columns)
+        self.assertCountEqual(expected_data, list(data))
+
+    def test_take_action_with_exclude_fields(self):
+        parsed_args = self.check_parser(
+            self.list_vnf_package,
+            ["--exclude_fields", 'softwareImages,checksum,userDefinedData',
+             "--filter", '(eq,onboardingState,ONBOARDED)'],
+            [('exclude_fields', 'softwareImages,checksum,userDefinedData'),
+             ('filter', '(eq,onboardingState,ONBOARDED)')])
+        vnf_packages = self._get_vnf_packages(onboarded_vnf_package=True)
+        updated_vnf_packages = {'vnf_packages': []}
+        for vnf_pkg in vnf_packages['vnf_packages']:
+            vnf_pkg.pop('softwareImages')
+            vnf_pkg.pop('checksum')
+            vnf_pkg.pop('userDefinedData')
+            updated_vnf_packages['vnf_packages'].append(vnf_pkg)
+        self._get_mock_response_for_list_vnf_packages(
+            'filter=(eq,onboardingState,ONBOARDED)&'
+            'exclude_fields=softwareImages,checksum,userDefinedData',
+            json=updated_vnf_packages)
+
+        actual_columns, data = self.list_vnf_package.take_action(parsed_args)
+        expected_data = []
+        headers, columns = tacker_osc_utils.get_column_definitions(
+            self.list_vnf_package.get_attributes(
+                exclude_fields=['softwareImages', 'checksum',
+                                'userDefinedData']),
+            long_listing=True)
+
+        for vnf_package_obj in updated_vnf_packages['vnf_packages']:
+            expected_data.append(vnf_package_fakes.get_vnf_package_data(
+                vnf_package_obj, columns=columns, list_action=True))
+        expected_columns = self.get_list_columns(
+            exclude_fields=['Software Images', 'Checksum',
+                            'User Defined Data'])
+        self.assertCountEqual(expected_columns, actual_columns)
+        self.assertCountEqual(expected_data, list(data))
+
+    @ddt.data((['--all_fields', '--fields', 'softwareImages'],
+               [('all_fields', True), ('fields', 'softwareImages')]),
+              (['--all_fields', '--exclude_fields', 'checksum'],
+               [('all_fields', True), ('exclude_fields', 'checksum')]),
+              (['--fields', 'softwareImages', '--exclude_fields', 'checksum'],
+               [('fields', 'softwareImages'), ('exclude_fields', 'checksum')]))
+    @ddt.unpack
+    def test_take_action_with_invalid_combination(self, arglist, verifylist):
+        self.assertRaises(base.ParserException, self.check_parser,
+                          self.list_vnf_package, arglist, verifylist)
+
+    def test_take_action_with_valid_combination(self):
+        parsed_args = self.check_parser(
+            self.list_vnf_package,
+            ["--fields", 'softwareImages,checksum', "--exclude_default"],
+            [('fields', 'softwareImages,checksum'), ('exclude_default', True)])
+        vnf_packages = self._get_vnf_packages(onboarded_vnf_package=True)
+        updated_vnf_packages = {'vnf_packages': []}
+        for vnf_pkg in vnf_packages['vnf_packages']:
+            vnf_pkg.pop('userDefinedData')
+            updated_vnf_packages['vnf_packages'].append(vnf_pkg)
+
+        self._get_mock_response_for_list_vnf_packages(
+            'exclude_default&fields=softwareImages,checksum',
+            json=updated_vnf_packages)
+
+        actual_columns, data = self.list_vnf_package.take_action(parsed_args)
+        expected_data = []
+        headers, columns = tacker_osc_utils.get_column_definitions(
+            self.list_vnf_package.get_attributes(
+                extra_fields=['softwareImages', 'checksum']),
+            long_listing=True)
+
+        for vnf_package_obj in updated_vnf_packages['vnf_packages']:
+            expected_data.append(vnf_package_fakes.get_vnf_package_data(
+                vnf_package_obj, columns=columns, list_action=True,
+                exclude_default=True))
+
+        self.assertCountEqual(self.get_list_columns(
+            extra_fields=['Software Images', 'Checksum']),
+            actual_columns)
         self.assertCountEqual(expected_data, list(data))
 
 
@@ -160,6 +288,8 @@ class TestShowVnfPackage(TestVnfPackage):
         self.requests_mock.register_uri('GET', url, json=vnf_package_obj,
                                         headers=self.header)
         columns, data = (self.show_vnf_package.take_action(parsed_args))
+        self.assertEqual(sorted(_get_columns_vnf_package(
+            vnf_package_obj=vnf_package_obj, action='show')), sorted(columns))
         self.assertCountEqual(_get_columns_vnf_package(
             vnf_package_obj=vnf_package_obj, action='show'), columns)
         self.assertCountEqual(

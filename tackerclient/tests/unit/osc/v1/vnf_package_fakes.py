@@ -63,6 +63,10 @@ def vnf_package_obj(attrs=None, onboarded_state=False):
                                     "imagePath": "string"
                                 }
                             ],
+                            "checksum": {
+                                "algorithm": "string",
+                                "hash": "string"
+                            },
                             "onboardingState": "ONBOARDED",
                             "operationalState": "ENABLED",
                             "usageState": "IN_USE",
@@ -84,7 +88,7 @@ def vnf_package_obj(attrs=None, onboarded_state=False):
     return fake_vnf_package
 
 
-def get_vnf_package_data(vnf_package, list_action=False, columns=None):
+def get_vnf_package_data(vnf_package, **kwargs):
     """Get the vnf package data from a FakeVnfPackage dict object.
 
     :param vnf_package:
@@ -96,8 +100,7 @@ def get_vnf_package_data(vnf_package, list_action=False, columns=None):
         'CREATED', 'DISABLED', 'NOT_IN_USE', {'Test_key': 'Test_value'}]
     """
 
-    if list_action:
-        vnf_package.pop('_links')
+    if kwargs.get('list_action'):
         # In case of List VNF packages we get empty string as data for
         # 'vnfProductName' if onboardingState is CREATED. Hence to match
         # up with actual data we are adding here empty string.
@@ -105,13 +108,13 @@ def get_vnf_package_data(vnf_package, list_action=False, columns=None):
             vnf_package['vnfProductName'] = ''
 
     # return the list of data as per column order
-    if columns:
-        return tuple([vnf_package[key] for key in columns])
+    if kwargs.get('columns'):
+        return tuple([vnf_package[key] for key in kwargs.get('columns')])
 
     return tuple([vnf_package[key] for key in sorted(vnf_package.keys())])
 
 
-def create_vnf_packages(count=2):
+def create_vnf_packages(count=2, onboarded_vnf_package=False):
     """Create multiple fake vnf packages.
 
     :param Dictionary attrs:
@@ -124,7 +127,8 @@ def create_vnf_packages(count=2):
     vnf_packages = []
     for i in range(0, count):
         unique_id = uuidutils.generate_uuid()
-        vnf_packages.append(vnf_package_obj(attrs={'id': unique_id}))
+        vnf_packages.append(vnf_package_obj(
+            attrs={'id': unique_id}, onboarded_state=onboarded_vnf_package))
     return {'vnf_packages': vnf_packages}
 
 
