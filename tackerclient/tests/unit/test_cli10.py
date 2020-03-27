@@ -573,6 +573,7 @@ class CLITestV10Base(testtools.TestCase):
                 'PUT',
                 body=_body,
                 headers=test_utils.ContainsKeyValue('X-Auth-Token', TOKEN))
+
         self.assertEqual(get_client_called_count, mock_get.call_count)
         _str = self.fake_stdout.make_string()
         self.assertIn(myid, _str)

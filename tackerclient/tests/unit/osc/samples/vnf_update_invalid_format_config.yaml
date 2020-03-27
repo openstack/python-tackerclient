@@ -1,0 +1,7 @@
+auth_url: ][
+username: 'xyz'
+password: '12345'
+project_name: 'abc'
+project_domain_name: 'prj_domain_name'
+user_domain_name: 'user_domain_name'
+type: 'openstack'

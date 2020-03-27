@@ -13,10 +13,11 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+import mock
 import sys
 
-import mock
-
+from tackerclient.common import exceptions
+from tackerclient.common import utils
 from tackerclient import shell
 from tackerclient.tacker import v1_0 as tackerV1_0
 from tackerclient.tacker.v1_0 import TackerCommand
@@ -187,7 +188,313 @@ class CLITestV10VmVNFJSON(test_cli10.CLITestV10Base):
                                    [my_id, '--%s' % key, value],
                                    {key: value})
 
-    def test_delete_vnf_without_force(self):
+    def test_vnf_update_param_file(self):
+        cmd = vnf.UpdateVNF(test_cli10.MyApp(sys.stdout), None)
+        my_id = 'my-id'
+        key = 'key'
+        value = 'new-value'
+        config_file = utils.get_file_path(
+            'tests/unit/osc/samples/vnf_update_param.yaml')
+        args = [my_id, '--param-file', str(config_file)]
+        extra_fields = {'attributes': {'param_values': {key: value}}}
+
+        self._test_update_resource(self._RESOURCE, cmd, my_id, args,
+                                   extra_fields)
+
+    def test_vnf_update_config_file(self):
+        cmd = vnf.UpdateVNF(test_cli10.MyApp(sys.stdout), None)
+        name = 'my-name'
+        description = 'Vim Description'
+        vim_config = utils.get_file_path(
+            'tests/unit/osc/samples/vnf_update_config.yaml')
+        args = [
+            name,
+            '--config-file', vim_config,
+            '--description', description]
+        p_auth_url = 'http://1.2.3.4:5000'
+        p_type = 'openstack'
+        p_project_name = 'abc'
+        p_username = 'xyz'
+        p_project_domain_name = 'prj_domain_name'
+        p_user_domain_name = 'user_domain_name'
+        p_password = '12345'
+        config = {'auth_url': p_auth_url, 'project_name': p_project_name,
+                  'username': p_username,
+                  'project_domain_name': p_project_domain_name,
+                  'type': p_type, 'user_domain_name': p_user_domain_name,
+                  'password': p_password}
+        extra_body = {'description': description,
+                      'attributes': {'config': config}}
+
+        self._test_update_resource(self._RESOURCE, cmd, name, args, extra_body)
+
+    def test_vnf_update_config(self):
+        cmd = vnf.UpdateVNF(test_cli10.MyApp(sys.stdout), None)
+        name = 'my-name'
+        description = 'Vim Description'
+        p_auth_url = 'https://1.2.3.4:6443'
+        p_type = 'kubernetes'
+        p_password = '12345'
+        p_project_name = 'default'
+        p_username = 'xyz'
+        p_ssl_ca_cert = 'abcxyz'
+        config = {'password': p_password, 'project_name': p_project_name,
+                  'username': p_username, 'type': p_type,
+                  'ssl_ca_cert': p_ssl_ca_cert, 'auth_url': p_auth_url}
+        args = [
+            name,
+            '--description', description,
+            '--config', str(config)]
+        extra_body = {'description': description,
+                      'attributes': {'config': config}}
+
+        self._test_update_resource(self._RESOURCE, cmd, name, args, extra_body)
+
+    def test_vnf_update_invalid_format_param_file(self):
+        cmd = vnf.UpdateVNF(test_cli10.MyApp(sys.stdout), None)
+        my_id = 'my-id'
+        name = 'my-name'
+        key = 'key'
+        value = 'new-value'
+        config_file = utils.get_file_path(
+            'tests/unit/osc/samples/vnf_update_invalid_format_param.yaml')
+        args = [my_id, '--param-file', str(config_file)]
+        extra_fields = {'attributes': {'param_values': {key: value}}}
+
+        self.assertRaises(exceptions.InvalidInput,
+                          self._test_update_resource,
+                          self._RESOURCE, cmd, name, args, extra_fields)
+
+    def test_vnf_update_empty_param_file(self):
+        cmd = vnf.UpdateVNF(test_cli10.MyApp(sys.stdout), None)
+        my_id = 'my-id'
+        name = 'my-name'
+        key = 'key'
+        value = 'new-value'
+        config_file = utils.get_file_path(
+            'tests/unit/osc/samples/vnf_update_empty_param.yaml')
+        args = [my_id, '--param-file', str(config_file)]
+        extra_fields = {'attributes': {'param_values': {key: value}}}
+
+        self.assertRaises(exceptions.InvalidInput,
+                          self._test_update_resource,
+                          self._RESOURCE, cmd, name, args, extra_fields)
+
+    def test_vnf_update_invalid_format_config_file(self):
+        cmd = vnf.UpdateVNF(test_cli10.MyApp(sys.stdout), None)
+        name = 'my-name'
+        description = 'Vim Description'
+        vim_config = utils.get_file_path(
+            'tests/unit/osc/samples/vnf_update_invalid_format_config.yaml')
+        args = [
+            name,
+            '--config-file', vim_config,
+            '--description', description]
+        p_auth_url = 'http://1.2.3.4:5000'
+        p_type = 'openstack'
+        p_project_name = 'abc'
+        p_username = 'xyz'
+        p_project_domain_name = 'prj_domain_name'
+        p_user_domain_name = 'user_domain_name'
+        p_password = '12345'
+        config = {'auth_url': p_auth_url, 'project_name': p_project_name,
+                  'username': p_username,
+                  'project_domain_name': p_project_domain_name, 'type': p_type,
+                  'user_domain_name': p_user_domain_name,
+                  'password': p_password}
+        extra_body = {'description': description,
+                      'attributes': {'config': config}}
+
+        self.assertRaises(exceptions.InvalidInput,
+                          self._test_update_resource,
+                          self._RESOURCE, cmd, name, args, extra_body)
+
+    def test_vnf_update_empty_config_file(self):
+        cmd = vnf.UpdateVNF(test_cli10.MyApp(sys.stdout), None)
+        name = 'my-name'
+        description = 'Vim Description'
+        vim_config = utils.get_file_path(
+            'tests/unit/osc/samples/vnf_update_empty_config.yaml')
+        args = [
+            name,
+            '--config-file', vim_config,
+            '--description', description]
+        extra_body = {'description': description}
+
+        self.assertRaises(exceptions.InvalidInput,
+                          self._test_update_resource,
+                          self._RESOURCE, cmd, name, args, extra_body)
+
+    def test_vnf_update_invalid_format_config(self):
+        cmd = vnf.UpdateVNF(test_cli10.MyApp(sys.stdout), None)
+        my_id = 'my-id'
+        name = 'vnfs/my-id'
+        key = 'key'
+        value = 'new-value'
+        description = 'Vim Description'
+        extra_fields = {'attributes': {'param_values': {key: value}}}
+        config = 'test: : ]['
+        args = [my_id,
+                '--config', config,
+                '--description', description]
+
+        self.assertRaises(exceptions.InvalidInput,
+                          self._test_update_resource,
+                          self._RESOURCE, cmd, name, args, extra_fields)
+
+    def test_vnf_update_empty_config(self):
+        cmd = vnf.UpdateVNF(test_cli10.MyApp(sys.stdout), None)
+        name = 'my-name'
+        description = 'Vim Description'
+        config = {}
+        args = [name,
+                '--config', str(config),
+                '--description', description]
+        extra_body = {'description': description}
+
+        self.assertRaises(exceptions.InvalidInput,
+                          self._test_update_resource,
+                          self._RESOURCE, cmd, name, args, extra_body)
+
+    def test_vnf_update_multi_args_config_configfile_paramfile(self):
+        cmd = vnf.UpdateVNF(test_cli10.MyApp(sys.stdout), None)
+        my_id = 'my-id'
+        key = 'key'
+        name = 'my-name'
+        value = 'new-value'
+        description = 'Vim Description'
+        p_auth_url = 'https://1.2.3.4:6443'
+        p_type = 'kubernetes'
+        p_password = '12345'
+        p_project_name = 'default'
+        p_username = 'xyz'
+        p_ssl_ca_cert = 'abcxyz'
+        config = {'password': p_password, 'project_name': p_project_name,
+                  'username': p_username, 'type': p_type,
+                  'ssl_ca_cert': p_ssl_ca_cert, 'auth_url': p_auth_url}
+        vim_config = utils.get_file_path(
+            'tests/unit/osc/samples/vnf_update_config.yaml')
+        param_file = utils.get_file_path(
+            'tests/unit/osc/samples/vnf_update_param.yaml')
+        args = [my_id,
+                '--config-file', str(vim_config),
+                '--param-file', str(param_file),
+                '--config', str(config),
+                '--description', description]
+        extra_fields = {'attributes': {'param_values': {key: value}}}
+
+        self.assertRaises(BaseException,
+                          self._test_update_resource,
+                          self._RESOURCE, cmd, name, args, extra_fields)
+
+    def test_vnf_update_multi_args_configfile_paramfile(self):
+        cmd = vnf.UpdateVNF(test_cli10.MyApp(sys.stdout), None)
+        name = 'my_name'
+        my_id = 'my-id'
+        description = 'Vim Description'
+        param_file = utils.get_file_path(
+            'tests/unit/osc/samples/vnf_update_param.yaml')
+        vim_config = utils.get_file_path(
+            'tests/unit/osc/samples/vnf_update_config.yaml')
+        args = [
+            my_id,
+            '--param-file', str(param_file),
+            '--config-file', vim_config,
+            '--description', description]
+        extra_body = {'description': description}
+
+        self.assertRaises(BaseException,
+                          self._test_update_resource,
+                          self._RESOURCE, cmd, name, args, extra_body)
+
+    def test_vnf_update_multi_args_config_configfile(self):
+        cmd = vnf.UpdateVNF(test_cli10.MyApp(sys.stdout), None)
+        name = 'my_name'
+        my_id = 'my-id'
+        description = 'Vim Description'
+        p_auth_url = 'https://1.2.3.4:6443'
+        p_type = 'kubernetes'
+        p_password = '12345'
+        p_project_name = 'default'
+        p_username = 'xyz'
+        p_ssl_ca_cert = 'abcxyz'
+        config = {'password': p_password, 'project_name': p_project_name,
+                  'username': p_username, 'type': p_type,
+                  'ssl_ca_cert': p_ssl_ca_cert, 'auth_url': p_auth_url}
+        vim_config = utils.get_file_path(
+            'tests/unit/osc/samples/vnf_update_config.yaml')
+        args = [
+            my_id,
+            '--config-file', str(vim_config),
+            '--config', str(config),
+            '--description', description]
+        extra_body = {'description': description}
+
+        self.assertRaises(BaseException,
+                          self._test_update_resource,
+                          self._RESOURCE, cmd, name, args, extra_body)
+
+    def test_vnf_update_multi_args_config_paramfile(self):
+        cmd = vnf.UpdateVNF(test_cli10.MyApp(sys.stdout), None)
+        name = 'my_name'
+        my_id = 'my-id'
+        description = 'Vim Description'
+        p_auth_url = 'https://1.2.3.4:6443'
+        p_type = 'kubernetes'
+        p_password = '12345'
+        p_project_name = 'default'
+        p_username = 'xyz'
+        p_ssl_ca_cert = 'abcxyz'
+        config = {'password': p_password, 'project_name': p_project_name,
+                  'username': p_username, 'type': p_type,
+                  'ssl_ca_cert': p_ssl_ca_cert, 'auth_url': p_auth_url}
+        param_file = utils.get_file_path(
+            'tests/unit/osc/samples/vnf_update_param.yaml')
+        args = [
+            my_id,
+            '--param-file', str(param_file),
+            '--config', str(config),
+            '--description', description]
+        extra_body = {'description': description}
+
+        self.assertRaises(BaseException,
+                          self._test_update_resource,
+                          self._RESOURCE, cmd, name, args, extra_body)
+
+    def test_vnf_update_param_file_with_empty_dict(self):
+        cmd = vnf.UpdateVNF(test_cli10.MyApp(sys.stdout), None)
+        my_id = 'my-id'
+        name = 'my-name'
+        key = 'key'
+        value = 'new-value'
+        config_file = utils.get_file_path(
+            'tests/unit/osc/samples/'
+            'vnf_update_param_file_with_empty_dict.yaml')
+        args = [my_id, '--param-file', str(config_file)]
+        extra_fields = {'attributes': {'param_values': {key: value}}}
+
+        self.assertRaises(exceptions.InvalidInput,
+                          self._test_update_resource,
+                          self._RESOURCE, cmd, name, args, extra_fields)
+
+    def test_vnf_update_config_file_with_empty_dict(self):
+        cmd = vnf.UpdateVNF(test_cli10.MyApp(sys.stdout), None)
+        name = 'my-name'
+        description = 'Vim Description'
+        vim_config = utils.get_file_path(
+            'tests/unit/osc/samples/'
+            'vnf_update_config_file_with_empty_dict.yaml')
+        args = [
+            name,
+            '--config-file', vim_config,
+            '--description', description]
+        extra_body = {'description': description}
+
+        self.assertRaises(exceptions.InvalidInput,
+                          self._test_update_resource,
+                          self._RESOURCE, cmd, name, args, extra_body)
+
+    def test_delete_vnf(self):
         cmd = vnf.DeleteVNF(test_cli10.MyApp(sys.stdout), None)
         my_id = 'my-id'
         args = [my_id]
