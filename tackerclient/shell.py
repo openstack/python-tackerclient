@@ -104,6 +104,7 @@ class BashCompletionCommand(openstack_command.OpenStackCommand):
     """Prints all of the commands and options for bash-completion."""
     resource = "bash_completion"
 
+
 COMMAND_V1 = {
     'bash-completion': BashCompletionCommand,
     'ext-list': extension.ListExt,

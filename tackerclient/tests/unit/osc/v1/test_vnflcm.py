@@ -484,15 +484,15 @@ class TestDeleteVnfLcm(TestVnfLcm):
         self.vnf_instances = vnflcm_fakes.create_vnf_instances(count=3)
 
     def _mock_request_url_for_delete(self, vnf_index):
-            url = os.path.join(self.url, 'vnflcm/v1/vnf_instances',
-                               self.vnf_instances[vnf_index]['id'])
+        url = os.path.join(self.url, 'vnflcm/v1/vnf_instances',
+                           self.vnf_instances[vnf_index]['id'])
 
-            json = self.vnf_instances[vnf_index]
+        json = self.vnf_instances[vnf_index]
 
-            self.requests_mock.register_uri('GET', url, json=json,
-                                            headers=self.header)
-            self.requests_mock.register_uri('DELETE', url,
-                                            headers=self.header, json={})
+        self.requests_mock.register_uri('GET', url, json=json,
+                                        headers=self.header)
+        self.requests_mock.register_uri('DELETE', url,
+                                        headers=self.header, json={})
 
     def test_delete_one_vnf_instance(self):
         arglist = [self.vnf_instances[0]['id']]

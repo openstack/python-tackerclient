@@ -181,15 +181,15 @@ class TestDeleteVnfPackage(TestVnfPackage):
         self._vnf_package = vnf_package_fakes.create_vnf_packages(count=3)
 
     def _mock_request_url_for_delete(self, vnf_pkg_index):
-            url = (self.url + '/vnfpkgm/v1/vnf_packages/' +
-                   self._vnf_package['vnf_packages'][vnf_pkg_index]['id'])
+        url = (self.url + '/vnfpkgm/v1/vnf_packages/' +
+               self._vnf_package['vnf_packages'][vnf_pkg_index]['id'])
 
-            json = self._vnf_package['vnf_packages'][vnf_pkg_index]
+        json = self._vnf_package['vnf_packages'][vnf_pkg_index]
 
-            self.requests_mock.register_uri('GET', url, json=json,
-                                            headers=self.header)
-            self.requests_mock.register_uri('DELETE', url,
-                                            headers=self.header, json={})
+        self.requests_mock.register_uri('GET', url, json=json,
+                                        headers=self.header)
+        self.requests_mock.register_uri('DELETE', url,
+                                        headers=self.header, json={})
 
     def test_delete_one_vnf_package(self):
         arglist = [self._vnf_package['vnf_packages'][0]['id']]

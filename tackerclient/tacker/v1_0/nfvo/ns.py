@@ -82,17 +82,17 @@ class CreateNS(tackerV10.CreateCommand):
         tacker_client = self.get_client()
         tacker_client.format = parsed_args.request_format
         if parsed_args.vim_name:
-                _id = tackerV10.find_resourceid_by_name_or_id(tacker_client,
-                                                              'vim',
-                                                              parsed_args.
-                                                              vim_name)
-                parsed_args.vim_id = _id
+            _id = tackerV10.find_resourceid_by_name_or_id(tacker_client,
+                                                          'vim',
+                                                          parsed_args.
+                                                          vim_name)
+            parsed_args.vim_id = _id
         if parsed_args.nsd_name:
-                _id = tackerV10.find_resourceid_by_name_or_id(tacker_client,
-                                                              'nsd',
-                                                              parsed_args.
-                                                              nsd_name)
-                parsed_args.nsd_id = _id
+            _id = tackerV10.find_resourceid_by_name_or_id(tacker_client,
+                                                          'nsd',
+                                                          parsed_args.
+                                                          nsd_name)
+            parsed_args.nsd_id = _id
         elif parsed_args.nsd_template:
             with open(parsed_args.nsd_template) as f:
                 template = f.read()
