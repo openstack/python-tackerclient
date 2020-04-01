@@ -317,8 +317,11 @@ class ClientBase(object):
         if retrieve_all:
             res = []
             for r in self._pagination(collection, path, **params):
-                res.extend(r[collection])
-            return {collection: res}
+                if type(r) is list:
+                    res.extend(r)
+                else:
+                    res.extend(r[collection])
+            return {collection: res} if collection else res
         else:
             return self._pagination(collection, path, **params)
 
@@ -333,6 +336,11 @@ class ClientBase(object):
             yield res
             next = False
             try:
+                # TODO(tpatil): Handle pagination for list data type
+                # once it's supported by tacker.
+                if type(res) is list:
+                    break
+
                 for link in res['%s_links' % collection]:
                     if link['rel'] == linkrel:
                         query_str = urlparse.urlparse(link['href']).query
@@ -796,6 +804,12 @@ class VnfLCMClient(ClientBase):
         return self.get(self.vnf_instance_path % vnf_id, params=_params)
 
     @APIParamsCall
+    def list_vnf_instances(self, retrieve_all=True, **_params):
+        vnf_instances = self.list(None, self.vnf_instances_path,
+                                  retrieve_all, **_params)
+        return vnf_instances
+
+    @APIParamsCall
     def instantiate_vnf_instance(self, vnf_id, body):
         return self.post((self.vnf_instance_path + "/instantiate") % vnf_id,
                          body=body)
@@ -1064,6 +1078,10 @@ class Client(object):
     def show_vnf_instance(self, vnf_instance, **_params):
         return self.vnf_lcm_client.show_vnf_instance(vnf_instance,
                                                      **_params)
+
+    def list_vnf_instances(self, retrieve_all=True, **_params):
+        return self.vnf_lcm_client.list_vnf_instances(
+            retrieve_all=retrieve_all, **_params)
 
     def instantiate_vnf_instance(self, vnf_id, body):
         return self.vnf_lcm_client.instantiate_vnf_instance(vnf_id, body)

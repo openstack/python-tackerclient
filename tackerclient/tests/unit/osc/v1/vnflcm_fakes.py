@@ -111,13 +111,21 @@ def vnf_instance_response(attrs=None, instantiation_state='NOT_INSTANTIATED'):
     return dummy_vnf_instance
 
 
-def get_vnflcm_data(vnf_instance):
+def get_vnflcm_data(vnf_instance, list_action=False, columns=None):
     """Get the vnf instance data.
 
     :return:
         A tuple object sorted based on the name of the columns.
     """
+
+    if list_action:
+        for item in ['vnfInstanceDescription', 'vnfdVersion']:
+            vnf_instance.pop(item)
+
     # return the list of data as per column order
+    if columns:
+        return tuple([vnf_instance[key] for key in columns])
+
     return tuple([vnf_instance[key] for key in sorted(vnf_instance.keys())])
 
 
