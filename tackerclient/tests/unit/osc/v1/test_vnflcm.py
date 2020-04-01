@@ -13,13 +13,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import ddt
 from io import StringIO
-import mock
 import os
 import sys
 
+import ddt
+import mock
 from oslo_utils.fixture import uuidsentinel
+import six
 
 from tackerclient.common import exceptions
 from tackerclient.osc.v1.vnflcm import vnflcm
@@ -237,3 +238,219 @@ class TestInstantiateVnfLcm(TestVnfLcm):
 
         expected_msg = "Failed to load parameter file."
         self.assertIn(expected_msg, ex.message)
+
+
+@ddt.ddt
+class TestTerminateVnfLcm(TestVnfLcm):
+
+    def setUp(self):
+        super(TestTerminateVnfLcm, self).setUp()
+        self.terminate_vnf_instance = vnflcm.TerminateVnfLcm(
+            self.app, self.app_args, cmd_name='vnflcm terminate')
+
+    @ddt.data({'termination_type': 'GRACEFUL', 'delete_vnf': True},
+              {'termination_type': 'FORCEFUL', 'delete_vnf': False})
+    @ddt.unpack
+    def test_take_action(self, termination_type, delete_vnf):
+        # argument 'delete_vnf' decides deletion of vnf instance post
+        # termination.
+        vnf_instance = vnflcm_fakes.vnf_instance_response()
+        arglist = ['--termination-type', termination_type, vnf_instance['id']]
+
+        verifylist = [('termination_type', termination_type),
+                      ('vnf_instance', vnf_instance['id'])]
+
+        if delete_vnf:
+            arglist.extend(['--D'])
+            verifylist.extend([('D', True)])
+
+        if termination_type == 'GRACEFUL':
+            arglist.extend(['--graceful-termination-timeout', '60'])
+            verifylist.append(('graceful_termination_timeout', 60))
+        parsed_args = self.check_parser(self.terminate_vnf_instance, arglist,
+                                        verifylist)
+        url = os.path.join(self.url, 'vnflcm/v1/vnf_instances',
+                           vnf_instance['id'], 'terminate')
+
+        with mock.patch.object(proxy_client.ClientBase,
+                               '_handle_fault_response') as m:
+            self.requests_mock.register_uri('POST', url, json={},
+                                            headers=self.header)
+            if delete_vnf:
+                self.requests_mock.register_uri(
+                    'GET', os.path.join(self.url, 'vnflcm/v1/vnf_instances',
+                                        vnf_instance['id']),
+                    json=vnf_instance, headers=self.header)
+                self.requests_mock.register_uri(
+                    'DELETE', os.path.join(
+                        self.url, 'vnflcm/v1/vnf_instances',
+                        vnf_instance['id']), json={}, headers=self.header)
+
+            sys.stdout = buffer = StringIO()
+            result = self.terminate_vnf_instance.take_action(parsed_args)
+            actual_message = buffer.getvalue().strip()
+
+            expected_message = ("Terminate request for VNF Instance '%s'"
+                                " has been accepted.") % vnf_instance['id']
+            self.assertIn(expected_message, actual_message)
+
+            if delete_vnf:
+                expected_message = ("VNF Instance '%s' deleted successfully"
+                                    % vnf_instance['id'])
+                self.assertIn(expected_message, actual_message)
+
+        self.assertIsNone(result)
+        self.assertNotCalled(m)
+
+    def test_take_action_terminate_and_delete_wait_failed(self):
+        vnf_instance = vnflcm_fakes.vnf_instance_response()
+        termination_type = 'GRACEFUL'
+        arglist = ['--termination-type', termination_type, '--D',
+                   '--graceful-termination-timeout', '5', vnf_instance['id']]
+
+        verifylist = [('termination_type', termination_type), ('D', True),
+                      ('graceful_termination_timeout', 5),
+                      ('vnf_instance', vnf_instance['id'])]
+
+        parsed_args = self.check_parser(self.terminate_vnf_instance, arglist,
+                                        verifylist)
+        url = os.path.join(self.url, 'vnflcm/v1/vnf_instances',
+                           vnf_instance['id'], 'terminate')
+
+        self.requests_mock.register_uri('POST', url, json={},
+                                        headers=self.header)
+        # set the instantiateState to "INSTANTIATED", so that the
+        # _wait_until_vnf_is_terminated will fail
+        vnf_instance['instantiationState'] = 'INSTANTIATED'
+
+        self.requests_mock.register_uri(
+            'GET', os.path.join(self.url, 'vnflcm/v1/vnf_instances',
+                                vnf_instance['id']),
+            json=vnf_instance, headers=self.header)
+
+        sys.stdout = buffer = StringIO()
+        with mock.patch.object(self.app.client_manager.tackerclient,
+                               'delete_vnf_instance') as mock_delete:
+            result = self.assertRaises(
+                exceptions.CommandError,
+                self.terminate_vnf_instance.take_action, parsed_args)
+
+            actual_message = buffer.getvalue().strip()
+
+            # Terminate vnf instance verification
+            expected_message = ("Terminate request for VNF Instance '%s'"
+                                " has been accepted.") % vnf_instance['id']
+            self.assertIn(expected_message, actual_message)
+
+            # Verify it fails to wait for termination before delete
+            expected_message = ("Couldn't verify vnf instance is terminated "
+                                "within '%(timeout)s' seconds. Unable to "
+                                "delete vnf instance %(id)s"
+                                % {'timeout': 15, 'id': vnf_instance['id']})
+
+            self.assertIn(expected_message, six.text_type(result))
+            self.assertNotCalled(mock_delete)
+
+    def test_terminate_no_options(self):
+        self.assertRaises(base.ParserException, self.check_parser,
+                          self.terminate_vnf_instance, [], [])
+
+    def test_take_action_vnf_instance_not_found(self):
+        vnf_instance = vnflcm_fakes.vnf_instance_response()
+        termination_type = 'GRACEFUL'
+        arglist = ['--termination-type', termination_type, '--D',
+                   '--graceful-termination-timeout', '5', vnf_instance['id']]
+
+        verifylist = [('termination_type', termination_type), ('D', True),
+                      ('graceful_termination_timeout', 5),
+                      ('vnf_instance', vnf_instance['id'])]
+
+        parsed_args = self.check_parser(self.terminate_vnf_instance, arglist,
+                                        verifylist)
+
+        url = os.path.join(self.url, 'vnflcm/v1/vnf_instances',
+                           vnf_instance['id'], 'terminate')
+        self.requests_mock.register_uri('POST', url, headers=self.header,
+                                        status_code=404, json={})
+
+        self.assertRaises(exceptions.TackerClientException,
+                          self.terminate_vnf_instance.take_action,
+                          parsed_args)
+
+
+class TestDeleteVnfLcm(TestVnfLcm):
+
+    def setUp(self):
+        super(TestDeleteVnfLcm, self).setUp()
+        self.delete_vnf_instance = vnflcm.DeleteVnfLcm(
+            self.app, self.app_args, cmd_name='vnflcm delete')
+
+        # Vnf Instance to delete
+        self.vnf_instances = vnflcm_fakes.create_vnf_instances(count=3)
+
+    def _mock_request_url_for_delete(self, vnf_index):
+            url = os.path.join(self.url, 'vnflcm/v1/vnf_instances',
+                               self.vnf_instances[vnf_index]['id'])
+
+            json = self.vnf_instances[vnf_index]
+
+            self.requests_mock.register_uri('GET', url, json=json,
+                                            headers=self.header)
+            self.requests_mock.register_uri('DELETE', url,
+                                            headers=self.header, json={})
+
+    def test_delete_one_vnf_instance(self):
+        arglist = [self.vnf_instances[0]['id']]
+        verifylist = [('vnf_instances',
+                       [self.vnf_instances[0]['id']])]
+
+        parsed_args = self.check_parser(self.delete_vnf_instance, arglist,
+                                        verifylist)
+
+        self._mock_request_url_for_delete(0)
+        sys.stdout = buffer = StringIO()
+        result = self.delete_vnf_instance.take_action(parsed_args)
+        self.assertIsNone(result)
+        self.assertEqual(("Vnf instance '%s' deleted successfully")
+                         % self.vnf_instances[0]['id'],
+                         buffer.getvalue().strip())
+
+    def test_delete_multiple_vnf_instance(self):
+        arglist = []
+        for vnf_pkg in self.vnf_instances:
+            arglist.append(vnf_pkg['id'])
+        verifylist = [('vnf_instances', arglist)]
+        parsed_args = self.check_parser(self.delete_vnf_instance, arglist,
+                                        verifylist)
+        for i in range(0, 3):
+            self._mock_request_url_for_delete(i)
+        sys.stdout = buffer = StringIO()
+        result = self.delete_vnf_instance.take_action(parsed_args)
+        self.assertIsNone(result)
+        self.assertEqual('All specified vnf instances are deleted '
+                         'successfully', buffer.getvalue().strip())
+
+    def test_delete_multiple_vnf_instance_exception(self):
+        arglist = [
+            self.vnf_instances[0]['id'],
+            'xxxx-yyyy-zzzz',
+            self.vnf_instances[1]['id'],
+        ]
+        verifylist = [('vnf_instances', arglist)]
+        parsed_args = self.check_parser(self.delete_vnf_instance,
+                                        arglist, verifylist)
+
+        self._mock_request_url_for_delete(0)
+
+        url = os.path.join(self.url, 'vnflcm/v1/vnf_instances',
+                           'xxxx-yyyy-zzzz')
+        self.requests_mock.register_uri(
+            'GET', url, exc=exceptions.ConnectionFailed)
+
+        self._mock_request_url_for_delete(1)
+        exception = self.assertRaises(exceptions.CommandError,
+                                      self.delete_vnf_instance.take_action,
+                                      parsed_args)
+
+        self.assertEqual('Failed to delete 1 of 3 vnf instances.',
+                         exception.message)

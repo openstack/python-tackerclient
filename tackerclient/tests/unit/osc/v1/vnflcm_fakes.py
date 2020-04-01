@@ -14,6 +14,7 @@
 #    under the License.
 
 from oslo_utils.fixture import uuidsentinel
+from oslo_utils import uuidutils
 
 
 def vnf_instance_response(attrs=None, instantiation_state='NOT_INSTANTIATED'):
@@ -104,6 +105,9 @@ def vnf_instance_response(attrs=None, instantiation_state='NOT_INSTANTIATED'):
             }
         })
 
+    # Overwrite default attributes.
+    dummy_vnf_instance.update(attrs)
+
     return dummy_vnf_instance
 
 
@@ -115,3 +119,17 @@ def get_vnflcm_data(vnf_instance):
     """
     # return the list of data as per column order
     return tuple([vnf_instance[key] for key in sorted(vnf_instance.keys())])
+
+
+def create_vnf_instances(count=2):
+    """Create multiple fake vnf instances.
+
+    :param count: The number of vnf instances to fake
+    :return:
+        A list of fake vnf instances dictionary
+    """
+    vnf_instances = []
+    for i in range(0, count):
+        unique_id = uuidutils.generate_uuid()
+        vnf_instances.append(vnf_instance_response(attrs={'id': unique_id}))
+    return vnf_instances
