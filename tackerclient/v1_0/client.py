@@ -782,6 +782,7 @@ class VnfLCMClient(ClientBase):
     """
 
     vnf_instances_path = '/vnflcm/v1/vnf_instances'
+    vnf_instance_path = '/vnflcm/v1/vnf_instances/%s'
 
     def build_action(self, action):
         return action
@@ -789,6 +790,15 @@ class VnfLCMClient(ClientBase):
     @APIParamsCall
     def create_vnf_instance(self, body):
         return self.post(self.vnf_instances_path, body=body)
+
+    @APIParamsCall
+    def show_vnf_instance(self, vnf_id, **_params):
+        return self.get(self.vnf_instance_path % vnf_id, params=_params)
+
+    @APIParamsCall
+    def instantiate_vnf_instance(self, vnf_id, body):
+        return self.post((self.vnf_instance_path + "/instantiate") % vnf_id,
+                         body=body)
 
 
 class Client(object):
@@ -1041,3 +1051,10 @@ class Client(object):
 
     def create_vnf_instance(self, body):
         return self.vnf_lcm_client.create_vnf_instance(body)
+
+    def show_vnf_instance(self, vnf_instance, **_params):
+        return self.vnf_lcm_client.show_vnf_instance(vnf_instance,
+                                                     **_params)
+
+    def instantiate_vnf_instance(self, vnf_id, body):
+        return self.vnf_lcm_client.instantiate_vnf_instance(vnf_id, body)

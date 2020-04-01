@@ -16,7 +16,7 @@
 from oslo_utils.fixture import uuidsentinel
 
 
-def vnf_instance_response(attrs=None):
+def vnf_instance_response(attrs=None, instantiation_state='NOT_INSTANTIATED'):
     """Create a fake vnf instance.
 
     :param Dictionary attrs:
@@ -36,10 +36,74 @@ def vnf_instance_response(attrs=None):
         "vnfProductName": "Sample VNF",
         "vnfSoftwareVersion": "1.0",
         "vnfdVersion": "1.0",
-        "instantiationState": "NOT_INSTANTIATED",
-        "links": "vnflcm/v1/vnf_instances/" + uuidsentinel.vnf_instance_id +
-                 "/instantiate"
-    }
+        "_links": "vnflcm/v1/vnf_instances/" + uuidsentinel.vnf_instance_id +
+                  "/instantiate",
+        "instantiationState": instantiation_state}
+    if instantiation_state == 'INSTANTIATED':
+        dummy_vnf_instance.update({
+            "vimConnectionInfo": [{
+                'id': uuidsentinel.uuid,
+                'vimId': uuidsentinel.vimId,
+                'vimType': 'openstack',
+                'interfaceInfo': {'k': 'v'},
+                'accessInfo': {'k': 'v'},
+                'extra': {'k': 'v'}
+            }],
+            "instantiatedVnfInfo": {
+                "flavourId": uuidsentinel.flavourId,
+                "vnfState": "STARTED",
+                "extCpInfo": [{
+                    'id': uuidsentinel.extCpInfo_uuid,
+                    'cpdId': uuidsentinel.cpdId_uuid,
+                    'cpProtocolInfo': [{
+                        'layerProtocol': 'IP_OVER_ETHERNET',
+                        'ipOverEthernet': '{}'
+                    }],
+                    'extLinkPortId': uuidsentinel.extLinkPortId_uuid,
+                    'metadata': {'k': 'v'},
+                    'associatedVnfcCpId': uuidsentinel.associatedVnfcCpId_uuid
+                }],
+                "extVirtualLinkInfo": [{
+                    'id': uuidsentinel.extVirtualLinkInfo_uuid,
+                    'resourceHandle': {},
+                    'extLinkPorts': []
+                }],
+                "extManagedVirtualLinkInfo": [{
+                    "id": uuidsentinel.extManagedVirtualLinkInfo_uuid,
+                    'vnfVirtualLinkDescId': {},
+                    'networkResource': {},
+                    'vnfLinkPorts': []
+                }],
+                "vnfcResourceInfo": [{
+                    'id': uuidsentinel.vnfcResourceInfo_uuid,
+                    'vduId': uuidsentinel.vduId_uuid,
+                    'computeResource': {},
+                    'storageResourceIds': [],
+                    'reservationId': uuidsentinel.reservationId,
+                }],
+                "vnfVirtualLinkResourceInfo": [{
+                    'id': uuidsentinel.vnfVirtualLinkResourceInfo,
+                    'vnfVirtualLinkDescId': 'VL4',
+                    'networkResource': {},
+                    'reservationId': uuidsentinel.reservationId,
+                    'vnfLinkPorts': [],
+                    'metadata': {'k': 'v'}
+                }],
+                "virtualStorageResourceInfo": [{
+                    'id': uuidsentinel.virtualStorageResourceInfo,
+                    'virtualStorageDescId': uuidsentinel.virtualStorageDescId,
+                    'storageResource': {},
+                    'reservationId': uuidsentinel.reservationId,
+                    'metadata': {'k': 'v'}
+                }]
+            },
+            "_links": {
+                'self': 'self_link',
+                'indicators': None,
+                'instantiate': 'instantiate_link'
+            }
+        })
+
     return dummy_vnf_instance
 
 
