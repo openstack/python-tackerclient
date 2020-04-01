@@ -774,6 +774,23 @@ class VnfPackageClient(ClientBase):
                 body=file_data)
 
 
+class VnfLCMClient(ClientBase):
+    """Client for vnflcm APIs.
+
+    Purpose of this class is to create required request url for vnflcm
+    APIs.
+    """
+
+    vnf_instances_path = '/vnflcm/v1/vnf_instances'
+
+    def build_action(self, action):
+        return action
+
+    @APIParamsCall
+    def create_vnf_instance(self, body):
+        return self.post(self.vnf_instances_path, body=body)
+
+
 class Client(object):
     """Unified interface to interact with multiple applications of tacker service.
 
@@ -794,6 +811,7 @@ class Client(object):
     """
 
     def __init__(self, **kwargs):
+        self.vnf_lcm_client = VnfLCMClient(**kwargs)
         self.vnf_package_client = VnfPackageClient(**kwargs)
         self.legacy_client = LegacyClient(**kwargs)
 
@@ -1018,3 +1036,8 @@ class Client(object):
 
     def delete_vnf_package(self, vnf_package):
         return self.vnf_package_client.delete_vnf_package(vnf_package)
+
+    # VnfLCMClient methods.
+
+    def create_vnf_instance(self, body):
+        return self.vnf_lcm_client.create_vnf_instance(body)
