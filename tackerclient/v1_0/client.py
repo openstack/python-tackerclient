@@ -191,12 +191,32 @@ class ClientBase(object):
         action = self.action_prefix + action
         return action
 
+    def _build_params_query(self, params=None):
+        flag_params = []
+        keyval_params = {}
+        for key, value in params.items():
+            if value is None:
+                flag_params.append(key)
+            else:
+                keyval_params[key] = value
+
+        flags_encoded = utils.safe_encode_list(flag_params) \
+            if flag_params else ""
+        keyval_encoded = utils.safe_encode_dict(keyval_params) \
+            if keyval_params else ""
+
+        query = ""
+        for flag in flags_encoded:
+            query = query + urlparse.quote_plus(flag) + '&'
+        query = query + urlparse.urlencode(keyval_encoded, doseq=1)
+        return query.strip('&')
+
     def do_request(self, method, action, body=None, headers=None, params=None):
         action = self.build_action(action)
         # Add format and tenant_id
         if type(params) is dict and params:
-            params = utils.safe_encode_dict(params)
-            action += '?' + urlparse.urlencode(params, doseq=1)
+            query = self._build_params_query(params)
+            action += '?' + query
 
         if body or body == {}:
             body = self.serialize(body)
@@ -1109,7 +1129,8 @@ class Client(object):
     def create_vnf_package(self, body):
         return self.vnf_package_client.create_vnf_package(body)
 
-    def list_vnf_packages(self, retrieve_all=True, **_params):
+    def list_vnf_packages(self, retrieve_all=True, query_parameter=None,
+                          **_params):
         return self.vnf_package_client.list_vnf_packages(
             retrieve_all=retrieve_all, **_params)
 

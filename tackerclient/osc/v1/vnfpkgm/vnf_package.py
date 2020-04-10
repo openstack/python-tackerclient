@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from functools import reduce
 import logging
 import sys
 
@@ -27,21 +28,11 @@ from tackerclient.osc import utils as tacker_osc_utils
 
 LOG = logging.getLogger(__name__)
 
-_attr_map = (
-    ('id', 'ID', tacker_osc_utils.LIST_BOTH),
-    ('vnfProductName', 'VNF Product Name', tacker_osc_utils.LIST_BOTH),
-    ('onboardingState', 'Onboarding State', tacker_osc_utils.LIST_BOTH),
-    ('usageState', 'Usage State', tacker_osc_utils.LIST_BOTH),
-    ('operationalState', 'Operational State', tacker_osc_utils.LIST_BOTH),
-    ('userDefinedData', 'User Defined Data', tacker_osc_utils.LIST_BOTH)
-)
-
 
 _mixed_case_fields = ('usageState', 'onboardingState', 'operationalState',
                       'vnfProductName', 'softwareImages', 'userDefinedData',
                       'vnfdId', 'vnfdVersion', 'vnfSoftwareVersion',
-                      'vnfProvider', 'artifactPath', 'imagePath',
-                      'diskFormat', 'userMetadata')
+                      'vnfProvider')
 
 
 def _get_columns(vnf_package_obj):
@@ -61,7 +52,8 @@ def _get_columns(vnf_package_obj):
             'vnfSoftwareVersion': 'VNF Software Version',
             'vnfProductName': 'VNF Product Name',
             'vnfdId': 'VNFD ID',
-            'vnfdVersion': 'VNFD Version'
+            'vnfdVersion': 'VNFD Version',
+            'checksum': 'Checksum'
         })
 
     return sdk_utils.get_osc_show_columns_for_sdk_resource(vnf_package_obj,
@@ -100,19 +92,104 @@ class CreateVnfPackage(command.ShowOne):
 
 
 class ListVnfPackage(command.Lister):
-    _description = _("List VNF Package")
+    _description = _("List VNF Packages")
 
     def get_parser(self, prog_name):
         LOG.debug('get_parser(%s)', prog_name)
         parser = super(ListVnfPackage, self).get_parser(prog_name)
+        parser.add_argument(
+            "--filter",
+            metavar="<filter>",
+            help=_("Atrribute-based-filtering parameters"),
+        )
+        fields_exclusive_group = parser.add_mutually_exclusive_group(
+            required=False)
+        fields_exclusive_group.add_argument(
+            "--all_fields",
+            action="store_true",
+            default=False,
+            help=_("Include all complex attributes in the response"),
+        )
+        fields_exclusive_group.add_argument(
+            "--fields",
+            metavar="fields",
+            help=_("Complex attributes to be included into the response"),
+        )
+        fields_exclusive_group.add_argument(
+            "--exclude_fields",
+            metavar="exclude-fields",
+            help=_("Complex attributes to be excluded from the response"),
+        )
+        parser.add_argument(
+            "--exclude_default",
+            action="store_true",
+            default=False,
+            help=_("Indicates to exclude all complex attributes"
+                   " from the response. This argument can be used alone or"
+                   " with --fields and --filter. For all other combinations"
+                   " tacker server will throw bad request error"),
+        )
         return parser
+
+    def case_modify(self, field):
+        return reduce(
+            lambda x, y: x + (' ' if y.isupper() else '') + y, field).title()
+
+    def get_attributes(self, extra_fields=None, all_fields=False,
+                       exclude_fields=None):
+        fields = ['id', 'vnfProductName', 'onboardingState',
+                  'usageState', 'operationalState']
+        complex_fields = ['checksum', 'softwareImages', 'userDefinedData']
+        simple_fields = ['vnfdVersion', 'vnfProvider', 'vnfSoftwareVersion',
+                         'vnfdId', '_links']
+
+        if extra_fields:
+            fields.extend(extra_fields)
+
+        if exclude_fields:
+            fields.extend([field for field in complex_fields
+                           if field not in exclude_fields])
+        if all_fields:
+            fields.extend(complex_fields)
+            fields.extend(simple_fields)
+
+        attrs = []
+        for field in fields:
+            if field == '_links':
+                attrs.extend([(field, 'Links', tacker_osc_utils.LIST_BOTH)])
+            else:
+                attrs.extend([(field, self.case_modify(field),
+                               tacker_osc_utils.LIST_BOTH)])
+
+        return tuple(attrs)
 
     def take_action(self, parsed_args):
         _params = {}
+        extra_fields = []
+        exclude_fields = []
+        all_fields = False
+        if parsed_args.filter:
+            _params['filter'] = parsed_args.filter
+        if parsed_args.fields:
+            _params['fields'] = parsed_args.fields
+            fields = parsed_args.fields.split(',')
+            for field in fields:
+                extra_fields.append(field.split('/')[0])
+        if parsed_args.exclude_fields:
+            _params['exclude_fields'] = parsed_args.exclude_fields
+            fields = parsed_args.exclude_fields.split(',')
+            exclude_fields.extend(fields)
+        if parsed_args.exclude_default:
+            _params['exclude_default'] = None
+        if parsed_args.all_fields:
+            _params['all_fields'] = None
+            all_fields = True
+
         client = self.app.client_manager.tackerclient
         data = client.list_vnf_packages(**_params)
         headers, columns = tacker_osc_utils.get_column_definitions(
-            _attr_map, long_listing=True)
+            self.get_attributes(extra_fields, all_fields, exclude_fields),
+            long_listing=True)
         return (headers,
                 (utils.get_dict_properties(
                     s, columns, mixed_case_fields=_mixed_case_fields,
