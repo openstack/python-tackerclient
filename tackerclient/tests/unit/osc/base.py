@@ -17,6 +17,8 @@ import mock
 from requests_mock.contrib import fixture as requests_mock_fixture
 import testtools
 
+from cliff import columns as cliff_columns
+
 
 class FixturedTestCase(testtools.TestCase):
     client_fixture_class = None
@@ -50,6 +52,20 @@ class FixturedTestCase(testtools.TestCase):
             if not msg:
                 msg = 'method %s should not have been called' % m
             self.fail(msg)
+
+    def assertListItemsEqual(self, expected, actual):
+        """Assertion based on human_readable values of list items"""
+
+        self.assertEqual(len(expected), len(actual))
+        for col_expected, col_actual in zip(expected, actual):
+            if isinstance(col_actual, tuple):
+                self.assertListItemsEqual(col_expected, col_actual)
+            elif isinstance(col_expected, cliff_columns.FormattableColumn):
+                self.assertIsInstance(col_actual, col_expected.__class__)
+                self.assertEqual(col_expected.human_readable(),
+                                 col_actual.human_readable())
+            else:
+                self.assertEqual(col_expected, col_actual)
 
 
 class ParserException(Exception):

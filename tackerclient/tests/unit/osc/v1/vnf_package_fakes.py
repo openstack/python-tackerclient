@@ -15,6 +15,8 @@
 
 from oslo_utils import uuidutils
 
+from tackerclient.osc.v1.vnfpkgm import vnf_package
+
 
 def vnf_package_obj(attrs=None, onboarded_state=False):
     """Create a fake vnf package.
@@ -34,7 +36,7 @@ def vnf_package_obj(attrs=None, onboarded_state=False):
                         "onboardingState": "CREATED",
                         "operationalState": "DISABLED",
                         "usageState": "NOT_IN_USE",
-                        "userDefinedData": None}
+                        "userDefinedData": {'key': 'value'}}
 
     if onboarded_state:
         fake_vnf_package = {"id": "60a6ac16-b50d-4e92-964b-b3cf98c7cf5c",
@@ -70,7 +72,7 @@ def vnf_package_obj(attrs=None, onboarded_state=False):
                             "onboardingState": "ONBOARDED",
                             "operationalState": "ENABLED",
                             "usageState": "IN_USE",
-                            "userDefinedData": None,
+                            "userDefinedData": {'key': 'value'},
                             "_links": {
                                 "self": {
                                     "href": "string"
@@ -88,10 +90,10 @@ def vnf_package_obj(attrs=None, onboarded_state=False):
     return fake_vnf_package
 
 
-def get_vnf_package_data(vnf_package, **kwargs):
+def get_vnf_package_data(vnf_package_obj, **kwargs):
     """Get the vnf package data from a FakeVnfPackage dict object.
 
-    :param vnf_package:
+    :param vnf_package_obj:
         A FakeVnfPackage dict object
     :return:
         A list which may include the following values:
@@ -99,19 +101,27 @@ def get_vnf_package_data(vnf_package, **kwargs):
         'vnfd': {'href': 'string'}}, '60a6ac16-b50d-4e92-964b-b3cf98c7cf5c',
         'CREATED', 'DISABLED', 'NOT_IN_USE', {'Test_key': 'Test_value'}]
     """
+    complex_attributes = ['softwareImages', 'checksum', '_links',
+                          'userDefinedData']
+    for attribute in complex_attributes:
+        if vnf_package_obj.get(attribute):
+            vnf_package_obj.update(
+                {attribute: vnf_package.FormatComplexDataColumn(
+                    vnf_package_obj[attribute])})
 
     if kwargs.get('list_action'):
         # In case of List VNF packages we get empty string as data for
         # 'vnfProductName' if onboardingState is CREATED. Hence to match
         # up with actual data we are adding here empty string.
-        if not vnf_package.get('vnfProductName'):
-            vnf_package['vnfProductName'] = ''
+        if not vnf_package_obj.get('vnfProductName'):
+            vnf_package_obj['vnfProductName'] = ''
 
-    # return the list of data as per column order
     if kwargs.get('columns'):
-        return tuple([vnf_package[key] for key in kwargs.get('columns')])
+        # return the list of data as per column order
+        return tuple([vnf_package_obj[key] for key in kwargs.get('columns')])
 
-    return tuple([vnf_package[key] for key in sorted(vnf_package.keys())])
+    return tuple([vnf_package_obj[key] for key in sorted(
+        vnf_package_obj.keys())])
 
 
 def create_vnf_packages(count=2, onboarded_vnf_package=False):

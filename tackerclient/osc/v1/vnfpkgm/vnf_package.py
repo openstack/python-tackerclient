@@ -17,6 +17,7 @@ from functools import reduce
 import logging
 import sys
 
+from cliff import columns as cliff_columns
 from osc_lib.cli import parseractions
 from osc_lib.command import command
 from osc_lib import utils
@@ -27,6 +28,18 @@ from tackerclient.osc import sdk_utils
 from tackerclient.osc import utils as tacker_osc_utils
 
 LOG = logging.getLogger(__name__)
+
+
+class FormatComplexDataColumn(cliff_columns.FormattableColumn):
+
+    def human_readable(self):
+        return tacker_osc_utils.format_dict_with_indention(self._value)
+
+
+formatters = {'softwareImages': FormatComplexDataColumn,
+              'checksum': FormatComplexDataColumn,
+              '_links': FormatComplexDataColumn,
+              'userDefinedData': FormatComplexDataColumn}
 
 
 _mixed_case_fields = ('usageState', 'onboardingState', 'operationalState',
@@ -87,7 +100,8 @@ class CreateVnfPackage(command.ShowOne):
         display_columns, columns = _get_columns(vnf_package)
         data = utils.get_item_properties(
             sdk_utils.DictModel(vnf_package),
-            columns, mixed_case_fields=_mixed_case_fields)
+            columns, formatters=formatters,
+            mixed_case_fields=_mixed_case_fields)
         return (display_columns, data)
 
 
@@ -192,7 +206,8 @@ class ListVnfPackage(command.Lister):
             long_listing=True)
         return (headers,
                 (utils.get_dict_properties(
-                    s, columns, mixed_case_fields=_mixed_case_fields,
+                    s, columns, formatters=formatters,
+                    mixed_case_fields=_mixed_case_fields,
                 ) for s in data['vnf_packages']))
 
 
@@ -215,7 +230,8 @@ class ShowVnfPackage(command.ShowOne):
         display_columns, columns = _get_columns(vnf_package)
         data = utils.get_item_properties(
             sdk_utils.DictModel(vnf_package),
-            columns, mixed_case_fields=_mixed_case_fields)
+            columns, formatters=formatters,
+            mixed_case_fields=_mixed_case_fields)
         return (display_columns, data)
 
 
@@ -452,5 +468,6 @@ class UpdateVnfPackage(command.ShowOne):
         display_columns, columns = self.get_columns(updated_values)
         data = utils.get_item_properties(
             sdk_utils.DictModel(updated_values),
-            columns, mixed_case_fields=_mixed_case_fields)
+            columns, formatters=formatters,
+            mixed_case_fields=_mixed_case_fields)
         return (display_columns, data)

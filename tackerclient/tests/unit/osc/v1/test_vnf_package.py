@@ -104,8 +104,9 @@ class TestCreateVnfPackage(TestVnfPackage):
 
         columns, data = (self.create_vnf_package.take_action(parsed_args))
         self.assertCountEqual(_get_columns_vnf_package(), columns)
-        self.assertCountEqual(vnf_package_fakes.get_vnf_package_data(json),
-                              data)
+        headers, attributes = vnf_package._get_columns(json)
+        self.assertListItemsEqual(vnf_package_fakes.get_vnf_package_data(
+            json, columns=attributes), data)
 
 
 @ddt.ddt
@@ -186,7 +187,7 @@ class TestListVnfPackage(TestVnfPackage):
                 vnf_package_obj, columns=columns, list_action=True, **kwargs))
 
         self.assertCountEqual(self.get_list_columns(**kwargs), actual_columns)
-        self.assertCountEqual(expected_data, list(data))
+        self.assertListItemsEqual(expected_data, list(data))
 
     def test_take_action_with_exclude_fields(self):
         parsed_args = self.check_parser(
@@ -265,7 +266,7 @@ class TestListVnfPackage(TestVnfPackage):
         self.assertCountEqual(self.get_list_columns(
             extra_fields=['Software Images', 'Checksum']),
             actual_columns)
-        self.assertCountEqual(expected_data, list(data))
+        self.assertListItemsEqual(expected_data, list(data))
 
 
 @ddt.ddt
@@ -288,12 +289,13 @@ class TestShowVnfPackage(TestVnfPackage):
         self.requests_mock.register_uri('GET', url, json=vnf_package_obj,
                                         headers=self.header)
         columns, data = (self.show_vnf_package.take_action(parsed_args))
-        self.assertEqual(sorted(_get_columns_vnf_package(
-            vnf_package_obj=vnf_package_obj, action='show')), sorted(columns))
         self.assertCountEqual(_get_columns_vnf_package(
             vnf_package_obj=vnf_package_obj, action='show'), columns)
-        self.assertCountEqual(
-            vnf_package_fakes.get_vnf_package_data(vnf_package_obj), data)
+
+        headers, attributes = vnf_package._get_columns(vnf_package_obj)
+        self.assertListItemsEqual(
+            vnf_package_fakes.get_vnf_package_data(vnf_package_obj,
+                                                   columns=attributes), data)
 
     def test_show_no_options(self):
         self.assertRaises(base.ParserException, self.check_parser,
@@ -536,7 +538,7 @@ class TestUpdateVnfPackage(TestVnfPackage):
         columns, data = self.update_vnf_package.take_action(parsed_args)
         self.assertItemsEqual(_get_columns_vnf_package(
             vnf_package_obj=fake_response, action='update'), columns)
-        self.assertItemsEqual(
+        self.assertListItemsEqual(
             vnf_package_fakes.get_vnf_package_data(fake_response), data)
 
     def test_update_no_options(self):
