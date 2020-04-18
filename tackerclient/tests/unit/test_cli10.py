@@ -14,11 +14,11 @@
 #    under the License.
 #
 
+from unittest import mock
 import urllib
 
 import contextlib
 import fixtures
-import mock
 import six
 import six.moves.urllib.parse as urlparse
 import sys

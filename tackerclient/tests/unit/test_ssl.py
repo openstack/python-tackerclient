@@ -13,9 +13,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from unittest import mock
+
 import fixtures
 from keystoneclient import session
-import mock
 import requests
 import testtools
 

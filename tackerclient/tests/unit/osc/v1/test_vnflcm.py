@@ -16,9 +16,9 @@
 from io import StringIO
 import os
 import sys
+from unittest import mock
 
 import ddt
-import mock
 from oslo_utils.fixture import uuidsentinel
 import six
 

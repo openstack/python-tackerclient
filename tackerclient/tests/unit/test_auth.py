@@ -16,10 +16,10 @@
 
 import copy
 import json
+from unittest import mock
 import uuid
 
 from keystoneclient import exceptions as k_exceptions
-import mock
 import requests
 import testtools
 

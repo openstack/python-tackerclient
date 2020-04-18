@@ -18,9 +18,9 @@ import os
 import shutil
 import sys
 import tempfile
+from unittest import mock
 
 import ddt
-import mock
 import zipfile
 
 from tackerclient.common import exceptions

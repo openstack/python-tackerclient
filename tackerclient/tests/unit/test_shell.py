@@ -17,12 +17,13 @@ import argparse
 import logging
 import os
 import re
+from unittest import mock
+
 import six
 import sys
 
 import fixtures
 from keystoneclient import session
-import mock
 import testtools
 from testtools import matchers
 

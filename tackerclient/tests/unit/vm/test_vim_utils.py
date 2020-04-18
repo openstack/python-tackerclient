@@ -13,12 +13,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-
-from mock import sentinel
 import testtools
 
 from tackerclient.common import exceptions
 from tackerclient.tacker.v1_0.nfvo import vim_utils
+from unittest.mock import sentinel
 
 
 class TestVIMUtils(testtools.TestCase):

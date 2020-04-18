@@ -10,12 +10,12 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from mock import mock_open
-from mock import patch
 import sys
 
 from tackerclient.tacker.v1_0.nfvo import vnffgd
 from tackerclient.tests.unit import test_cli10
+from unittest.mock import mock_open
+from unittest.mock import patch
 
 
 class CLITestV10VmVNFFGDJSON(test_cli10.CLITestV10Base):

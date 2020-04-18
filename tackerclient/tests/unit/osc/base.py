@@ -13,9 +13,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import mock
 from requests_mock.contrib import fixture as requests_mock_fixture
 import testtools
+from unittest import mock
 
 from cliff import columns as cliff_columns
 

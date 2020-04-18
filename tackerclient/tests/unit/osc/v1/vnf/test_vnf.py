@@ -15,8 +15,9 @@
 #    under the License.
 
 import ast
+from unittest import mock
+
 import fixtures
-import mock
 import yaml
 
 from tackerclient.common import exceptions
