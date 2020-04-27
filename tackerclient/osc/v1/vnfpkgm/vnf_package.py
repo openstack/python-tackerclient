@@ -150,12 +150,12 @@ class ListVnfPackage(command.Lister):
             lambda x, y: x + (' ' if y.isupper() else '') + y, field).title()
 
     def get_attributes(self, extra_fields=None, all_fields=False,
-                       exclude_fields=None):
+                       exclude_fields=None, exclude_default=False):
         fields = ['id', 'vnfProductName', 'onboardingState',
-                  'usageState', 'operationalState']
+                  'usageState', 'operationalState', '_links']
         complex_fields = ['checksum', 'softwareImages', 'userDefinedData']
         simple_fields = ['vnfdVersion', 'vnfProvider', 'vnfSoftwareVersion',
-                         'vnfdId', '_links']
+                         'vnfdId']
 
         if extra_fields:
             fields.extend(extra_fields)
@@ -165,6 +165,9 @@ class ListVnfPackage(command.Lister):
                            if field not in exclude_fields])
         if all_fields:
             fields.extend(complex_fields)
+            fields.extend(simple_fields)
+
+        if exclude_default:
             fields.extend(simple_fields)
 
         attrs = []
@@ -182,6 +185,7 @@ class ListVnfPackage(command.Lister):
         extra_fields = []
         exclude_fields = []
         all_fields = False
+        exclude_default = False
         if parsed_args.filter:
             _params['filter'] = parsed_args.filter
         if parsed_args.fields:
@@ -195,6 +199,7 @@ class ListVnfPackage(command.Lister):
             exclude_fields.extend(fields)
         if parsed_args.exclude_default:
             _params['exclude_default'] = None
+            exclude_default = True
         if parsed_args.all_fields:
             _params['all_fields'] = None
             all_fields = True
@@ -202,8 +207,8 @@ class ListVnfPackage(command.Lister):
         client = self.app.client_manager.tackerclient
         data = client.list_vnf_packages(**_params)
         headers, columns = tacker_osc_utils.get_column_definitions(
-            self.get_attributes(extra_fields, all_fields, exclude_fields),
-            long_listing=True)
+            self.get_attributes(extra_fields, all_fields, exclude_fields,
+                                exclude_default), long_listing=True)
         return (headers,
                 (utils.get_dict_properties(
                     s, columns, formatters=formatters,
