@@ -123,12 +123,12 @@ class TestListVnfPackage(TestVnfPackage):
             count=3, onboarded_vnf_package=onboarded_vnf_package)
 
     def get_list_columns(self, all_fields=False, exclude_fields=None,
-                         extra_fields=None):
+                         extra_fields=None, exclude_default=False):
 
         columns = ['Id', 'Vnf Product Name', 'Onboarding State', 'Usage State',
-                   'Operational State']
+                   'Operational State', 'Links']
         complex_columns = ['Checksum', 'Software Images', 'User Defined Data']
-        simple_columns = ['Vnfd Version', 'Vnf Provider', 'Vnfd Id', 'Links',
+        simple_columns = ['Vnfd Version', 'Vnf Provider', 'Vnfd Id',
                           'Vnf Software Version']
 
         if extra_fields:
@@ -139,6 +139,9 @@ class TestListVnfPackage(TestVnfPackage):
                            if field not in exclude_fields])
         if all_fields:
             columns.extend(complex_columns)
+            columns.extend(simple_columns)
+
+        if exclude_default:
             columns.extend(simple_columns)
 
         return columns
@@ -164,7 +167,7 @@ class TestListVnfPackage(TestVnfPackage):
             expected_data.append(vnf_package_fakes.get_vnf_package_data(
                 vnf_package_obj, columns=columns, list_action=True))
         self.assertCountEqual(self.get_list_columns(), actual_columns)
-        self.assertCountEqual(expected_data, list(data))
+        self.assertListItemsEqual(expected_data, list(data))
 
     @ddt.data('all_fields', 'exclude_default')
     def test_take_action(self, arg):
@@ -178,7 +181,7 @@ class TestListVnfPackage(TestVnfPackage):
 
         actual_columns, data = self.list_vnf_package.take_action(parsed_args)
         expected_data = []
-        kwargs = {arg: True} if arg == 'all_fields' else {}
+        kwargs = {arg: True}
         headers, columns = tacker_osc_utils.get_column_definitions(
             self.list_vnf_package.get_attributes(**kwargs), long_listing=True)
 
@@ -223,7 +226,7 @@ class TestListVnfPackage(TestVnfPackage):
             exclude_fields=['Software Images', 'Checksum',
                             'User Defined Data'])
         self.assertCountEqual(expected_columns, actual_columns)
-        self.assertCountEqual(expected_data, list(data))
+        self.assertListItemsEqual(expected_data, list(data))
 
     @ddt.data((['--all_fields', '--fields', 'softwareImages'],
                [('all_fields', True), ('fields', 'softwareImages')]),
@@ -255,7 +258,8 @@ class TestListVnfPackage(TestVnfPackage):
         expected_data = []
         headers, columns = tacker_osc_utils.get_column_definitions(
             self.list_vnf_package.get_attributes(
-                extra_fields=['softwareImages', 'checksum']),
+                extra_fields=['softwareImages', 'checksum'],
+                exclude_default=True),
             long_listing=True)
 
         for vnf_package_obj in updated_vnf_packages['vnf_packages']:
@@ -264,7 +268,8 @@ class TestListVnfPackage(TestVnfPackage):
                 exclude_default=True))
 
         self.assertCountEqual(self.get_list_columns(
-            extra_fields=['Software Images', 'Checksum']),
+            extra_fields=['Software Images', 'Checksum'],
+            exclude_default=True),
             actual_columns)
         self.assertListItemsEqual(expected_data, list(data))
 
