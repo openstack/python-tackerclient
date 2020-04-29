@@ -105,7 +105,9 @@ class TestCreateVnfLcm(TestVnfLcm):
                 json={}, headers=self.header)
 
         sys.stdout = buffer = StringIO()
-        columns, data = (self.create_vnf_lcm.take_action(parsed_args))
+        actual_columns, data = (self.create_vnf_lcm.take_action(parsed_args))
+
+        headers, attributes = vnflcm._get_columns(json)
 
         expected_message = (
             'VNF Instance ' + json['id'] + ' is created and instantiation '
@@ -114,9 +116,9 @@ class TestCreateVnfLcm(TestVnfLcm):
             self.assertEqual(expected_message, buffer.getvalue().strip())
 
         self.assertItemsEqual(_get_columns_vnflcm(),
-                              columns)
-        self.assertItemsEqual(vnflcm_fakes.get_vnflcm_data(json),
-                              data)
+                              actual_columns)
+        self.assertListItemsEqual(vnflcm_fakes.get_vnflcm_data(
+            json, columns=attributes), data)
 
 
 class TestShowVnfLcm(TestVnfLcm):
@@ -145,6 +147,10 @@ class TestShowVnfLcm(TestVnfLcm):
         columns, data = (self.show_vnf_lcm.take_action(parsed_args))
         self.assertItemsEqual(_get_columns_vnflcm(action='show'),
                               columns)
+        headers, attributes = vnflcm._get_columns(vnf_instance, action='show')
+        self.assertListItemsEqual(
+            vnflcm_fakes.get_vnflcm_data(vnf_instance, columns=attributes),
+            data)
 
 
 class TestListVnfLcm(TestVnfLcm):

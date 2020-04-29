@@ -16,6 +16,8 @@
 from oslo_utils.fixture import uuidsentinel
 from oslo_utils import uuidutils
 
+from tackerclient.osc import utils as tacker_osc_utils
+
 
 def vnf_instance_response(attrs=None, instantiation_state='NOT_INSTANTIATED'):
     """Create a fake vnf instance.
@@ -117,6 +119,12 @@ def get_vnflcm_data(vnf_instance, list_action=False, columns=None):
     :return:
         A tuple object sorted based on the name of the columns.
     """
+    complex_attributes = ['vimConnectionInfo', 'instantiatedVnfInfo', '_links']
+    for attribute in complex_attributes:
+        if vnf_instance.get(attribute):
+            vnf_instance.update(
+                {attribute: tacker_osc_utils.FormatComplexDataColumn(
+                    vnf_instance[attribute])})
 
     if list_action:
         for item in ['vnfInstanceDescription', 'vnfdVersion']:
@@ -126,7 +134,8 @@ def get_vnflcm_data(vnf_instance, list_action=False, columns=None):
     if columns:
         return tuple([vnf_instance[key] for key in columns])
 
-    return tuple([vnf_instance[key] for key in sorted(vnf_instance.keys())])
+    return tuple([vnf_instance[key] for key in sorted(
+        vnf_instance.keys())])
 
 
 def create_vnf_instances(count=2):
