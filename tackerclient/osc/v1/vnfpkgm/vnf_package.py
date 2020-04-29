@@ -17,7 +17,6 @@ from functools import reduce
 import logging
 import sys
 
-from cliff import columns as cliff_columns
 from osc_lib.cli import parseractions
 from osc_lib.command import command
 from osc_lib import utils
@@ -30,16 +29,10 @@ from tackerclient.osc import utils as tacker_osc_utils
 LOG = logging.getLogger(__name__)
 
 
-class FormatComplexDataColumn(cliff_columns.FormattableColumn):
-
-    def human_readable(self):
-        return tacker_osc_utils.format_dict_with_indention(self._value)
-
-
-formatters = {'softwareImages': FormatComplexDataColumn,
-              'checksum': FormatComplexDataColumn,
-              '_links': FormatComplexDataColumn,
-              'userDefinedData': FormatComplexDataColumn}
+formatters = {'softwareImages': tacker_osc_utils.FormatComplexDataColumn,
+              'checksum': tacker_osc_utils.FormatComplexDataColumn,
+              '_links': tacker_osc_utils.FormatComplexDataColumn,
+              'userDefinedData': tacker_osc_utils.FormatComplexDataColumn}
 
 
 _mixed_case_fields = ('usageState', 'onboardingState', 'operationalState',

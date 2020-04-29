@@ -22,6 +22,7 @@ to this module. They should go to tackerclient.osc.v1.utils.
 
 import operator
 
+from cliff import columns as cliff_columns
 from keystoneclient import exceptions as identity_exc
 from keystoneclient.v3 import domains
 from keystoneclient.v3 import projects
@@ -205,3 +206,9 @@ def _find_identity_resource(identity_client_manager, name_or_id,
 
 
 # The above are borrowed from openstackclient.identity.common.
+
+
+class FormatComplexDataColumn(cliff_columns.FormattableColumn):
+
+    def human_readable(self):
+        return format_dict_with_indention(self._value)

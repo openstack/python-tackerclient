@@ -18,7 +18,6 @@ import logging
 import os
 import time
 
-from osc_lib.cli import format_columns
 from osc_lib.command import command
 from osc_lib import utils
 
@@ -51,6 +50,10 @@ VNF_INSTANCE_TERMINATION_TIMEOUT = 300
 EXTRA_WAITING_TIME = 10
 
 SLEEP_TIME = 1
+
+formatters = {'vimConnectionInfo': tacker_osc_utils.FormatComplexDataColumn,
+              'instantiatedVnfInfo': tacker_osc_utils.FormatComplexDataColumn,
+              '_links': tacker_osc_utils.FormatComplexDataColumn}
 
 
 def _get_columns(vnflcm_obj, action=None):
@@ -132,9 +135,9 @@ class CreateVnfLcm(command.ShowOne):
                 print((_('VNF Instance %(id)s is created and instantiation'
                          ' request has been accepted.') % {'id': vnf['id']}))
         display_columns, columns = _get_columns(vnf)
-        data = utils.get_item_properties(
-            sdk_utils.DictModel(vnf),
-            columns, mixed_case_fields=_mixed_case_fields)
+        data = utils.get_item_properties(sdk_utils.DictModel(vnf),
+                                         columns, formatters=formatters,
+                                         mixed_case_fields=_mixed_case_fields)
         return (display_columns, data)
 
 
@@ -156,7 +159,7 @@ class ShowVnfLcm(command.ShowOne):
         data = utils.get_item_properties(
             sdk_utils.DictModel(obj),
             columns, mixed_case_fields=_mixed_case_fields,
-            formatters={'instantiatedVnfInfo': format_columns.DictColumn})
+            formatters=formatters)
         return (display_columns, data)
 
 
