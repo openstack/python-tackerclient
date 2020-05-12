@@ -185,7 +185,7 @@ class DeleteVIM(command.Command):
                                                  'resource': _VIM})
             err_msg = _("\n\nUnable to delete the below"
                         " %s(s):") % _VIM
-            for failed_id, error in failed_items.iteritems():
+            for failed_id, error in failed_items.items():
                 err_msg += (_('\n Cannot delete %(failed_id)s: %(error)s')
                             % {'failed_id': failed_id,
                                'error': error})
