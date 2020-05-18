@@ -44,7 +44,6 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = 'python-tackerclient'
 copyright = 'OpenStack Contributors'
 
 # If true, '()' will be appended to :func: etc. cross-reference text.
@@ -55,7 +54,7 @@ add_function_parentheses = True
 add_module_names = True
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = 'sphinx'
+pygments_style = 'native'
 
 # -- Options for HTML output --------------------------------------------------
 
@@ -68,7 +67,6 @@ htmlhelp_basename = 'tackerclientdoc'
 
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.
-html_last_updated_fmt = '%Y-%m-%d %H:%M'
 
 # -- Options for manual page output -------------------------------------------
 
@@ -79,9 +77,9 @@ man_pages = [
 
 # -- Options for openstackdocstheme -------------------------------------------
 
-repository_name = 'openstack/python-tackerclient'
-bug_project = 'python-tackerclient'
-bug_tag = 'doc'
+openstackdocs_repo_name = 'openstack/python-tackerclient'
+openstackdocs_bug_project = 'python-tackerclient'
+openstackdocs_bug_tag = 'doc'
 
 # -- Options for cliff.sphinxext plugin ---------------------------------------
 
