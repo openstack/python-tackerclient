@@ -332,6 +332,7 @@ class TableFormater(table.TableFormatter):
 
     https://bugs.launchpad.net/python-tackerclient/+bug/1165962
     """
+
     def emit_list(self, column_names, data, stdout, parsed_args):
         if column_names:
             super(TableFormater, self).emit_list(column_names, data, stdout,
@@ -559,7 +560,7 @@ class DeleteCommand(TackerCommand):
                                                  'resource': self.resource})
             err_msg = _("\n\nUnable to delete the below"
                         " %s(s):") % self.resource
-            for failed_id, error in failed_items.iteritems():
+            for failed_id, error in failed_items.items():
                 err_msg += (_('\n Cannot delete %(failed_id)s: %(error)s')
                             % {'failed_id': failed_id,
                                'error': error})
