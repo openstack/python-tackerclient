@@ -15,7 +15,7 @@
 
 from oslo_utils import uuidutils
 
-from tackerclient.osc.v1.vnfpkgm import vnf_package
+from tackerclient.osc import utils as tacker_osc_utils
 
 
 def vnf_package_obj(attrs=None, onboarded_state=False):
@@ -106,7 +106,7 @@ def get_vnf_package_data(vnf_package_obj, **kwargs):
     for attribute in complex_attributes:
         if vnf_package_obj.get(attribute):
             vnf_package_obj.update(
-                {attribute: vnf_package.FormatComplexDataColumn(
+                {attribute: tacker_osc_utils.FormatComplexDataColumn(
                     vnf_package_obj[attribute])})
 
     if kwargs.get('list_action'):
