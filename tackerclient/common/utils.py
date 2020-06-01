@@ -57,7 +57,7 @@ def get_client_class(api_name, version, version_map):
                 "one of: %(map_keys)s")
         msg = msg % {'api_name': api_name, 'version': version,
                      'map_keys': ', '.join(version_map.keys())}
-        raise exceptions.UnsupportedVersion(msg)
+        raise exceptions.UnsupportedVersion(message=msg)
 
     return importutils.import_class(client_path)
 

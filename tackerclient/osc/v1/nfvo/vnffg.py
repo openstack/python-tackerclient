@@ -145,9 +145,10 @@ class CreateVNFFG(command.ShowOne):
                 try:
                     template = yaml.load(template, Loader=yaml.SafeLoader)
                 except yaml.YAMLError as e:
-                    raise exceptions.InvalidInput(e)
+                    raise exceptions.InvalidInput(reason=e)
                 if not template:
-                    raise exceptions.InvalidInput('The vnffgd file is empty')
+                    raise exceptions.InvalidInput(
+                        reason='The vnffgd file is empty')
                 body[_VNFFG]['vnffgd_template'] = template
 
         if parsed_args.param_file:
@@ -157,9 +158,10 @@ class CreateVNFFG(command.ShowOne):
                 param_yaml = yaml.load(
                     param_yaml, Loader=yaml.SafeLoader)
             except yaml.YAMLError as e:
-                raise exceptions.InvalidInput(e)
+                raise exceptions.InvalidInput(reason=e)
             if not param_yaml:
-                raise exceptions.InvalidInput('The parameter file is empty')
+                raise exceptions.InvalidInput(
+                    reason='The parameter file is empty')
             body[_VNFFG]['attributes'] = {'param_values': param_yaml}
         tackerV10.update_dict(parsed_args, body[_VNFFG],
                               ['tenant_id', 'name', 'vnffgd_id',
@@ -218,7 +220,7 @@ class DeleteVNFFG(command.Command):
                             % {'failed_id': failed_id,
                                'error': error})
             msg += err_msg
-            raise exceptions.CommandError(msg)
+            raise exceptions.CommandError(message=msg)
         else:
             print((_('All specified %(resource)s(s) deleted successfully')
                    % {'resource': _VNFFG}))
@@ -274,9 +276,10 @@ class UpdateVNFFG(command.ShowOne):
                     template = yaml.load(
                         template, Loader=yaml.SafeLoader)
                 except yaml.YAMLError as e:
-                    raise exceptions.InvalidInput(e)
+                    raise exceptions.InvalidInput(reason=e)
                 if not template:
-                    raise exceptions.InvalidInput('The vnffgd file is empty')
+                    raise exceptions.InvalidInput(
+                        reason='The vnffgd file is empty')
                 body[_VNFFG]['vnffgd_template'] = template
 
         if parsed_args.param_file:
@@ -286,9 +289,10 @@ class UpdateVNFFG(command.ShowOne):
                 param_yaml = yaml.load(
                     param_yaml, Loader=yaml.SafeLoader)
             except yaml.YAMLError as e:
-                raise exceptions.InvalidInput(e)
+                raise exceptions.InvalidInput(reason=e)
             if not param_yaml:
-                raise exceptions.InvalidInput('The parameter file is empty')
+                raise exceptions.InvalidInput(
+                    reason='The parameter file is empty')
             body[_VNFFG]['attributes'] = {'param_values': param_yaml}
         tackerV10.update_dict(parsed_args, body[self.resource],
                               ['vnf_mapping', 'symmetrical', 'description'])

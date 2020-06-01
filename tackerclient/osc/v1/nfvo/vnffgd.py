@@ -71,15 +71,16 @@ class CreateVNFFGD(command.ShowOne):
         body = {_VNFFGD: {}}
         vnffgd = None
         if not parsed_args.vnffgd_file:
-            raise exceptions.InvalidInput("Invalid input for vnffgd file")
+            raise exceptions.InvalidInput(
+                reason="Invalid input for vnffgd file")
         with open(parsed_args.vnffgd_file) as f:
             vnffgd = f.read()
             try:
                 vnffgd = yaml.load(vnffgd, Loader=yaml.SafeLoader)
             except yaml.YAMLError as e:
-                raise exceptions.InvalidInput(e)
+                raise exceptions.InvalidInput(reason=e)
             if not vnffgd:
-                raise exceptions.InvalidInput("vnffgd file is empty")
+                raise exceptions.InvalidInput(reason="vnffgd file is empty")
             body[_VNFFGD]['template'] = {'vnffgd': vnffgd}
         tackerV10.update_dict(parsed_args, body[_VNFFGD],
                               ['tenant_id', 'name', 'description'])
@@ -136,7 +137,7 @@ class DeleteVNFFGD(command.Command):
                             % {'failed_id': failed_id,
                                'error': error})
             msg += err_msg
-            raise exceptions.CommandError(msg)
+            raise exceptions.CommandError(message=msg)
         else:
             print((_('All specified %(resource)s(s) deleted successfully')
                    % {'resource': _VNFFGD}))

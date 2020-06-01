@@ -124,7 +124,7 @@ class CreateVIM(command.ShowOne):
                     config_param = yaml.load(vim_config,
                                              Loader=yaml.SafeLoader)
                 except yaml.YAMLError as e:
-                    raise exceptions.InvalidInput(e)
+                    raise exceptions.InvalidInput(reason=e)
         vim_obj = body[_VIM]
         try:
             auth_url = config_param.pop('auth_url')
@@ -190,7 +190,7 @@ class DeleteVIM(command.Command):
                             % {'failed_id': failed_id,
                                'error': error})
             msg += err_msg
-            raise exceptions.CommandError(msg)
+            raise exceptions.CommandError(message=msg)
         else:
             print((_('All specified %(resource)s(s) deleted successfully')
                    % {'resource': _VIM}))
@@ -232,7 +232,7 @@ class UpdateVIM(command.ShowOne):
             try:
                 config_param = yaml.load(config_yaml)
             except yaml.YAMLError as e:
-                raise exceptions.InvalidInput(e)
+                raise exceptions.InvalidInput(reason=e)
         vim_obj = body[_VIM]
         if config_param is not None:
             vim_utils.args2body_vim(config_param, vim_obj)

@@ -100,9 +100,9 @@ class CreateNS(tackerV10.CreateCommand):
                 args['nsd_template'] = yaml.load(
                     template, Loader=yaml.SafeLoader)
             except yaml.YAMLError as e:
-                raise exceptions.InvalidInput(e)
+                raise exceptions.InvalidInput(reason=e)
             if not args['nsd_template']:
-                raise exceptions.InvalidInput('The nsd file is empty')
+                raise exceptions.InvalidInput(reason='The nsd file is empty')
 
         if parsed_args.param_file:
             with open(parsed_args.param_file) as f:
@@ -111,7 +111,7 @@ class CreateNS(tackerV10.CreateCommand):
                 args['attributes']['param_values'] = yaml.load(
                     param_yaml, Loader=yaml.SafeLoader)
             except yaml.YAMLError as e:
-                raise exceptions.InvalidInput(e)
+                raise exceptions.InvalidInput(reason=e)
         tackerV10.update_dict(parsed_args, body[self.resource],
                               ['tenant_id', 'name', 'description',
                                'nsd_id', 'vim_id'])

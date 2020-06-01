@@ -120,7 +120,7 @@ class CreateVNF(command.ShowOne):
                 config = yaml.load(
                     config_yaml, Loader=yaml.SafeLoader)
             except yaml.YAMLError as e:
-                raise exceptions.InvalidInput(e)
+                raise exceptions.InvalidInput(reason=e)
         if config:
             body[_VNF]['attributes'] = {'config': config}
 
@@ -146,9 +146,10 @@ class CreateVNF(command.ShowOne):
                     template = yaml.load(
                         template, Loader=yaml.SafeLoader)
                 except yaml.YAMLError as e:
-                    raise exceptions.InvalidInput(e)
+                    raise exceptions.InvalidInput(reason=e)
                 if not template:
-                    raise exceptions.InvalidInput('The vnfd file is empty')
+                    raise exceptions.InvalidInput(
+                        reason='The vnfd file is empty')
                 body[_VNF]['vnfd_template'] = template
 
         if parsed_args.param_file:
@@ -158,9 +159,10 @@ class CreateVNF(command.ShowOne):
                 param_yaml = yaml.load(
                     param_yaml, Loader=yaml.SafeLoader)
             except yaml.YAMLError as e:
-                raise exceptions.InvalidInput(e)
+                raise exceptions.InvalidInput(reason=e)
             if not param_yaml:
-                raise exceptions.InvalidInput('The parameter file is empty')
+                raise exceptions.InvalidInput(
+                    reason='The parameter file is empty')
             body[_VNF]['attributes'] = {'param_values': param_yaml}
         tackerV10.update_dict(parsed_args, body[_VNF],
                               ['tenant_id', 'name', 'description',
@@ -234,7 +236,7 @@ class DeleteVNF(command.Command):
                             % {'failed_id': failed_id,
                                'error': error})
             msg += err_msg
-            raise exceptions.CommandError(msg)
+            raise exceptions.CommandError(message=msg)
         else:
             print((_('All specified %(resource)s(s) deleted successfully')
                    % {'resource': _VNF}))

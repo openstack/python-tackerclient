@@ -253,9 +253,9 @@ class TestInstantiateVnfLcm(TestVnfLcm):
                                self.instantiate_vnf_lcm.take_action,
                                parsed_args)
 
-        expected_msg = ("File %s does not exist or user does not have read "
-                        "privileges to it")
-        self.assertEqual(expected_msg % sample_param_file, ex.message)
+        expected_msg = ("Invalid input: File %s does not exist "
+                        "or user does not have read privileges to it")
+        self.assertEqual(expected_msg % sample_param_file, str(ex))
 
     @mock.patch("os.open")
     @mock.patch("os.access")
@@ -275,9 +275,8 @@ class TestInstantiateVnfLcm(TestVnfLcm):
         ex = self.assertRaises(exceptions.InvalidInput,
                                self.instantiate_vnf_lcm.take_action,
                                parsed_args)
-
         expected_msg = "Failed to load parameter file."
-        self.assertIn(expected_msg, ex.message)
+        self.assertIn(expected_msg, str(ex))
 
 
 @ddt.ddt

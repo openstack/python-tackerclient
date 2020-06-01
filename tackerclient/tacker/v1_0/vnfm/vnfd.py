@@ -77,15 +77,15 @@ class CreateVNFD(tackerV10.CreateCommand):
         body = {self.resource: {}}
         vnfd = None
         if not parsed_args.vnfd_file:
-            raise exceptions.InvalidInput("Invalid input for vnfd file")
+            raise exceptions.InvalidInput(reason="Invalid input for vnfd file")
         with open(parsed_args.vnfd_file) as f:
             vnfd = f.read()
             try:
                 vnfd = yaml.load(vnfd, Loader=yaml.SafeLoader)
             except yaml.YAMLError as e:
-                raise exceptions.InvalidInput(e)
+                raise exceptions.InvalidInput(reason=e)
             if not vnfd:
-                raise exceptions.InvalidInput("vnfd file is empty")
+                raise exceptions.InvalidInput(reason="vnfd file is empty")
             body[self.resource]['attributes'] = {'vnfd': vnfd}
         tackerV10.update_dict(parsed_args, body[self.resource],
                               ['tenant_id', 'name', 'description'])

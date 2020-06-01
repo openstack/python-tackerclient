@@ -187,17 +187,20 @@ def instantiate_vnf_args2body(file_path):
     if file_path is not None and os.access(file_path, os.R_OK) is False:
         msg = _("File %s does not exist or user does not have read "
                 "privileges to it")
-        raise exceptions.InvalidInput(msg % file_path)
+        reason = msg % file_path
+        raise exceptions.InvalidInput(reason=reason)
 
     try:
         with open(file_path) as f:
             body = json.load(f)
     except (IOError, ValueError) as ex:
         msg = _("Failed to load parameter file. Error: %s")
-        raise exceptions.InvalidInput(msg % ex)
+        reason = msg % ex
+        raise exceptions.InvalidInput(reason=reason)
 
     if not body:
-        raise exceptions.InvalidInput(_('The parameter file is empty'))
+        reason = _('The parameter file is empty')
+        raise exceptions.InvalidInput(reason=reason)
 
     return body
 
@@ -304,7 +307,7 @@ class TerminateVnfLcm(command.Command):
 
         if parsed_args.graceful_termination_timeout:
             if parsed_args.termination_type == 'FORCEFUL':
-                exceptions.InvalidInput('--graceful-termination-timeout'
+                exceptions.InvalidInput(reason='--graceful-termination-timeout'
                                         ' argument is invalid for "FORCEFUL"'
                                         ' termination')
             body['gracefulTerminationTimeout'] = parsed_args.\
@@ -355,8 +358,8 @@ class TerminateVnfLcm(command.Command):
                 msg = _("Couldn't verify vnf instance is terminated within "
                         "'%(timeout)s' seconds. Unable to delete vnf instance "
                         "%(id)s")
-                raise exceptions.CommandError(msg % {'timeout': timeout,
-                                              'id': vnf_instance_id})
+                raise exceptions.CommandError(
+                    message=msg % {'timeout': timeout, 'id': vnf_instance_id})
             time.sleep(SLEEP_TIME)
 
 
@@ -396,7 +399,7 @@ class DeleteVnfLcm(command.Command):
             msg = (_("Failed to delete %(error_count)s of %(total)s "
                      "vnf instances.") % {'error_count': error_count,
                                           'total': total})
-            raise exceptions.CommandError(msg)
+            raise exceptions.CommandError(message=msg)
         else:
             if total > 1:
                 print(_('All specified vnf instances are deleted '

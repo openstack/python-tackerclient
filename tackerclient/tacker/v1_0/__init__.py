@@ -166,7 +166,7 @@ def _process_previous_argument(current_arg, _value_number, current_type_str,
         if _value_number == 0 and (current_type_str or _list_flag):
             # This kind of argument should have value
             raise exceptions.CommandError(
-                _("Invalid values_specs %s") % ' '.join(values_specs))
+                message=_("Invalid values_specs %s") % ' '.join(values_specs))
         if _value_number > 1 or _list_flag or current_type_str == 'list':
             current_arg.update({'nargs': '+'})
         elif _value_number == 0:
@@ -237,7 +237,8 @@ def parse_args_to_dict(values_specs):
                 _value_number = 0
             if _item in _options:
                 raise exceptions.CommandError(
-                    _("Duplicated options %s") % ' '.join(values_specs))
+                    message=_("Duplicated "
+                              "options %s") % ' '.join(values_specs))
             else:
                 _options.update({_item: {}})
             current_arg = _options[_item]
@@ -245,7 +246,8 @@ def parse_args_to_dict(values_specs):
         elif _item.startswith('type='):
             if current_arg is None:
                 raise exceptions.CommandError(
-                    _("Invalid values_specs %s") % ' '.join(values_specs))
+                    message=_("Invalid "
+                              "values_specs %s") % ' '.join(values_specs))
             if 'type' not in current_arg:
                 current_type_str = _item.split('=', 2)[1]
                 current_arg.update({'type': eval(current_type_str)})
@@ -267,7 +269,8 @@ def parse_args_to_dict(values_specs):
             if (not current_item or '=' in current_item or
                _item.startswith('-') and not is_number(_item)):
                 raise exceptions.CommandError(
-                    _("Invalid values_specs %s") % ' '.join(values_specs))
+                    message=_("Invalid "
+                              "values_specs %s") % ' '.join(values_specs))
             _value_number += 1
 
         _values_specs.append(_item)
@@ -484,7 +487,8 @@ class UpdateCommand(TackerCommand):
             body[self.resource] = _extra_values
         if not body[self.resource]:
             raise exceptions.CommandError(
-                _("Must specify new values to update %s") % self.resource)
+                message=_("Must specify new"
+                          " values to update %s") % self.resource)
         if self.allow_names:
             _id = find_resourceid_by_name_or_id(
                 tacker_client, self.resource, parsed_args.id)
@@ -565,7 +569,7 @@ class DeleteCommand(TackerCommand):
                             % {'failed_id': failed_id,
                                'error': error})
             msg += err_msg
-            raise exceptions.CommandError(msg)
+            raise exceptions.CommandError(message=msg)
         else:
             print((_('All specified %(resource)s(s) %(msg)s successfully')
                    % {'msg': self.deleted_msg.get(self.resource, 'deleted'),

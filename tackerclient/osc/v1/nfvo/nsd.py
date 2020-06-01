@@ -71,15 +71,15 @@ class CreateNSD(command.ShowOne):
         body = {_NSD: {}}
         nsd = None
         if not parsed_args.nsd_file:
-            raise exceptions.InvalidInput("Invalid input for nsd file")
+            raise exceptions.InvalidInput(reason="Invalid input for nsd file")
         with open(parsed_args.nsd_file) as f:
             nsd = f.read()
             try:
                 nsd = yaml.load(nsd, Loader=yaml.SafeLoader)
             except yaml.YAMLError as e:
-                raise exceptions.InvalidInput(e)
+                raise exceptions.InvalidInput(reason=e)
             if not nsd:
-                raise exceptions.InvalidInput("nsd file is empty")
+                raise exceptions.InvalidInput(reason="nsd file is empty")
             body[_NSD]['attributes'] = {'nsd': nsd}
         tackerV10.update_dict(parsed_args, body[_NSD],
                               ['tenant_id', 'name', 'description'])
@@ -138,7 +138,7 @@ class DeleteNSD(command.Command):
                             % {'failed_id': failed_id,
                                'error': error})
             msg += err_msg
-            raise exceptions.CommandError(msg)
+            raise exceptions.CommandError(message=msg)
         else:
             print((_('All specified %(resource)s(s) deleted successfully')
                    % {'resource': _NSD}))

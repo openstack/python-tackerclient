@@ -54,9 +54,9 @@ def make_client(instance):
                                auth=instance._auth)
         return client
     else:
-        raise exceptions.UnsupportedVersion(_("API version %s is not "
-                                              "supported") %
-                                            instance._api_version[API_NAME])
+        raise exceptions.UnsupportedVersion(
+            reason=_("API version %s is not supported") %
+            instance._api_version[API_NAME])
 
 
 def Client(api_version, *args, **kwargs):

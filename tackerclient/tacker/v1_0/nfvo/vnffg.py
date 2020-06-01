@@ -153,9 +153,10 @@ class CreateVNFFG(tackerV10.CreateCommand):
                 args['vnffgd_template'] = yaml.load(
                     template, Loader=yaml.SafeLoader)
             except yaml.YAMLError as e:
-                raise exceptions.InvalidInput(e)
+                raise exceptions.InvalidInput(reason=e)
             if not args['vnffgd_template']:
-                raise exceptions.InvalidInput('The vnffgd file is empty')
+                raise exceptions.InvalidInput(
+                    reason='The vnffgd file is empty')
 
         if parsed_args.param_file:
             with open(parsed_args.param_file) as f:
@@ -164,7 +165,7 @@ class CreateVNFFG(tackerV10.CreateCommand):
                 args['attributes']['param_values'] = yaml.load(
                     param_yaml, Loader=yaml.SafeLoader)
             except yaml.YAMLError as e:
-                raise exceptions.InvalidInput(e)
+                raise exceptions.InvalidInput(reason=e)
 
         tackerV10.update_dict(parsed_args, body[self.resource],
                               ['tenant_id', 'name', 'vnffgd_id',
@@ -217,9 +218,10 @@ class UpdateVNFFG(tackerV10.UpdateCommand):
                 args['vnffgd_template'] = yaml.load(
                     template, Loader=yaml.SafeLoader)
             except yaml.YAMLError as e:
-                raise exceptions.InvalidInput(e)
+                raise exceptions.InvalidInput(reason=e)
             if not args['vnffgd_template']:
-                raise exceptions.InvalidInput('The vnffgd template is empty')
+                raise exceptions.InvalidInput(
+                    reason='The vnffgd template is empty')
 
         tackerV10.update_dict(parsed_args, body[self.resource],
                               ['tenant_id', 'vnf_mapping', 'symmetrical'])

@@ -54,7 +54,7 @@ def validate_int_range(parsed_args, attr_name, min_value=None, max_value=None):
                {'attr_name': attr_name.replace('_', '-'),
                 'val': val})
 
-    raise exceptions.CommandError(msg)
+    raise exceptions.CommandError(message=msg)
 
 
 def validate_ip_subnet(parsed_args, attr_name):
@@ -65,5 +65,5 @@ def validate_ip_subnet(parsed_args, attr_name):
         netaddr.IPNetwork(val)
     except (netaddr.AddrFormatError, ValueError):
         raise exceptions.CommandError(
-            (_('%(attr_name)s "%(val)s" is not a valid CIDR.') %
-             {'attr_name': attr_name.replace('_', '-'), 'val': val}))
+            message=(_('%(attr_name)s "%(val)s" is not a valid CIDR.') %
+                     {'attr_name': attr_name.replace('_', '-'), 'val': val}))

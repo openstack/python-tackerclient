@@ -94,7 +94,7 @@ class CreateVNF(tackerV10.CreateCommand):
                 config = yaml.load(
                     config_yaml, Loader=yaml.SafeLoader)
             except yaml.YAMLError as e:
-                raise exceptions.InvalidInput(e)
+                raise exceptions.InvalidInput(reason=e)
 
         if config:
             args['attributes']['config'] = config
@@ -123,7 +123,7 @@ class CreateVNF(tackerV10.CreateCommand):
                 args['vnfd_template'] = yaml.load(
                     template, Loader=yaml.SafeLoader)
             except yaml.YAMLError as e:
-                raise exceptions.InvalidInput(e)
+                raise exceptions.InvalidInput(reason=e)
 
         if parsed_args.param_file:
             with open(parsed_args.param_file) as f:
@@ -132,7 +132,7 @@ class CreateVNF(tackerV10.CreateCommand):
                 args['attributes']['param_values'] = yaml.load(
                     param_yaml, Loader=yaml.SafeLoader)
             except yaml.YAMLError as e:
-                raise exceptions.InvalidInput(e)
+                raise exceptions.InvalidInput(reason=e)
         tackerV10.update_dict(parsed_args, body[self.resource],
                               ['tenant_id', 'name', 'description',
                                'vnfd_id', 'vim_id'])
