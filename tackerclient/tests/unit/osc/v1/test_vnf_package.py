@@ -541,7 +541,7 @@ class TestUpdateVnfPackage(TestVnfPackage):
                                         headers=self.header)
 
         columns, data = self.update_vnf_package.take_action(parsed_args)
-        self.assertItemsEqual(_get_columns_vnf_package(
+        self.assertCountEqual(_get_columns_vnf_package(
             vnf_package_obj=fake_response, action='update'), columns)
         self.assertListItemsEqual(
             vnf_package_fakes.get_vnf_package_data(fake_response), data)

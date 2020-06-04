@@ -115,7 +115,7 @@ class TestCreateVnfLcm(TestVnfLcm):
         if instantiate:
             self.assertEqual(expected_message, buffer.getvalue().strip())
 
-        self.assertItemsEqual(_get_columns_vnflcm(),
+        self.assertCountEqual(_get_columns_vnflcm(),
                               actual_columns)
         self.assertListItemsEqual(vnflcm_fakes.get_vnflcm_data(
             json, columns=attributes), data)
@@ -145,7 +145,7 @@ class TestShowVnfLcm(TestVnfLcm):
             json=vnf_instance, headers=self.header)
 
         columns, data = (self.show_vnf_lcm.take_action(parsed_args))
-        self.assertItemsEqual(_get_columns_vnflcm(action='show'),
+        self.assertCountEqual(_get_columns_vnflcm(action='show'),
                               columns)
         headers, attributes = vnflcm._get_columns(vnf_instance, action='show')
         self.assertListItemsEqual(
@@ -177,9 +177,9 @@ class TestListVnfLcm(TestVnfLcm):
             expected_data.append(vnflcm_fakes.get_vnflcm_data(
                 vnf_instance_obj, columns=columns, list_action=True))
 
-        self.assertItemsEqual(_get_columns_vnflcm(action='list'),
+        self.assertCountEqual(_get_columns_vnflcm(action='list'),
                               actual_columns)
-        self.assertItemsEqual(expected_data, list(data))
+        self.assertCountEqual(expected_data, list(data))
 
 
 class TestInstantiateVnfLcm(TestVnfLcm):
