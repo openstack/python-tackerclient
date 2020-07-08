@@ -229,6 +229,8 @@ class ClientBase(object):
             self.format = 'zip'
         elif 'text/plain' == resp.headers.get('Content-Type'):
             self.format = 'text'
+        elif 'artifacts' in action:
+            self.format = 'any'
         else:
             self.format = 'json'
 
@@ -265,7 +267,7 @@ class ClientBase(object):
 
     def deserialize(self, data, status_code):
         """Deserializes an XML or JSON string into a dictionary."""
-        if status_code in (204, 202) or self.format in ('zip', 'text'):
+        if status_code in (204, 202) or self.format in ('zip', 'text', 'any'):
             return data
         return serializer.Serializer(self.get_attr_metadata()).deserialize(
             data, self.content_type())['body']
@@ -775,6 +777,8 @@ class VnfPackageClient(ClientBase):
     vnfpackage_path = '/vnfpkgm/v1/vnf_packages/%s'
     vnfpackage_vnfd_path = '/vnfpkgm/v1/vnf_packages/%s/vnfd'
     vnfpackage_download_path = '/vnfpkgm/v1/vnf_packages/%s/package_content'
+    vnfpakcage_artifact_path = '/vnfpkgm/v1/vnf_packages/%(id)s/artifacts/' \
+                               '%(artifact_path)s'
 
     def build_action(self, action):
         return action
@@ -844,6 +848,11 @@ class VnfPackageClient(ClientBase):
         else:
             self.format = 'both'
         return self.get(self.vnfpackage_vnfd_path % vnf_package)
+
+    @APIParamsCall
+    def download_artifact_from_vnf_package(self, vnf_package, artifact_path):
+        return self.get(self.vnfpakcage_artifact_path %
+                        {'id': vnf_package, 'artifact_path': artifact_path})
 
     @APIParamsCall
     def update_vnf_package(self, vnf_package, body):
@@ -1182,6 +1191,11 @@ class Client(object):
     def download_vnfd_from_vnf_package(self, vnf_package, accept):
         return self.vnf_package_client.download_vnfd_from_vnf_package(
             vnf_package, accept)
+
+    def download_artifact_from_vnf_package(self, vnf_package, artifact_path):
+        return self.vnf_package_client.download_artifact_from_vnf_package(
+            vnf_package, artifact_path
+        )
 
     def download_vnf_package(self, vnf_package):
         return self.vnf_package_client.download_vnf_package(vnf_package)

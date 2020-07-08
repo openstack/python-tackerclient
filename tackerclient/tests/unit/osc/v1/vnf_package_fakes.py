@@ -83,7 +83,17 @@ def vnf_package_obj(attrs=None, onboarded_state=False):
                                 "packageContent": {
                                     "href": "string"
                                 }
-                            }}
+                            },
+                            "additionalArtifacts": [
+                                {
+                                    "artifactPath": "string",
+                                    "metadata": {},
+                                    "checksum": {
+                                        "algorithm": "string",
+                                        "hash": "string"
+                                    }
+                                }]
+                            }
 
     # Overwrite default attributes.
     fake_vnf_package.update(attrs)
@@ -102,7 +112,7 @@ def get_vnf_package_data(vnf_package_obj, **kwargs):
         'CREATED', 'DISABLED', 'NOT_IN_USE', {'Test_key': 'Test_value'}]
     """
     complex_attributes = ['softwareImages', 'checksum', '_links',
-                          'userDefinedData']
+                          'userDefinedData', 'additionalArtifacts']
     for attribute in complex_attributes:
         if vnf_package_obj.get(attribute):
             vnf_package_obj.update(

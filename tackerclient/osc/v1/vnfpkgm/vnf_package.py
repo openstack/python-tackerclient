@@ -32,13 +32,14 @@ LOG = logging.getLogger(__name__)
 formatters = {'softwareImages': tacker_osc_utils.FormatComplexDataColumn,
               'checksum': tacker_osc_utils.FormatComplexDataColumn,
               '_links': tacker_osc_utils.FormatComplexDataColumn,
-              'userDefinedData': tacker_osc_utils.FormatComplexDataColumn}
+              'userDefinedData': tacker_osc_utils.FormatComplexDataColumn,
+              'additionalArtifacts': tacker_osc_utils.FormatComplexDataColumn}
 
 
 _mixed_case_fields = ('usageState', 'onboardingState', 'operationalState',
                       'vnfProductName', 'softwareImages', 'userDefinedData',
                       'vnfdId', 'vnfdVersion', 'vnfSoftwareVersion',
-                      'vnfProvider')
+                      'vnfProvider', 'additionalArtifacts')
 
 
 def _get_columns(vnf_package_obj):
@@ -59,7 +60,8 @@ def _get_columns(vnf_package_obj):
             'vnfProductName': 'VNF Product Name',
             'vnfdId': 'VNFD ID',
             'vnfdVersion': 'VNFD Version',
-            'checksum': 'Checksum'
+            'checksum': 'Checksum',
+            'additionalArtifacts': 'Additional Artifacts'
         })
 
     return sdk_utils.get_osc_show_columns_for_sdk_resource(vnf_package_obj,
@@ -146,7 +148,11 @@ class ListVnfPackage(command.Lister):
                        exclude_fields=None, exclude_default=False):
         fields = ['id', 'vnfProductName', 'onboardingState',
                   'usageState', 'operationalState', '_links']
-        complex_fields = ['checksum', 'softwareImages', 'userDefinedData']
+        complex_fields = [
+            'checksum',
+            'softwareImages',
+            'userDefinedData',
+            'additionalArtifacts']
         simple_fields = ['vnfdVersion', 'vnfProvider', 'vnfSoftwareVersion',
                          'vnfdId']
 
@@ -407,6 +413,51 @@ class DownloadVnfPackage(command.Command):
             body = client.download_vnf_package(parsed_args.vnf_package)
 
         sdk_utils.save_data(body, parsed_args.file)
+
+
+class DownloadVnfPackageArtifact(command.Command):
+    _description = _("Download VNF package artifact of an on-boarded "
+                     "VNF package.")
+
+    def get_parser(self, prog_name):
+        parser = super(DownloadVnfPackageArtifact, self).get_parser(prog_name)
+        parser.add_argument(
+            "vnf_package",
+            metavar="<vnf-package>",
+            help=_("VNF package ID")
+        )
+        parser.add_argument(
+            "artifact_path",
+            metavar="<artifact-path>",
+            help=_("The artifact file's path")
+        )
+        parser.add_argument(
+            "--file",
+            metavar="<FILE>",
+            help=_("Local file to save downloaded VNF Package or VNFD data. "
+                   "If this is not specified and there is no redirection "
+                   "then data will not be saved.")
+        )
+        return parser
+
+    def take_action(self, parsed_args):
+        client = self.app.client_manager.tackerclient
+        if sys.stdout.isatty() and not (parsed_args.file):
+            msg = (
+                "No redirection or local file specified for downloaded "
+                "vnf package artifact data. Please specify a "
+                "local file with --file to "
+                "save downloaded vnf package artifact data "
+                "or use redirection.")
+            sdk_utils.exit(msg)
+        body = client.download_artifact_from_vnf_package(
+            parsed_args.vnf_package, parsed_args.artifact_path)
+
+        if not parsed_args.file:
+            print(body)
+            return
+        else:
+            sdk_utils.save_data(body, parsed_args.file)
 
 
 class UpdateVnfPackage(command.ShowOne):
