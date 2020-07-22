@@ -86,14 +86,14 @@ class TestUpdateVNF(TestVnfParameter):
             json=json, headers=self.header)
         columns, data = (self.set_vnf.take_action(parsed_args))
 
-        self.assertItemsEqual(_get_columns_vnf_parameter(),
+        self.assertCountEqual(_get_columns_vnf_parameter(),
                               columns)
         self.assertEqual(get_client_called_count,
                          self.requests_mock.call_count)
-        self.assertItemsEqual(
+        self.assertCountEqual(
             ast.literal_eval(self.requests_mock.last_request.body),
             ast.literal_eval(body))
-        self.assertItemsEqual(self._get_vnf_data(json['vnf']), data)
+        self.assertCountEqual(self._get_vnf_data(json['vnf']), data)
 
     def test_vnf_update_param_file(self):
         my_id = 'my-id'
