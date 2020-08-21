@@ -1,0 +1,5 @@
+{
+    "vnfInstanceName": "sample",
+    "vnfInstanceDescription" : "sample_description",
+    "vnfdId" : "sample_id"
+  }

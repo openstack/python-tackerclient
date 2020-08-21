@@ -111,7 +111,7 @@ class CreateVnfLcm(command.ShowOne):
         body = {}
 
         if file_path:
-            return instantiate_vnf_args2body(file_path)
+            return jsonfile2body(file_path)
 
         body['vnfdId'] = parsed_args.vnfd_id
 
@@ -182,7 +182,7 @@ class ListVnfLcm(command.Lister):
                 ) for s in vnf_instances))
 
 
-def instantiate_vnf_args2body(file_path):
+def jsonfile2body(file_path):
 
     if file_path is not None and os.access(file_path, os.R_OK) is False:
         msg = _("File %s does not exist or user does not have read "
@@ -224,7 +224,7 @@ class InstantiateVnfLcm(command.Command):
     def take_action(self, parsed_args):
         client = self.app.client_manager.tackerclient
         result = client.instantiate_vnf_instance(
-            parsed_args.vnf_instance, instantiate_vnf_args2body(
+            parsed_args.vnf_instance, jsonfile2body(
                 parsed_args.instantiation_request_file))
         if not result:
             print((_('Instantiate request for VNF Instance %(id)s has been'
@@ -407,3 +407,61 @@ class DeleteVnfLcm(command.Command):
             else:
                 print(_("Vnf instance '%s' deleted "
                         "successfully") % vnf_instances[0])
+
+
+class UpdateVnfLcm(command.Command):
+    _description = _("Update VNF Instance")
+
+    def get_parser(self, prog_name):
+        """Add arguments to parser.
+
+        Args:
+            prog_name ([string]): program name
+
+        Returns:
+            parser([ArgumentParser]): [description]
+        """
+        parser = super(UpdateVnfLcm, self).get_parser(prog_name)
+        parser.add_argument(
+            _VNF_INSTANCE,
+            metavar="<vnf-instance>",
+            help=_('VNF instance ID to update.'))
+        parser.add_argument(
+            '--I',
+            metavar="<param-file>",
+            help=_("Specify update request parameters in a json file."))
+
+        return parser
+
+    def args2body(self, file_path=None):
+        """Call jsonfile2body to store request body to body(dict)
+
+        Args:
+            file_path ([string], optional): file path of param file(json).
+                                             Defaults to None.
+
+        Returns:
+            body ([dict]): Request body is stored
+        """
+        body = {}
+
+        if file_path:
+            return jsonfile2body(file_path)
+
+        return body
+
+    def take_action(self, parsed_args):
+        """Execute update_vnf_instance and output result comment
+
+        Args:
+            parsed_args ([Namespace]): [description]
+        """
+        client = self.app.client_manager.tackerclient
+        if parsed_args.I:
+            # Update VNF instance.
+            result = client.update_vnf_instance(
+                parsed_args.vnf_instance,
+                self.args2body(file_path=parsed_args.I))
+            if not result:
+                print((_('Update vnf:%(id)s ') %
+                       {'id': parsed_args.vnf_instance}))

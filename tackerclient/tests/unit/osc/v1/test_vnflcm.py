@@ -554,3 +554,101 @@ class TestDeleteVnfLcm(TestVnfLcm):
 
         self.assertEqual('Failed to delete 1 of 3 vnf instances.',
                          exception.message)
+
+
+class TestUpdateVnfLcm(TestVnfLcm):
+    def setUp(self):
+        super(TestUpdateVnfLcm, self).setUp()
+        self.update_vnf_lcm = vnflcm.UpdateVnfLcm(
+            self.app, self.app_args, cmd_name='vnflcm modify')
+
+    def test_take_action(self):
+        vnf_instance = vnflcm_fakes.vnf_instance_response()
+        sample_param_file = ("./tackerclient/osc/v1/vnflcm/samples/"
+                             "update_vnf_instance_param_sample.json")
+
+        arglist = [vnf_instance['id'], '--I', sample_param_file]
+        verifylist = [('vnf_instance', vnf_instance['id']),
+                      ('I', sample_param_file)]
+
+        # command param
+        parsed_args = self.check_parser(
+            self.update_vnf_lcm, arglist, verifylist)
+        url = os.path.join(
+            self.url,
+            'vnflcm/v1/vnf_instances',
+            vnf_instance['id'])
+
+        self.requests_mock.register_uri(
+            'PATCH', url, headers=self.header, json={})
+
+        sys.stdout = buffer = StringIO()
+        self.update_vnf_lcm.take_action(parsed_args)
+
+        actual_message = buffer.getvalue().strip()
+
+        expected_message = ('Update vnf:' + vnf_instance['id'])
+
+        self.assertEqual(expected_message, actual_message)
+
+    def test_take_action_param_file_not_exists(self):
+        vnf_instance = vnflcm_fakes.vnf_instance_response()
+        sample_param_file = "./not_exists.json"
+        arglist = [vnf_instance['id'], '--I', sample_param_file]
+        verifylist = [('vnf_instance', vnf_instance['id']),
+                      ('I', sample_param_file)]
+
+        # command param
+        parsed_args = self.check_parser(self.update_vnf_lcm, arglist,
+                                        verifylist)
+
+        ex = self.assertRaises(exceptions.InvalidInput,
+                               self.update_vnf_lcm.take_action, parsed_args)
+
+        expected_msg = ("Invalid input: File %s does not exist "
+                        "or user does not have read privileges to it")
+        self.assertEqual(expected_msg % sample_param_file, str(ex))
+
+    def test_take_action_vnf_instance_not_found(self):
+        vnf_instance = vnflcm_fakes.vnf_instance_response()
+        sample_param_file = ("./tackerclient/osc/v1/vnflcm/samples/"
+                             "update_vnf_instance_param_sample.json")
+        arglist = [vnf_instance['id'], '--I', sample_param_file]
+        verifylist = [('vnf_instance', vnf_instance['id']),
+                      ('I', sample_param_file)]
+
+        # command param
+        parsed_args = self.check_parser(
+            self.update_vnf_lcm, arglist, verifylist)
+
+        url = os.path.join(
+            self.url,
+            'vnflcm/v1/vnf_instances',
+            vnf_instance['id'])
+        self.requests_mock.register_uri(
+            'PATCH', url, headers=self.header, status_code=404, json={})
+
+        self.assertRaises(exceptions.TackerClientException,
+                          self.update_vnf_lcm.take_action,
+                          parsed_args)
+
+    @mock.patch("os.open")
+    @mock.patch("os.access")
+    def test_take_action_invalid_format_param_file(self, mock_open,
+                                                   mock_access):
+        vnf_instance = vnflcm_fakes.vnf_instance_response()
+        sample_param_file = "./invalid_param_file.json"
+        arglist = [vnf_instance['id'], '--I', sample_param_file]
+        verifylist = [('vnf_instance', vnf_instance['id']),
+                      ('I', sample_param_file)]
+
+        mock_open.return_value = "invalid_json_data"
+        # command param
+        parsed_args = self.check_parser(self.update_vnf_lcm, arglist,
+                                        verifylist)
+
+        ex = self.assertRaises(exceptions.InvalidInput,
+                               self.update_vnf_lcm.take_action,
+                               parsed_args)
+        expected_msg = "Failed to load parameter file."
+        self.assertIn(expected_msg, str(ex))
