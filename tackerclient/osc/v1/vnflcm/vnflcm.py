@@ -465,3 +465,71 @@ class UpdateVnfLcm(command.Command):
             if not result:
                 print((_('Update vnf:%(id)s ') %
                        {'id': parsed_args.vnf_instance}))
+
+
+class ScaleVnfLcm(command.Command):
+    _description = _("Scale a VNF Instance")
+
+    def get_parser(self, prog_name):
+        parser = super(ScaleVnfLcm, self).get_parser(prog_name)
+        parser.add_argument(
+            _VNF_INSTANCE,
+            metavar="<vnf-instance>",
+            help=_('VNF instance ID to scale'))
+        parser.add_argument(
+            '--I',
+            metavar="<param-file>",
+            help=_("Specify scale request parameters in a json file."))
+        parser.add_argument(
+            '--type',
+            metavar="<type>",
+            choices=['SCALE_OUT', 'SCALE_IN'],
+            help=_("Indicates the type of the scale operation requested"))
+        parser.add_argument(
+            '--aspect-id',
+            metavar="<aspect-id>",
+            help=_("Identifier of the scaling aspect."))
+        parser.add_argument(
+            '--number-of-steps',
+            metavar="<number-of-steps>",
+            type=int,
+            help=_("Number of scaling steps to be executed as part of"
+                   "this Scale VNF operation."))
+        parser.add_argument(
+            '--additional-param-file',
+            metavar="<additional-param-file>",
+            help=_("Additional parameters passed by the NFVO as input"
+                   "to the scaling process."))
+        return parser
+
+    def args2body(self, file_path=None):
+        """To store request body, call jsonfile2body.
+
+        Args:
+            file_path ([string], optional): file path of param file(json).
+            Defaults to None.
+
+        Returns:
+            body[dict]: [description]
+        """
+        body = {}
+
+        if file_path:
+            return jsonfile2body(file_path)
+
+        return body
+
+    def take_action(self, parsed_args):
+        """Execute scale_vnf_instance and output result comment.
+
+        Args:
+            parsed_args ([Namespace]): [description]
+        """
+        client = self.app.client_manager.tackerclient
+        if parsed_args.additional_param_file:
+            result = client.scale_vnf_instance(
+                parsed_args.vnf_instance,
+                self.args2body(file_path=parsed_args.additional_param_file))
+            if not result:
+                print((_('Scale request for VNF Instance %(id)s has been'
+                         ' accepted.') % {'id': parsed_args.vnf_instance}))

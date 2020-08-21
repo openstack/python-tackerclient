@@ -602,53 +602,109 @@ class TestUpdateVnfLcm(TestVnfLcm):
         parsed_args = self.check_parser(self.update_vnf_lcm, arglist,
                                         verifylist)
 
+        self.assertRaises(exceptions.InvalidInput,
+                          self.update_vnf_lcm.take_action, parsed_args)
+
+
+@ddt.ddt
+class TestScaleVnfLcm(TestVnfLcm):
+    def setUp(self):
+        super(TestScaleVnfLcm, self).setUp()
+        self.scale_vnf_lcm = vnflcm.ScaleVnfLcm(
+            self.app, self.app_args, cmd_name='vnflcm scale')
+
+    @ddt.data('SCALE_IN', 'SCALE_OUT')
+    def test_take_action(self, scale_type):
+        vnf_instance = vnflcm_fakes.vnf_instance_response()
+        sample_param_file = ("./tackerclient/osc/v1/vnflcm/samples/"
+                             "scale_vnf_instance_param_sample.json")
+
+        arglist = [vnf_instance['id'],
+                   '--aspect-id', uuidsentinel.aspect_id,
+                   '--number-of-steps', '1',
+                   '--type', scale_type,
+                   '--additional-param-file', sample_param_file]
+        verifylist = [('vnf_instance', vnf_instance['id']),
+                      ('aspect_id', uuidsentinel.aspect_id),
+                      ('number_of_steps', 1),
+                      ('type', scale_type),
+                      ('additional_param_file', sample_param_file)]
+
+        # command param
+        parsed_args = self.check_parser(self.scale_vnf_lcm, arglist,
+                                        verifylist)
+        url = os.path.join(
+            self.url,
+            'vnflcm/v1/vnf_instances',
+            vnf_instance['id'],
+            'scale')
+
+        self.requests_mock.register_uri(
+            'POST', url, headers=self.header, json={})
+
+        sys.stdout = buffer = StringIO()
+        self.scale_vnf_lcm.take_action(parsed_args)
+
+        actual_message = buffer.getvalue().strip()
+
+        expected_message = ("Scale request for VNF Instance %s has been "
+                            "accepted.") % vnf_instance['id']
+
+        self.assertEqual(expected_message, actual_message)
+
+    @ddt.data('SCALE_IN', 'SCALE_OUT')
+    def test_take_action_param_file_not_exists(self, scale_type):
+        vnf_instance = vnflcm_fakes.vnf_instance_response()
+        sample_param_file = "./not_exists.json"
+        arglist = [vnf_instance['id'],
+                   '--aspect-id', uuidsentinel.aspect_id,
+                   '--number-of-steps', '2',
+                   '--type', scale_type,
+                   '--additional-param-file', sample_param_file]
+        verifylist = [('vnf_instance', vnf_instance['id']),
+                      ('aspect_id', uuidsentinel.aspect_id),
+                      ('number_of_steps', 2),
+                      ('type', scale_type),
+                      ('additional_param_file', sample_param_file)]
+
+        # command param
+        parsed_args = self.check_parser(self.scale_vnf_lcm, arglist,
+                                        verifylist)
+
         ex = self.assertRaises(exceptions.InvalidInput,
-                               self.update_vnf_lcm.take_action, parsed_args)
+                               self.scale_vnf_lcm.take_action, parsed_args)
 
         expected_msg = ("Invalid input: File %s does not exist "
                         "or user does not have read privileges to it")
         self.assertEqual(expected_msg % sample_param_file, str(ex))
 
-    def test_take_action_vnf_instance_not_found(self):
+    @ddt.data('SCALE_IN', 'SCALE_OUT')
+    def test_take_action_vnf_instance_not_found(self, scale_type):
         vnf_instance = vnflcm_fakes.vnf_instance_response()
         sample_param_file = ("./tackerclient/osc/v1/vnflcm/samples/"
                              "update_vnf_instance_param_sample.json")
-        arglist = [vnf_instance['id'], '--I', sample_param_file]
+        arglist = [vnf_instance['id'],
+                   '--aspect-id', uuidsentinel.aspect_id,
+                   '--number-of-steps', '3',
+                   '--type', scale_type,
+                   '--additional-param-file', sample_param_file]
         verifylist = [('vnf_instance', vnf_instance['id']),
-                      ('I', sample_param_file)]
+                      ('aspect_id', uuidsentinel.aspect_id),
+                      ('number_of_steps', 3),
+                      ('type', scale_type),
+                      ('additional_param_file', sample_param_file)]
 
         # command param
-        parsed_args = self.check_parser(
-            self.update_vnf_lcm, arglist, verifylist)
+        parsed_args = self.check_parser(self.scale_vnf_lcm, arglist,
+                                        verifylist)
 
         url = os.path.join(
             self.url,
             'vnflcm/v1/vnf_instances',
             vnf_instance['id'])
         self.requests_mock.register_uri(
-            'PATCH', url, headers=self.header, status_code=404, json={})
+            'POST', url, headers=self.header, status_code=404, json={})
 
         self.assertRaises(exceptions.TackerClientException,
-                          self.update_vnf_lcm.take_action,
+                          self.scale_vnf_lcm.take_action,
                           parsed_args)
-
-    @mock.patch("os.open")
-    @mock.patch("os.access")
-    def test_take_action_invalid_format_param_file(self, mock_open,
-                                                   mock_access):
-        vnf_instance = vnflcm_fakes.vnf_instance_response()
-        sample_param_file = "./invalid_param_file.json"
-        arglist = [vnf_instance['id'], '--I', sample_param_file]
-        verifylist = [('vnf_instance', vnf_instance['id']),
-                      ('I', sample_param_file)]
-
-        mock_open.return_value = "invalid_json_data"
-        # command param
-        parsed_args = self.check_parser(self.update_vnf_lcm, arglist,
-                                        verifylist)
-
-        ex = self.assertRaises(exceptions.InvalidInput,
-                               self.update_vnf_lcm.take_action,
-                               parsed_args)
-        expected_msg = "Failed to load parameter file."
-        self.assertIn(expected_msg, str(ex))
