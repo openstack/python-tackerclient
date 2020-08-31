@@ -868,6 +868,7 @@ class VnfLCMClient(ClientBase):
 
     vnf_instances_path = '/vnflcm/v1/vnf_instances'
     vnf_instance_path = '/vnflcm/v1/vnf_instances/%s'
+    vnf_lcm_op_occs_path = '/vnflcm/v1/vnf_lcm_op_occs/%s'
 
     def build_action(self, action):
         return action
@@ -913,6 +914,10 @@ class VnfLCMClient(ClientBase):
     def scale_vnf_instance(self, vnf_id, body):
         return self.post((self.vnf_instance_path + "/scale") % vnf_id,
                          body=body)
+
+    @APIParamsCall
+    def rollback_vnf_instance(self, occ_id):
+        return self.post((self.vnf_lcm_op_occs_path + "/rollback") % occ_id)
 
 
 class Client(object):
@@ -1192,6 +1197,9 @@ class Client(object):
 
     def update_vnf_instance(self, vnf_id, body):
         return self.vnf_lcm_client.update_vnf_instance(vnf_id, body)
+
+    def rollback_vnf_instance(self, occ_id):
+        return self.vnf_lcm_client.rollback_vnf_instance(occ_id)
 
     def update_vnf_package(self, vnf_package, body):
         return self.vnf_package_client.update_vnf_package(vnf_package, body)
