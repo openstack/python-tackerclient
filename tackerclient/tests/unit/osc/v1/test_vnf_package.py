@@ -56,9 +56,14 @@ def _get_columns_vnf_package(action='list', vnf_package_obj=None):
     if action in ['show', 'create']:
         if vnf_package_obj and vnf_package_obj[
             'onboardingState'] == 'ONBOARDED':
-            columns.extend(['VNFD ID', 'VNF Provider', 'VNF Software Version',
-                            'VNFD Version', 'Software Images',
-                            'VNF Product Name', 'Checksum'])
+            columns.extend(['VNFD ID',
+                            'VNF Provider',
+                            'VNF Software Version',
+                            'VNFD Version',
+                            'Software Images',
+                            'VNF Product Name',
+                            'Checksum',
+                            'Additional Artifacts'])
 
     return columns
 
@@ -127,7 +132,11 @@ class TestListVnfPackage(TestVnfPackage):
 
         columns = ['Id', 'Vnf Product Name', 'Onboarding State', 'Usage State',
                    'Operational State', 'Links']
-        complex_columns = ['Checksum', 'Software Images', 'User Defined Data']
+        complex_columns = [
+            'Checksum',
+            'Software Images',
+            'User Defined Data',
+            'Additional Artifacts']
         simple_columns = ['Vnfd Version', 'Vnf Provider', 'Vnfd Id',
                           'Vnf Software Version']
 
@@ -195,9 +204,11 @@ class TestListVnfPackage(TestVnfPackage):
     def test_take_action_with_exclude_fields(self):
         parsed_args = self.check_parser(
             self.list_vnf_package,
-            ["--exclude_fields", 'softwareImages,checksum,userDefinedData',
+            ["--exclude_fields", 'softwareImages,checksum,'
+                                 'userDefinedData,additionalArtifacts',
              "--filter", '(eq,onboardingState,ONBOARDED)'],
-            [('exclude_fields', 'softwareImages,checksum,userDefinedData'),
+            [('exclude_fields', 'softwareImages,checksum,'
+                                'userDefinedData,additionalArtifacts'),
              ('filter', '(eq,onboardingState,ONBOARDED)')])
         vnf_packages = self._get_vnf_packages(onboarded_vnf_package=True)
         updated_vnf_packages = {'vnf_packages': []}
@@ -205,10 +216,12 @@ class TestListVnfPackage(TestVnfPackage):
             vnf_pkg.pop('softwareImages')
             vnf_pkg.pop('checksum')
             vnf_pkg.pop('userDefinedData')
+            vnf_pkg.pop('additionalArtifacts')
             updated_vnf_packages['vnf_packages'].append(vnf_pkg)
         self._get_mock_response_for_list_vnf_packages(
             'filter=(eq,onboardingState,ONBOARDED)&'
-            'exclude_fields=softwareImages,checksum,userDefinedData',
+            'exclude_fields=softwareImages,checksum,'
+            'userDefinedData,additionalArtifacts',
             json=updated_vnf_packages)
 
         actual_columns, data = self.list_vnf_package.take_action(parsed_args)
@@ -216,7 +229,7 @@ class TestListVnfPackage(TestVnfPackage):
         headers, columns = tacker_osc_utils.get_column_definitions(
             self.list_vnf_package.get_attributes(
                 exclude_fields=['softwareImages', 'checksum',
-                                'userDefinedData']),
+                                'userDefinedData', 'additionalArtifacts']),
             long_listing=True)
 
         for vnf_package_obj in updated_vnf_packages['vnf_packages']:
@@ -224,7 +237,7 @@ class TestListVnfPackage(TestVnfPackage):
                 vnf_package_obj, columns=columns, list_action=True))
         expected_columns = self.get_list_columns(
             exclude_fields=['Software Images', 'Checksum',
-                            'User Defined Data'])
+                            'User Defined Data', 'Additional Artifacts'])
         self.assertCountEqual(expected_columns, actual_columns)
         self.assertListItemsEqual(expected_data, list(data))
 
@@ -731,3 +744,60 @@ class TestDownloadVnfPackage(TestVnfPackage):
                         "Downloaded contents don't match test file")
         self.assertTrue(self._check_valid_zip_file(local_file.name))
         shutil.rmtree(temp_dir)
+
+
+@ddt.ddt
+class TestDownloadVnfPackageArtifact(TestVnfPackage):
+    # The new vnf package created.
+    _vnf_package = vnf_package_fakes.vnf_package_obj(
+        attrs={'userDefinedData': {'Test_key': 'Test_value'}})
+
+    def setUp(self):
+        super(TestDownloadVnfPackageArtifact, self).setUp()
+        self.download_vnf_package_artifacts = vnf_package.\
+            DownloadVnfPackageArtifact(
+                self.app, self.app_args,
+                cmd_name='vnf package artifact download')
+
+    def test_download_no_options(self):
+        self.assertRaises(base.ParserException, self.check_parser,
+                          self.download_vnf_package_artifacts, [], [])
+
+    def _mock_request_url_for_download_artifacts(
+        self, artifact_path, artifact_data):
+        self.header = {'content-type': 'text/plain'}
+        url = os.path.join(self.url, 'vnfpkgm/v1/vnf_packages',
+                           self._vnf_package['id'], 'artifacts', artifact_path)
+        self.requests_mock.register_uri('GET', url,
+                                        headers=self.header,
+                                        text=artifact_data)
+
+    def _get_arglist_and_verifylist(self, localfile):
+        arglist = [
+            self._vnf_package['id'],
+            localfile.name[1:],
+            '--file', localfile.name
+        ]
+        verifylist = [
+            ('vnf_package', self._vnf_package['id']),
+            ('artifact_path', localfile.name[1:]),
+            ('file', localfile.name)
+        ]
+        return arglist, verifylist
+
+    def test_download_artifacts_from_vnf_package(self):
+        test_file = ('./tackerclient/tests//unit/osc/v1/fixture_data/'
+                     'sample_vnf_package_artifacts/Scripts/'
+                     'install.sh')
+
+        local_file = tempfile.NamedTemporaryFile(suffix='install.sh')
+        artifact_data = open(test_file, 'r').read()
+        arglist, verifylist = self._get_arglist_and_verifylist(
+            local_file)
+        parsed_args = self.check_parser(
+            self.download_vnf_package_artifacts, arglist, verifylist)
+        self._mock_request_url_for_download_artifacts(
+            local_file.name[1:], artifact_data)
+        self.download_vnf_package_artifacts.take_action(parsed_args)
+        self.assertTrue(filecmp.cmp(test_file, local_file.name),
+                        "Downloaded contents don't match test file")
