@@ -251,6 +251,9 @@ class UpdateVNFFG(command.ShowOne):
         parser.add_argument(
             '--description',
             help=_('Set a description for the VNFFG'))
+        parser.add_argument(
+            '--param-file',
+            help=_('YAML file with specific VNFFG parameters'))
         return parser
 
     def args2body(self, parsed_args):
@@ -294,7 +297,7 @@ class UpdateVNFFG(command.ShowOne):
                 raise exceptions.InvalidInput(
                     reason='The parameter file is empty')
             body[_VNFFG]['attributes'] = {'param_values': param_yaml}
-        tackerV10.update_dict(parsed_args, body[self.resource],
+        tackerV10.update_dict(parsed_args, body[_VNFFG],
                               ['vnf_mapping', 'symmetrical', 'description'])
         return body
 
