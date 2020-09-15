@@ -1098,8 +1098,8 @@ class Client(object):
     def create_ns(self, body):
         return self.legacy_client.create_ns(body)
 
-    def delete_ns(self, ns):
-        return self.legacy_client.delete_ns(ns)
+    def delete_ns(self, ns, body=None):
+        return self.legacy_client.delete_ns(ns, body=body)
 
     def create_cluster(self, body=None):
         return self.legacy_client.create_cluster(body=body)
