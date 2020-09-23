@@ -32,7 +32,8 @@ from keystoneclient import discover
 from keystoneclient import exceptions as ks_exc
 from keystoneclient import session
 from oslo_utils import encodeutils
-import six.moves.urllib.parse as urlparse
+
+from urllib import parse as urlparse
 
 from cliff import app
 from cliff import commandmanager
