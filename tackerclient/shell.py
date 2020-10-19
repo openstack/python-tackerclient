@@ -25,6 +25,10 @@ import itertools
 import logging
 import os
 import sys
+from urllib import parse as urlparse
+
+from cliff import app
+from cliff import commandmanager
 
 from keystoneclient.auth.identity import v2 as v2_auth
 from keystoneclient.auth.identity import v3 as v3_auth
@@ -32,11 +36,6 @@ from keystoneclient import discover
 from keystoneclient import exceptions as ks_exc
 from keystoneclient import session
 from oslo_utils import encodeutils
-
-from urllib import parse as urlparse
-
-from cliff import app
-from cliff import commandmanager
 
 from tackerclient.common import clientmanager
 from tackerclient.common import command as openstack_command

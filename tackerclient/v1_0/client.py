@@ -19,7 +19,6 @@ import logging
 import time
 
 import requests
-
 from urllib import parse as urlparse
 
 from tackerclient import client

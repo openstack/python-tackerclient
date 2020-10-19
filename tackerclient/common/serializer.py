@@ -18,16 +18,12 @@ from xml.etree import ElementTree as etree
 from xml.parsers import expat
 
 from oslo_serialization import jsonutils
-import six
 
 from tackerclient.common import constants
 from tackerclient.common import exceptions as exception
 from tackerclient.i18n import _
 
 LOG = logging.getLogger(__name__)
-
-if six.PY3:
-    long = int
 
 
 class ActionDispatcher(object):
@@ -58,7 +54,7 @@ class JSONDictSerializer(DictSerializer):
 
     def default(self, data):
         def sanitizer(obj):
-            return six.text_type(obj)
+            return str(obj)
         return jsonutils.dumps(data, default=sanitizer)
 
 
@@ -93,7 +89,7 @@ class XMLDictSerializer(DictSerializer):
                 root_key = constants.VIRTUAL_ROOT_KEY
                 root_value = None
             else:
-                link_keys = [k for k in six.iterkeys(data) or []
+                link_keys = [k for k in data.keys() or []
                              if k.endswith('_links')]
                 if link_keys:
                     links = data.pop(link_keys[0], None)
@@ -183,10 +179,6 @@ class XMLDictSerializer(DictSerializer):
                 result.set(
                     constants.TYPE_ATTR,
                     constants.TYPE_INT)
-            elif isinstance(data, long):
-                result.set(
-                    constants.TYPE_ATTR,
-                    constants.TYPE_LONG)
             elif isinstance(data, float):
                 result.set(
                     constants.TYPE_ATTR,
@@ -194,7 +186,7 @@ class XMLDictSerializer(DictSerializer):
             LOG.debug("Data %(data)s type is %(type)s",
                       {'data': data,
                        'type': type(data)})
-            result.text = six.text_type(data)
+            result.text = str(data)
         return result
 
     def _create_link_nodes(self, xml_doc, links):
@@ -323,8 +315,6 @@ class XMLDeserializer(TextDeserializer):
                           lambda x: x.lower() == 'true',
                           constants.TYPE_INT:
                           lambda x: int(x),
-                          constants.TYPE_LONG:
-                          lambda x: long(x),
                           constants.TYPE_FLOAT:
                           lambda x: float(x)}
             if attrType and attrType in converters:

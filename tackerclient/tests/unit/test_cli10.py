@@ -14,15 +14,13 @@
 #    under the License.
 #
 
-from unittest import mock
-import urllib
-
 import contextlib
 import fixtures
-import six
+import io
 import sys
 import testtools
-
+from unittest import mock
+import urllib
 from urllib import parse as urlparse
 
 from tackerclient.common import constants
@@ -41,7 +39,7 @@ ENDURL = 'localurl'
 
 @contextlib.contextmanager
 def capture_std_streams():
-    fake_stdout, fake_stderr = six.StringIO(), six.StringIO()
+    fake_stdout, fake_stderr = io.StringIO(), io.StringIO()
     stdout, stderr = sys.stdout, sys.stderr
     try:
         sys.stdout, sys.stderr = fake_stdout, fake_stderr
@@ -318,7 +316,7 @@ class CLITestV10Base(testtools.TestCase):
             args.append("--tag")
         for tag in tags:
             args.append(tag)
-            if isinstance(tag, six.string_types):
+            if isinstance(tag, str):
                 tag = urllib.quote(tag.encode('utf-8'))
             if query:
                 query += "&tag=" + tag
@@ -415,7 +413,7 @@ class CLITestV10Base(testtools.TestCase):
             args.append("--tag")
         for tag in tags:
             args.append(tag)
-            if isinstance(tag, six.string_types):
+            if isinstance(tag, str):
                 tag = urllib.quote(tag.encode('utf-8'))
             if query:
                 query += "&tag=" + tag

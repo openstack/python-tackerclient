@@ -23,7 +23,6 @@ from cliff.formatters import table
 from cliff import lister
 from cliff import show
 from oslo_serialization import jsonutils
-import six
 
 from tackerclient.common._i18n import _
 from tackerclient.common import command
@@ -354,8 +353,7 @@ class TackerCommandMeta(abc.ABCMeta):
                                                      name, bases, cls_dict)
 
 
-@six.add_metaclass(TackerCommandMeta)
-class TackerCommand(command.OpenStackCommand):
+class TackerCommand(command.OpenStackCommand, metaclass=TackerCommandMeta):
 
     api = 'nfv-orchestration'
     values_specs = []

@@ -20,7 +20,6 @@ from unittest import mock
 
 import ddt
 from oslo_utils.fixture import uuidsentinel
-import six
 
 from tackerclient.common import exceptions
 from tackerclient.osc import utils as tacker_osc_utils
@@ -448,7 +447,7 @@ class TestTerminateVnfLcm(TestVnfLcm):
                                 "delete vnf instance %(id)s"
                                 % {'timeout': 15, 'id': vnf_instance['id']})
 
-            self.assertIn(expected_message, six.text_type(result))
+            self.assertIn(expected_message, str(result))
             self.assertNotCalled(mock_delete)
 
     def test_terminate_no_options(self):

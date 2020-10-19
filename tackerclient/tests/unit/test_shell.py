@@ -14,18 +14,17 @@
 #    under the License.
 
 import argparse
+import fixtures
+import io
 import logging
 import os
 import re
-from unittest import mock
-
-import six
 import sys
-
-import fixtures
-from keystoneclient import session
 import testtools
 from testtools import matchers
+from unittest import mock
+
+from keystoneclient import session
 
 from tackerclient.common import clientmanager
 from tackerclient import shell as openstack_shell
@@ -63,8 +62,8 @@ class ShellTest(testtools.TestCase):
         clean_env = {}
         _old_env, os.environ = os.environ, clean_env.copy()
         try:
-            sys.stdout = six.StringIO()
-            sys.stderr = six.StringIO()
+            sys.stdout = io.StringIO()
+            sys.stderr = io.StringIO()
             _shell = openstack_shell.TackerShell(DEFAULT_API_VERSION)
             _shell.run(argstr.split())
         except SystemExit:
