@@ -434,9 +434,9 @@ class DownloadVnfPackageArtifact(command.Command):
         parser.add_argument(
             "--file",
             metavar="<FILE>",
-            help=_("Local file to save downloaded VNF Package or VNFD data. "
-                   "If this is not specified and there is no redirection "
-                   "then data will not be saved.")
+            help=_("Local file to save downloaded VNF Package artifact "
+                   "file data. If this is not specified and "
+                   "there is no redirection then data will not be saved.")
         )
         return parser
 
