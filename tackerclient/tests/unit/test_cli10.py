@@ -20,9 +20,10 @@ import urllib
 import contextlib
 import fixtures
 import six
-import six.moves.urllib.parse as urlparse
 import sys
 import testtools
+
+from urllib import parse as urlparse
 
 from tackerclient.common import constants
 from tackerclient.common import exceptions

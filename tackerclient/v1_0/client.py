@@ -19,7 +19,8 @@ import logging
 import time
 
 import requests
-import six.moves.urllib.parse as urlparse
+
+from urllib import parse as urlparse
 
 from tackerclient import client
 from tackerclient.common import constants
