@@ -652,6 +652,38 @@ class TestScaleVnfLcm(TestVnfLcm):
         self.assertEqual(expected_message, actual_message)
 
     @ddt.data('SCALE_IN', 'SCALE_OUT')
+    def test_take_action_no_param_file(self, scale_type):
+        vnf_instance = vnflcm_fakes.vnf_instance_response()
+
+        arglist = [vnf_instance['id'],
+                   '--aspect-id', uuidsentinel.aspect_id,
+                   '--number-of-steps', '1',
+                   '--type', scale_type]
+        verifylist = [('vnf_instance', vnf_instance['id']),
+                      ('aspect_id', uuidsentinel.aspect_id),
+                      ('number_of_steps', 1),
+                      ('type', scale_type)]
+
+        parsed_args = self.check_parser(self.scale_vnf_lcm, arglist,
+                                        verifylist)
+
+        url = os.path.join(self.url, 'vnflcm/v1/vnf_instances',
+                           vnf_instance['id'], 'scale')
+
+        self.requests_mock.register_uri(
+            'POST', url, headers=self.header, json={})
+
+        sys.stdout = buffer = StringIO()
+        self.scale_vnf_lcm.take_action(parsed_args)
+
+        actual_message = buffer.getvalue().strip()
+
+        expected_message = ("Scale request for VNF Instance %s has been "
+                            "accepted.") % vnf_instance['id']
+
+        self.assertEqual(expected_message, actual_message)
+
+    @ddt.data('SCALE_IN', 'SCALE_OUT')
     def test_take_action_param_file_not_exists(self, scale_type):
         vnf_instance = vnflcm_fakes.vnf_instance_response()
         sample_param_file = "./not_exists.json"

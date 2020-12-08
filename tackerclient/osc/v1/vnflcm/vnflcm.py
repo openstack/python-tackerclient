@@ -477,45 +477,50 @@ class ScaleVnfLcm(command.Command):
             metavar="<vnf-instance>",
             help=_('VNF instance ID to scale'))
         parser.add_argument(
-            '--I',
-            metavar="<param-file>",
-            help=_("Specify scale request parameters in a json file."))
-        parser.add_argument(
-            '--type',
-            metavar="<type>",
-            choices=['SCALE_OUT', 'SCALE_IN'],
-            help=_("Indicates the type of the scale operation requested"))
-        parser.add_argument(
-            '--aspect-id',
-            metavar="<aspect-id>",
-            help=_("Identifier of the scaling aspect."))
-        parser.add_argument(
             '--number-of-steps',
             metavar="<number-of-steps>",
             type=int,
-            help=_("Number of scaling steps to be executed as part of"
+            help=_("Number of scaling steps to be executed as part of "
                    "this Scale VNF operation."))
         parser.add_argument(
             '--additional-param-file',
             metavar="<additional-param-file>",
-            help=_("Additional parameters passed by the NFVO as input"
+            help=_("Additional parameters passed by the NFVO as input "
                    "to the scaling process."))
+
+        scale_require_parameters = parser.add_argument_group(
+            "require arguments"
+        )
+        scale_require_parameters.add_argument(
+            '--type',
+            metavar="<type>",
+            required=True,
+            choices=['SCALE_OUT', 'SCALE_IN'],
+            help=_("SCALE_OUT or SCALE_IN for type of scale operation."))
+        scale_require_parameters.add_argument(
+            '--aspect-id',
+            required=True,
+            metavar="<aspect-id>",
+            help=_("Identifier of the scaling aspect."))
+
         return parser
 
-    def args2body(self, file_path=None):
+    def args2body(self, parsed_args):
         """To store request body, call jsonfile2body.
 
         Args:
-            file_path ([string], optional): file path of param file(json).
-            Defaults to None.
+            parsed_args ([Namespace]): arguments of CLI.
 
         Returns:
-            body[dict]: [description]
+            body ([dict]): Request body is stored
         """
-        body = {}
+        body = {'type': parsed_args.type, 'aspectId': parsed_args.aspect_id}
 
-        if file_path:
-            return jsonfile2body(file_path)
+        if parsed_args.number_of_steps:
+            body['numberOfSteps'] = parsed_args.number_of_steps
+
+        if parsed_args.additional_param_file:
+            body.update(jsonfile2body(parsed_args.additional_param_file))
 
         return body
 
@@ -523,13 +528,12 @@ class ScaleVnfLcm(command.Command):
         """Execute scale_vnf_instance and output result comment.
 
         Args:
-            parsed_args ([Namespace]): [description]
+            parsed_args ([Namespace]): arguments of CLI.
         """
         client = self.app.client_manager.tackerclient
-        if parsed_args.additional_param_file:
-            result = client.scale_vnf_instance(
-                parsed_args.vnf_instance,
-                self.args2body(file_path=parsed_args.additional_param_file))
-            if not result:
-                print((_('Scale request for VNF Instance %(id)s has been'
-                         ' accepted.') % {'id': parsed_args.vnf_instance}))
+        result = client.scale_vnf_instance(
+            parsed_args.vnf_instance,
+            self.args2body(parsed_args))
+        if not result:
+            print((_('Scale request for VNF Instance %s has been accepted.')
+                   % parsed_args.vnf_instance))
