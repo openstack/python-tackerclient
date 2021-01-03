@@ -154,10 +154,10 @@ class ShellTest(testtools.TestCase):
     @mock.patch.object(openstack_shell.TackerShell, 'run')
     def test_main_with_unicode(self, mock_run):
         mock_run.return_value = 0
-        unicode_text = u'\u7f51\u7edc'
+        unicode_text = '\u7f51\u7edc'
         argv = ['net-list', unicode_text, unicode_text.encode('utf-8')]
         ret = openstack_shell.main(argv=argv)
-        mock_run.assert_called_once_with([u'net-list', unicode_text,
+        mock_run.assert_called_once_with(['net-list', unicode_text,
                                           unicode_text])
         self.assertEqual(0, ret)
 

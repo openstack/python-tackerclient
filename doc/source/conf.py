@@ -71,8 +71,8 @@ htmlhelp_basename = 'tackerclientdoc'
 # -- Options for manual page output -------------------------------------------
 
 man_pages = [
-    ('cli/index', 'tacker', u'Client for Tacker API',
-     [u'OpenStack Contributors'], 1),
+    ('cli/index', 'tacker', 'Client for Tacker API',
+     ['OpenStack Contributors'], 1),
 ]
 
 # -- Options for openstackdocstheme -------------------------------------------

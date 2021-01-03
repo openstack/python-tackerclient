@@ -218,7 +218,7 @@ class ShowTemplateVNFD(command.ShowOne):
             obj[_VNFD]['attributes']['vnfd'])
         data = utils.get_item_properties(
             sdk_utils.DictModel(obj[_VNFD]),
-            (u'attributes',),
+            ('attributes',),
             formatters=_formatters)
         data = (data or _('Unable to display VNFD template!'))
-        return ((u'attributes',), data)
+        return (('attributes',), data)

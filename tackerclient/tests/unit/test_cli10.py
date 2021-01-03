@@ -653,8 +653,8 @@ class CLITestV10Base(testtools.TestCase):
 class ClientV1TestJson(CLITestV10Base):
     def test_do_request_unicode(self):
         self.client.format = self.format
-        unicode_text = u'\u7f51\u7edc'
-        action = u'/test'
+        unicode_text = '\u7f51\u7edc'
+        action = '/test'
         params = {'test': unicode_text}
         body = params
         expect_body = self.client.serialize(body)
@@ -663,7 +663,7 @@ class ClientV1TestJson(CLITestV10Base):
             mock_req.return_value = (MyResp(200), expect_body)
             res_body = self.client.do_request('PUT', action, body=body,
                                               params=params)
-            expected_uri = u'localurl/v1.0/test.json?test=%E7%BD%91%E7%BB%9C'
+            expected_uri = 'localurl/v1.0/test.json?test=%E7%BD%91%E7%BB%9C'
             mock_req.assert_called_with(
                 expected_uri, 'PUT', body=expect_body,
                 headers={'X-Auth-Token': unicode_text,

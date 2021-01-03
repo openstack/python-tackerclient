@@ -217,7 +217,7 @@ class ShowTemplateNSD(command.ShowOne):
             obj[_NSD]['attributes']['nsd'])
         data = utils.get_item_properties(
             sdk_utils.DictModel(obj[_NSD]),
-            (u'attributes',),
+            ('attributes',),
             formatters=_formatters)
         data = (data or _('Unable to display NSD template!'))
-        return ((u'attributes',), data)
+        return (('attributes',), data)

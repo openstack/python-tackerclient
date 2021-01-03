@@ -211,7 +211,7 @@ class ShowTemplateVNFFGD(command.ShowOne):
         obj = client.show_vnffgd(obj_id)
         data = utils.get_item_properties(
             sdk_utils.DictModel(obj[_VNFFGD]),
-            (u'template',),
+            ('template',),
             formatters=_formatters)
         data = (data or _('Unable to display VNFFGD template!'))
-        return ((u'template',), data)
+        return (('template',), data)

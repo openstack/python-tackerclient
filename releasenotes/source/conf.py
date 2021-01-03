@@ -53,8 +53,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'Tacker Client Release Notes'
-copyright = u'2016, Tacker Developers'
+project = 'Tacker Client Release Notes'
+copyright = '2016, Tacker Developers'
 
 # Release notes are version independent.
 release = ''
@@ -190,8 +190,8 @@ latex_elements = {
 #  [howto/manual]).
 latex_documents = [
     ('index', 'TackerClientReleaseNotes.tex',
-     u'Tacker Client Release Notes Documentation',
-     u'Tacker Developers', 'manual'),
+     'Tacker Client Release Notes Documentation',
+     'Tacker Developers', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -221,8 +221,8 @@ latex_documents = [
 # (source start file, name, description, authors, manual section).
 man_pages = [
     ('index', 'tackerreleasenotes',
-     u'Tacker Client Release Notes Documentation',
-     [u'Tacker Developers'], 1)
+     'Tacker Client Release Notes Documentation',
+     ['Tacker Developers'], 1)
 ]
 
 # If true, show URL addresses after external links.
@@ -236,8 +236,8 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
     ('index', 'TackerClientReleaseNotes',
-     u'Tacker Client Release Notes Documentation',
-     u'Tacker Developers', 'TackerClientReleaseNotes',
+     'Tacker Client Release Notes Documentation',
+     'Tacker Developers', 'TackerClientReleaseNotes',
      'Tacker Client Project.',
      'Miscellaneous'),
 ]
