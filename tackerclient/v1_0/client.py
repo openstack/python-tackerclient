@@ -54,6 +54,7 @@ def exception_handler_v10(status_code, error_content):
     :param status_code: HTTP error status code
     :param error_content: deserialized body of error response
     """
+    etsi_error_content = error_content
     error_dict = None
     if isinstance(error_content, dict):
         error_dict = error_content.get('TackerError')
@@ -94,6 +95,12 @@ def exception_handler_v10(status_code, error_content):
         if message:
             raise exceptions.TackerClientException(status_code=status_code,
                                                    message=message)
+        # ETSI error response
+        if isinstance(etsi_error_content, dict):
+            if etsi_error_content.get('detail'):
+                message = etsi_error_content.get('detail')
+                raise exceptions.TackerClientException(status_code=status_code,
+                                                       message=message)
 
     # If we end up here the exception was not a tacker error
     msg = "%s-%s" % (status_code, error_content)
