@@ -210,3 +210,117 @@ class TestFailVnfLcmOp(TestVnfLcm):
         verify_list = [('vnf_lcm_op_occ_id', arg_list)]
         self.assertRaises(base.ParserException, self.check_parser,
                           self.fail_vnf_lcm, arg_list, verify_list)
+
+
+class TestRetryVnfLcmOp(TestVnfLcm):
+
+    def setUp(self):
+        super(TestRetryVnfLcmOp, self).setUp()
+        self.retry_vnf_lcm = vnflcm_op_occs.RetryVnfLcmOp(
+            self.app, self.app_args, cmd_name='vnflcm op retry')
+
+    def test_take_action(self):
+        """Test of take_action()"""
+        arg_list = [uuidsentinel.vnf_lcm_op_occ_id]
+        verify_list = [('vnf_lcm_op_occ_id', uuidsentinel.vnf_lcm_op_occ_id)]
+
+        # command param
+        parsed_args = self.check_parser(
+            self.retry_vnf_lcm, arg_list, verify_list)
+        url = os.path.join(
+            self.url,
+            'vnflcm/v1/vnf_lcm_op_occs',
+            uuidsentinel.vnf_lcm_op_occ_id,
+            'retry')
+
+        self.requests_mock.register_uri(
+            'POST', url, headers=self.header, json={})
+
+        sys.stdout = buffer = StringIO()
+        self.retry_vnf_lcm.take_action(parsed_args)
+
+        actual_message = buffer.getvalue().strip()
+
+        expected_message = (
+            'Retry request for LCM operation ' +
+            uuidsentinel.vnf_lcm_op_occ_id +
+            ' has been accepted')
+
+        self.assertEqual(expected_message, actual_message)
+
+    def test_take_action_vnf_lcm_op_occ_id_not_found(self):
+        """Test if vnf-lcm-op-occ-id is not found."""
+        arglist = [uuidsentinel.vnf_lcm_op_occ_id]
+        verifylist = [('vnf_lcm_op_occ_id', uuidsentinel.vnf_lcm_op_occ_id)]
+
+        # command param
+        parsed_args = self.check_parser(
+            self.retry_vnf_lcm, arglist, verifylist)
+
+        url = os.path.join(
+            self.url,
+            'vnflcm/v1/vnf_lcm_op_occs',
+            uuidsentinel.vnf_lcm_op_occ_id,
+            'retry')
+
+        self.requests_mock.register_uri(
+            'POST', url, headers=self.header, status_code=404, json={})
+
+        self.assertRaises(exceptions.TackerClientException,
+                          self.retry_vnf_lcm.take_action,
+                          parsed_args)
+
+    def test_take_action_vnf_lcm_op_occ_state_is_conflict(self):
+        """Test if vnf-lcm-op-occ state is conflict"""
+
+        arg_list = [uuidsentinel.vnf_lcm_op_occ_id]
+        verify_list = [('vnf_lcm_op_occ_id', uuidsentinel.vnf_lcm_op_occ_id)]
+
+        # command param
+        parsed_args = self.check_parser(
+            self.retry_vnf_lcm, arg_list, verify_list)
+
+        url = os.path.join(
+            self.url,
+            'vnflcm/v1/vnf_lcm_op_occs',
+            uuidsentinel.vnf_lcm_op_occ_id,
+            'retry')
+
+        self.requests_mock.register_uri(
+            'POST', url, headers=self.header, status_code=409, json={})
+
+        self.assertRaises(exceptions.TackerClientException,
+                          self.retry_vnf_lcm.take_action,
+                          parsed_args)
+
+    def test_take_action_vnf_lcm_op_occ_internal_server_error(self):
+        """Test if request is internal server error"""
+
+        arg_list = [uuidsentinel.vnf_lcm_op_occ_id]
+        verify_list = [('vnf_lcm_op_occ_id', uuidsentinel.vnf_lcm_op_occ_id)]
+
+        # command param
+        parsed_args = self.check_parser(
+            self.retry_vnf_lcm, arg_list, verify_list)
+
+        url = os.path.join(
+            self.url,
+            'vnflcm/v1/vnf_lcm_op_occs',
+            uuidsentinel.vnf_lcm_op_occ_id,
+            'retry')
+
+        self.requests_mock.register_uri(
+            'POST', url, headers=self.header, status_code=500, json={})
+
+        self.assertRaises(exceptions.TackerClientException,
+                          self.retry_vnf_lcm.take_action,
+                          parsed_args)
+
+    def test_take_action_vnf_lcm_op_occ_missing_vnf_lcm_op_occ_id_argument(
+        self):
+        """Test if vnflcm_op_occ_id is not provided"""
+
+        arg_list = []
+        verify_list = [('vnf_lcm_op_occ_id', arg_list)]
+        self.assertRaises(base.ParserException, self.check_parser,
+                          self.retry_vnf_lcm, arg_list, verify_list)

@@ -108,3 +108,36 @@ class FailVnfLcmOp(command.ShowOne):
             columns, formatters=_FORMATTERS,
             mixed_case_fields=_MIXED_CASE_FIELDS)
         return (display_columns, data)
+
+
+class RetryVnfLcmOp(command.Command):
+    _description = _("Retry VNF Instance")
+
+    def get_parser(self, prog_name):
+        """Add arguments to parser.
+
+        Args:
+            prog_name ([type]): program name
+
+        Returns:
+            parser([ArgumentParser]):
+        """
+
+        parser = super(RetryVnfLcmOp, self).get_parser(prog_name)
+        parser.add_argument(
+            _VNF_LCM_OP_OCC_ID,
+            metavar="<vnf-lcm-op-occ-id>",
+            help=_('VNF lifecycle management operation occurrence ID.'))
+        return parser
+
+    def take_action(self, parsed_args):
+        """Execute retry_vnf_instance and output comment.
+
+        Args:
+            parsed_args ([Namespace]): arguments of CLI.
+        """
+        client = self.app.client_manager.tackerclient
+        result = client.retry_vnf_instance(parsed_args.vnf_lcm_op_occ_id)
+        if not result:
+            print((_('Retry request for LCM operation %(id)s has been'
+                     ' accepted') % {'id': parsed_args.vnf_lcm_op_occ_id}))
