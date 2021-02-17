@@ -97,7 +97,8 @@ def exception_handler_v10(status_code, error_content):
                                                    message=message)
         # ETSI error response
         if isinstance(etsi_error_content, dict):
-            if etsi_error_content.get('detail'):
+            if etsi_error_content.get('status') and \
+                etsi_error_content.get('detail'):
                 message = etsi_error_content.get('detail')
                 raise exceptions.TackerClientException(status_code=status_code,
                                                        message=message)
@@ -926,6 +927,10 @@ class VnfLCMClient(ClientBase):
     def rollback_vnf_instance(self, occ_id):
         return self.post((self.vnf_lcm_op_occs_path + "/rollback") % occ_id)
 
+    @APIParamsCall
+    def fail_vnf_instance(self, occ_id):
+        return self.post((self.vnf_lcm_op_occs_path + "/fail") % occ_id)
+
 
 class Client(object):
     """Unified interface to interact with multiple applications of tacker service.
@@ -1207,6 +1212,9 @@ class Client(object):
 
     def rollback_vnf_instance(self, occ_id):
         return self.vnf_lcm_client.rollback_vnf_instance(occ_id)
+
+    def fail_vnf_instance(self, occ_id):
+        return self.vnf_lcm_client.fail_vnf_instance(occ_id)
 
     def update_vnf_package(self, vnf_package, body):
         return self.vnf_package_client.update_vnf_package(vnf_package, body)

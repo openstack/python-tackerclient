@@ -798,3 +798,27 @@ class CLITestV10ExceptionHandler(CLITestV10Base):
             exceptions.TackerClientException, 500,
             expected_msg=expected_msg,
             error_content=error_content)
+
+    def test_exception_handler_v10_tacker_etsi_error(self):
+        """Test ETSI error response"""
+
+        known_error_map = [
+            ({
+                "status": "status 1",
+                "detail": "sample 1"
+            }, 400),
+            ({
+                "status": "status 2",
+                "detail": "sample 2"
+            }, 404),
+            ({
+                "status": "status 3",
+                "detail": "sample 3"
+            }, 409)
+        ]
+
+        for error_content, status_code in known_error_map:
+            self._test_exception_handler_v10(
+                exceptions.TackerClientException, status_code,
+                expected_msg=error_content['detail'],
+                error_content=error_content)
