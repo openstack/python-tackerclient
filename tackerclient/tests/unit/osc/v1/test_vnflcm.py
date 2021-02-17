@@ -739,3 +739,110 @@ class TestScaleVnfLcm(TestVnfLcm):
         self.assertRaises(exceptions.TackerClientException,
                           self.scale_vnf_lcm.take_action,
                           parsed_args)
+
+
+class TestChangeExtConnVnfLcm(TestVnfLcm):
+
+    def setUp(self):
+        super(TestChangeExtConnVnfLcm, self).setUp()
+        self.change_ext_conn_vnf_lcm = vnflcm.ChangeExtConnVnfLcm(
+            self.app, self.app_args,
+            cmd_name='vnflcm change-ext-conn')
+
+    def test_take_action(self):
+        vnf_instance = vnflcm_fakes.vnf_instance_response()
+        sample_param_file = ("./tackerclient/osc/v1/vnflcm/samples/"
+                             "change_ext_conn_vnf_instance_param_sample.json")
+
+        arglist = [vnf_instance['id'], sample_param_file]
+        verifylist = [('vnf_instance', vnf_instance['id']),
+                      ('request_file', sample_param_file)]
+
+        # command param
+        parsed_args = self.check_parser(self.change_ext_conn_vnf_lcm,
+                                        arglist,
+                                        verifylist)
+
+        url = os.path.join(self.url, 'vnflcm/v1/vnf_instances',
+                           vnf_instance['id'], 'change_ext_conn')
+        self.requests_mock.register_uri(
+            'POST', url, headers=self.header, json={})
+
+        sys.stdout = buffer = StringIO()
+        with mock.patch.object(proxy_client.ClientBase,
+                               '_handle_fault_response') as m:
+            self.change_ext_conn_vnf_lcm.take_action(parsed_args)
+            # check no fault response is received
+            self.assertNotCalled(m)
+            self.assertEqual(
+                ('Change External VNF Connectivity for VNF Instance {0} '
+                 'has been accepted.'.format(vnf_instance['id'])),
+                buffer.getvalue().strip())
+
+    def test_take_action_vnf_instance_not_found(self):
+        vnf_instance = vnflcm_fakes.vnf_instance_response()
+        sample_param_file = ("./tackerclient/osc/v1/vnflcm/samples/"
+                             "change_ext_conn_vnf_instance_param_sample.json")
+        arglist = [vnf_instance['id'], sample_param_file]
+        verifylist = [('vnf_instance', vnf_instance['id']),
+                      ('request_file', sample_param_file)]
+
+        # command param
+        parsed_args = self.check_parser(self.change_ext_conn_vnf_lcm,
+                                        arglist,
+                                        verifylist)
+
+        url = os.path.join(self.url, 'vnflcm/v1/vnf_instances',
+                           vnf_instance['id'], 'change_ext_conn')
+        self.requests_mock.register_uri(
+            'POST', url, headers=self.header, status_code=404, json={})
+
+        self.assertRaises(exceptions.TackerClientException,
+                          self.change_ext_conn_vnf_lcm.take_action,
+                          parsed_args)
+
+    def test_take_action_param_file_not_exists(self):
+        vnf_instance = vnflcm_fakes.vnf_instance_response()
+        sample_param_file = "./not_exists.json"
+        arglist = [vnf_instance['id'], sample_param_file]
+        verifylist = [('vnf_instance', vnf_instance['id']),
+                      ('request_file', sample_param_file)]
+
+        # command param
+        parsed_args = self.check_parser(
+            self.change_ext_conn_vnf_lcm,
+            arglist,
+            verifylist)
+
+        ex = self.assertRaises(
+            exceptions.InvalidInput,
+            self.change_ext_conn_vnf_lcm.take_action,
+            parsed_args)
+
+        expected_msg = ("Invalid input: File %s does not exist "
+                        "or user does not have read privileges to it")
+        self.assertEqual(expected_msg % sample_param_file, str(ex))
+
+    @mock.patch("os.open")
+    @mock.patch("os.access")
+    def test_take_action_invalid_format_param_file(self, mock_open,
+                                                   mock_access):
+        vnf_instance = vnflcm_fakes.vnf_instance_response()
+        sample_param_file = "./invalid_param_file.json"
+        arglist = [vnf_instance['id'], sample_param_file]
+        verifylist = [('vnf_instance', vnf_instance['id']),
+                      ('request_file', sample_param_file)]
+
+        mock_open.return_value = "invalid_json_data"
+        # command param
+        parsed_args = self.check_parser(self.change_ext_conn_vnf_lcm,
+                                        arglist,
+                                        verifylist)
+
+        ex = self.assertRaises(
+            exceptions.InvalidInput,
+            self.change_ext_conn_vnf_lcm.take_action,
+            parsed_args)
+
+        expected_msg = "Failed to load parameter file."
+        self.assertIn(expected_msg, str(ex))

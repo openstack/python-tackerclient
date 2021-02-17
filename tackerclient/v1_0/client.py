@@ -931,6 +931,11 @@ class VnfLCMClient(ClientBase):
     def fail_vnf_instance(self, occ_id):
         return self.post((self.vnf_lcm_op_occs_path + "/fail") % occ_id)
 
+    @APIParamsCall
+    def change_ext_conn_vnf_instance(self, vnf_id, body):
+        return self.post((self.vnf_instance_path + "/change_ext_conn") %
+                         vnf_id, body=body)
+
 
 class Client(object):
     """Unified interface to interact with multiple applications of tacker service.
@@ -1203,6 +1208,9 @@ class Client(object):
 
     def scale_vnf_instance(self, vnf_id, body):
         return self.vnf_lcm_client.scale_vnf_instance(vnf_id, body)
+
+    def change_ext_conn_vnf_instance(self, vnf_id, body):
+        return self.vnf_lcm_client.change_ext_conn_vnf_instance(vnf_id, body)
 
     def delete_vnf_instance(self, vnf_id):
         return self.vnf_lcm_client.delete_vnf_instance(vnf_id)
