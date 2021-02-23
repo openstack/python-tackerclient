@@ -11,59 +11,53 @@
       License for the specific language governing permissions and limitations
       under the License.
 
-      Convention for heading levels in Neutron devref:
-      =======  Heading 0 (reserved for the title in a document)
-      -------  Heading 1
-      ~~~~~~~  Heading 2
-      +++++++  Heading 3
-      '''''''  Heading 4
-      (Avoid deeper levels because they do not render well.)
-
 ============
 Installation
 ============
 
-**Note:** The paths we are using for configuration files in these steps
-are with reference to Ubuntu Operating System. The paths may vary for
-other Operating Systems.
+This document describes how to install python-tackerclient.
 
-The branch_name which is used in commands, specify the branch_name
-as stable/<branch> for any stable branch installation. For eg:
-stable/queens, stable/pike. If unspecified the default will be
-master branch.
+.. note::
+
+   This installation guide contents are specific to Ubuntu distro.
 
 Using python install
 ====================
-1. Clone python-tackerclient repository.
 
-  ::
+#. Clone python-tackerclient repository.
 
-    $ cd ~/
-    $ git clone https://github.com/openstack/python-tackerclient -b <branch_name>
+   You can use -b for specific release, optionally.
 
+   .. code-block:: console
 
-2. Install python-tackerclient.
+       $ cd ~/
+       $ git clone https://opendev.org/openstack/python-tackerclient -b <branch_name>
 
-  ::
+   .. note::
 
-    $ cd python-tackerclient
-    $ sudo python setup.py install
+      Make sure to replace the ``<branch_name>`` in command example with
+      specific branch name, such as ``stable/victoria``.
 
+#. Install python-tackerclient.
+
+   .. code-block:: console
+
+       $ cd python-tackerclient
+       $ sudo python3 setup.py install
 
 Using pip
 =========
 
 You can also install the latest version by using ``pip`` command:
 
-  ::
+.. code-block:: console
 
-    $ pip install python-tackerclient
-
+    $ pip3 install python-tackerclient
 
 Or, if it is needed to install ``python-tackerclient`` from master branch,
 type
 
-  ::
+.. code-block:: console
 
-    $ pip install git+https://github.com/openstack/python-tackerclient.git
+    $ pip3 install git+https://opendev.org/openstack/python-tackerclient
 
