@@ -947,6 +947,10 @@ class VnfLCMClient(ClientBase):
                                     retrieve_all, **_params)
         return vnf_lcm_op_occs
 
+    @APIParamsCall
+    def show_vnf_lcm_op_occs(self, occ_id):
+        return self.get(self.vnf_lcm_op_occs_path % occ_id)
+
 
 class Client(object):
     """Unified interface to interact with multiple applications of tacker service.
@@ -1256,3 +1260,6 @@ class Client(object):
     def list_vnf_lcm_op_occs(self, retrieve_all=True, **_params):
         return self.vnf_lcm_client.list_vnf_lcm_op_occs(
             retrieve_all=retrieve_all, **_params)
+
+    def show_vnf_lcm_op_occs(self, occ_id):
+        return self.vnf_lcm_client.show_vnf_lcm_op_occs(occ_id)

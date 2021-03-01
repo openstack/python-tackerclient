@@ -24,11 +24,25 @@ _MIXED_CASE_FIELDS = ['operationState', 'stateEnteredTime', 'startTime',
                       'resourceChanges', 'changedInfo',
                       'changedExtConnectivity']
 
-_FORMATTERS = {'error': tacker_osc_utils.FormatComplexDataColumn,
-               '_links': tacker_osc_utils.FormatComplexDataColumn}
+_FORMATTERS = {
+    'operationParams': tacker_osc_utils.FormatComplexDataColumn,
+    'error': tacker_osc_utils.FormatComplexDataColumn,
+    'resourceChanges': tacker_osc_utils.FormatComplexDataColumn,
+    'changedInfo': tacker_osc_utils.FormatComplexDataColumn,
+    'changedExtConnectivity': tacker_osc_utils.FormatComplexDataColumn,
+    '_links': tacker_osc_utils.FormatComplexDataColumn
+}
+
+_ATTR_MAP = (
+    ('id', 'id', tacker_osc_utils.LIST_BOTH),
+    ('operationState', 'operationState', tacker_osc_utils.LIST_BOTH),
+    ('vnfInstanceId', 'vnfInstanceId', tacker_osc_utils.LIST_BOTH),
+    ('operation', 'operation', tacker_osc_utils.LIST_BOTH)
+)
 
 
-def _get_columns(vnflcm_op_occ_obj):
+def _get_columns(vnflcm_op_occ_obj, action=None):
+
     column_map = {
         'id': 'ID',
         'operationState': 'Operation State',
@@ -41,6 +55,16 @@ def _get_columns(vnflcm_op_occ_obj):
         'error': 'Error',
         '_links': 'Links'
     }
+
+    if action == 'show':
+        column_map.update(
+            {'operationParams': 'Operation Parameters',
+             'grantId': 'Grant ID',
+             'resourceChanges': 'Resource Changes',
+             'changedInfo': 'Changed Info',
+             'cancelMode': 'Cancel Mode',
+             'changedExtConnectivity': 'Changed External Connectivity'}
+        )
 
     return sdk_utils.get_osc_show_columns_for_sdk_resource(vnflcm_op_occ_obj,
                                                            column_map)
@@ -245,3 +269,38 @@ class ListVnfLcmOp(command.Lister):
         )
 
         return (headers, dictionary_properties)
+
+
+class ShowVnfLcmOp(command.ShowOne):
+    _description = _("Display Operation Occurrence details")
+
+    def get_parser(self, program_name):
+        """Add arguments to parser.
+
+        Args:
+            program_name ([type]): program name
+
+        Returns:
+            parser([ArgumentParser]):
+        """
+        parser = super(ShowVnfLcmOp, self).get_parser(program_name)
+        parser.add_argument(
+            _VNF_LCM_OP_OCC_ID,
+            metavar="<vnf-lcm-op-occ-id>",
+            help=_('VNF lifecycle management operation occurrence ID.'))
+        return parser
+
+    def take_action(self, parsed_args):
+        """Execute show_vnf_lcm_op_occs and output response.
+
+        Args:
+            parsed_args ([Namespace]): arguments of CLI.
+        """
+        client = self.app.client_manager.tackerclient
+        obj = client.show_vnf_lcm_op_occs(parsed_args.vnf_lcm_op_occ_id)
+        display_columns, columns = _get_columns(obj, action='show')
+        data = utils.get_item_properties(
+            sdk_utils.DictModel(obj),
+            columns, formatters=_FORMATTERS,
+            mixed_case_fields=_MIXED_CASE_FIELDS)
+        return (display_columns, data)

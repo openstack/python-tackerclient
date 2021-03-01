@@ -25,7 +25,7 @@ from tackerclient.tests.unit.osc.v1.fixture_data import client
 from tackerclient.tests.unit.osc.v1 import vnflcm_op_occs_fakes
 
 
-def _get_columns_vnflcm_op_occs(action=''):
+def _get_columns_vnflcm_op_occs(action='show'):
 
     if action == 'fail':
         return ['ID', 'Operation State', 'State Entered Time',
@@ -427,4 +427,75 @@ class TestListVnfLcmOp(TestVnfLcm):
 
         self.assertRaises(exceptions.TackerClientException,
                           self.list_vnflcm_op_occ.take_action,
+                          parsed_args)
+
+
+class TestShowVnfLcmOp(TestVnfLcm):
+
+    def setUp(self):
+        super(TestShowVnfLcmOp, self).setUp()
+        self.show_vnf_lcm_op_occs = vnflcm_op_occs.ShowVnfLcmOp(
+            self.app, self.app_args, cmd_name='vnflcm op show')
+
+    def test_take_action(self):
+        """Test of take_action()"""
+        vnflcm_op_occ = vnflcm_op_occs_fakes.vnflcm_op_occ_response()
+
+        arglist = [vnflcm_op_occ['id']]
+        verifylist = [('vnf_lcm_op_occ_id', vnflcm_op_occ['id'])]
+
+        # command param
+        parsed_args = self.check_parser(
+            self.show_vnf_lcm_op_occs, arglist, verifylist)
+        url = os.path.join(
+            self.url,
+            'vnflcm/v1/vnf_lcm_op_occs',
+            vnflcm_op_occ['id'])
+
+        self.requests_mock.register_uri(
+            'GET', url, headers=self.header, json=vnflcm_op_occ)
+
+        columns, data = (self.show_vnf_lcm_op_occs.take_action(parsed_args))
+
+        self.assertItemsEqual(_get_columns_vnflcm_op_occs(),
+                              columns)
+
+    def test_take_action_vnf_lcm_op_occ_id_not_found(self):
+        """Test if vnf-lcm-op-occ-id does not find."""
+        arglist = [uuidsentinel.vnf_lcm_op_occ_id]
+        verifylist = [('vnf_lcm_op_occ_id', uuidsentinel.vnf_lcm_op_occ_id)]
+
+        # command param
+        parsed_args = self.check_parser(
+            self.show_vnf_lcm_op_occs, arglist, verifylist)
+
+        url = os.path.join(
+            self.url,
+            'vnflcm/v1/vnf_lcm_op_occs',
+            uuidsentinel.vnf_lcm_op_occ_id)
+        self.requests_mock.register_uri(
+            'GET', url, headers=self.header, status_code=404, json={})
+
+        self.assertRaises(exceptions.TackerClientException,
+                          self.show_vnf_lcm_op_occs.take_action,
+                          parsed_args)
+
+    def test_take_action_internal_server_error(self):
+        """Test for internal server error."""
+        arglist = [uuidsentinel.vnf_lcm_op_occ_id]
+        verifylist = [('vnf_lcm_op_occ_id', uuidsentinel.vnf_lcm_op_occ_id)]
+
+        # command param
+        parsed_args = self.check_parser(
+            self.show_vnf_lcm_op_occs, arglist, verifylist)
+
+        url = os.path.join(
+            self.url,
+            'vnflcm/v1/vnf_lcm_op_occs',
+            uuidsentinel.vnf_lcm_op_occ_id)
+        self.requests_mock.register_uri(
+            'GET', url, headers=self.header, status_code=500, json={})
+
+        self.assertRaises(exceptions.TackerClientException,
+                          self.show_vnf_lcm_op_occs.take_action,
                           parsed_args)
