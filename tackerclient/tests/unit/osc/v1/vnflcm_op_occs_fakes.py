@@ -16,7 +16,7 @@ from oslo_utils import uuidutils
 from tackerclient.osc import utils as tacker_osc_utils
 
 
-def vnflcm_op_occ_response(attrs=None):
+def vnflcm_op_occ_response(attrs=None, action=''):
     """Create a fake vnflcm op occurrence.
 
     :param Dictionary attrs:
@@ -33,17 +33,35 @@ def vnflcm_op_occ_response(attrs=None):
         "stateEnteredTime": "2018-12-22T16:59:45.187Z",
         "startTime": "2018-12-22T16:59:45.187Z",
         "vnfInstanceId": "376f37f3-d4e9-4d41-8e6a-9b0ec98695cc",
+        "grantId": "",
         "operation": "INSTANTIATE",
         "isAutomaticInvocation": "true",
+        "operationParams": {
+            "flavourId": "default",
+            "instantiationLevelId": "n-mme-min"
+        },
         "isCancelPending": "true",
+        "cancelMode": "",
         "error": {
             "status": "500",
             "detail": "internal server error"
         },
+        "resourceChanges": [],
+        "changedInfo": [],
+        "changedExtConnectivity": [],
         "_links": {
             "self": ""
         }
     }
+
+    if action == 'fail':
+        fail_not_needed_columns = [
+            'grantId', 'operationParams',
+            'cancelMode', 'resourceChanges', 'changedInfo',
+            'changedExtConnectivity']
+
+        for key in fail_not_needed_columns:
+            del dummy_vnf_lcm_op_occ[key]
 
     # Overwrite default attributes.
     dummy_vnf_lcm_op_occ.update(attrs)
@@ -57,7 +75,10 @@ def get_vnflcm_op_occ_data(vnf_lcm_op_occ, columns=None):
     :return:
         A tuple object sorted based on the name of the columns.
     """
-    complex_attributes = ['error', 'links']
+    complex_attributes = [
+        'operationParams', 'error', 'resourceChanges',
+        'changedInfo', 'changedExtConnectivity', 'links']
+
     for attribute in complex_attributes:
         if vnf_lcm_op_occ.get(attribute):
             vnf_lcm_op_occ.update(

@@ -876,6 +876,7 @@ class VnfLCMClient(ClientBase):
 
     vnf_instances_path = '/vnflcm/v1/vnf_instances'
     vnf_instance_path = '/vnflcm/v1/vnf_instances/%s'
+    vnf_lcm_op_occurrences_path = '/vnflcm/v1/vnf_lcm_op_occs'
     vnf_lcm_op_occs_path = '/vnflcm/v1/vnf_lcm_op_occs/%s'
 
     def build_action(self, action):
@@ -939,6 +940,12 @@ class VnfLCMClient(ClientBase):
     @APIParamsCall
     def retry_vnf_instance(self, occ_id):
         return self.post((self.vnf_lcm_op_occs_path + "/retry") % occ_id)
+
+    @APIParamsCall
+    def list_vnf_lcm_op_occs(self, retrieve_all=True, **_params):
+        vnf_lcm_op_occs = self.list(None, self.vnf_lcm_op_occurrences_path,
+                                    retrieve_all, **_params)
+        return vnf_lcm_op_occs
 
 
 class Client(object):
@@ -1245,3 +1252,7 @@ class Client(object):
 
     def download_vnf_package(self, vnf_package):
         return self.vnf_package_client.download_vnf_package(vnf_package)
+
+    def list_vnf_lcm_op_occs(self, retrieve_all=True, **_params):
+        return self.vnf_lcm_client.list_vnf_lcm_op_occs(
+            retrieve_all=retrieve_all, **_params)

@@ -18,19 +18,30 @@ from oslo_utils.fixture import uuidsentinel
 from unittest import mock
 
 from tackerclient.common import exceptions
+from tackerclient.osc import utils as tacker_osc_utils
 from tackerclient.osc.v1.vnflcm import vnflcm_op_occs
 from tackerclient.tests.unit.osc import base
 from tackerclient.tests.unit.osc.v1.fixture_data import client
 from tackerclient.tests.unit.osc.v1 import vnflcm_op_occs_fakes
 
 
-def _get_columns_vnflcm_op_occs():
-    columns = ['ID', 'Operation State', 'State Entered Time',
-               'Start Time', 'VNF Instance ID', 'Operation',
-               'Is Automatic Invocation', 'Is Cancel Pending',
-               'Error', 'Links']
+def _get_columns_vnflcm_op_occs(action=''):
 
-    return columns
+    if action == 'fail':
+        return ['ID', 'Operation State', 'State Entered Time',
+                'Start Time', 'VNF Instance ID', 'Operation',
+                'Is Automatic Invocation', 'Is Cancel Pending',
+                'Error', 'Links']
+    elif action == 'list':
+        return ['ID', 'Operation State', 'VNF Instance ID',
+                'Operation']
+    else:
+        return ['ID', 'Operation State', 'State Entered Time',
+                'Start Time', 'VNF Instance ID', 'Grant ID',
+                'Operation', 'Is Automatic Invocation',
+                'Operation Parameters', 'Is Cancel Pending',
+                'Cancel Mode', 'Error', 'Resource Changes',
+                'Changed Info', 'Changed External Connectivity', 'Links']
 
 
 class TestVnfLcm(base.FixturedTestCase):
@@ -114,7 +125,8 @@ class TestFailVnfLcmOp(TestVnfLcm):
     def test_take_action(self):
         """Test of take_action()"""
 
-        vnflcm_op_occ = vnflcm_op_occs_fakes.vnflcm_op_occ_response()
+        vnflcm_op_occ = vnflcm_op_occs_fakes.vnflcm_op_occ_response(
+            action='fail')
 
         arg_list = [vnflcm_op_occ['id']]
         verify_list = [('vnf_lcm_op_occ_id', vnflcm_op_occ['id'])]
@@ -132,7 +144,7 @@ class TestFailVnfLcmOp(TestVnfLcm):
             'POST', url, headers=self.header, json=vnflcm_op_occ)
 
         columns, data = (self.fail_vnf_lcm.take_action(parsed_args))
-        expected_columns = _get_columns_vnflcm_op_occs()
+        expected_columns = _get_columns_vnflcm_op_occs(action='fail')
 
         self.assertCountEqual(expected_columns, columns)
 
@@ -324,3 +336,95 @@ class TestRetryVnfLcmOp(TestVnfLcm):
         verify_list = [('vnf_lcm_op_occ_id', arg_list)]
         self.assertRaises(base.ParserException, self.check_parser,
                           self.retry_vnf_lcm, arg_list, verify_list)
+
+
+class TestListVnfLcmOp(TestVnfLcm):
+
+    vnflcm_op_occs_obj = vnflcm_op_occs_fakes.create_vnflcm_op_occs(count=3)
+
+    def setUp(self):
+        super(TestListVnfLcmOp, self).setUp()
+        self.list_vnflcm_op_occ = vnflcm_op_occs.ListVnfLcmOp(
+            self.app, self.app_args, cmd_name='vnflcm op list')
+
+    def test_take_action(self):
+        parsed_args = self.check_parser(self.list_vnflcm_op_occ, [], [])
+        self.requests_mock.register_uri(
+            'GET', os.path.join(self.url,
+                                'vnflcm/v1/vnf_lcm_op_occs'),
+            json=self.vnflcm_op_occs_obj, headers=self.header)
+
+        actual_columns, data = self.list_vnflcm_op_occ.take_action(parsed_args)
+
+        headers, columns = tacker_osc_utils.get_column_definitions(
+            self.list_vnflcm_op_occ.get_attributes(), long_listing=True)
+
+        expected_data = []
+        for vnflcm_op_occ_obj in self.vnflcm_op_occs_obj:
+            expected_data.append(vnflcm_op_occs_fakes.get_vnflcm_op_occ_data(
+                vnflcm_op_occ_obj, columns=columns))
+
+        self.assertItemsEqual(_get_columns_vnflcm_op_occs(action='list'),
+                              actual_columns)
+        self.assertItemsEqual(expected_data, list(data))
+
+    def test_take_action_with_filter(self):
+        parsed_args = self.check_parser(
+            self.list_vnflcm_op_occ,
+            ["--filter", '(eq,operationState,STARTING)'],
+            [('filter', '(eq,operationState,STARTING)')])
+        self.requests_mock.register_uri(
+            'GET', os.path.join(
+                self.url,
+                'vnflcm/v1/vnf_lcm_op_occs?'
+                'filter=(eq,operationState,STARTING)'),
+            json=self.vnflcm_op_occs_obj, headers=self.header)
+
+        actual_columns, data = self.list_vnflcm_op_occ.take_action(parsed_args)
+
+        headers, columns = tacker_osc_utils.get_column_definitions(
+            self.list_vnflcm_op_occ.get_attributes(), long_listing=True)
+
+        expected_data = []
+        for vnflcm_op_occ_obj in self.vnflcm_op_occs_obj:
+            expected_data.append(vnflcm_op_occs_fakes.get_vnflcm_op_occ_data(
+                vnflcm_op_occ_obj, columns=columns))
+
+        self.assertItemsEqual(_get_columns_vnflcm_op_occs(action='list'),
+                              actual_columns)
+        self.assertListItemsEqual(expected_data, list(data))
+
+    def test_take_action_with_incorrect_filter(self):
+
+        parsed_args = self.check_parser(
+            self.list_vnflcm_op_occ,
+            ["--filter", '(operationState)'],
+            [('filter', '(operationState)')])
+
+        url = os.path.join(
+            self.url,
+            'vnflcm/v1/vnf_lcm_op_occs?filter=(operationState)')
+        self.requests_mock.register_uri(
+            'POST', url, headers=self.header, status_code=400, json={})
+
+        self.assertRaises(exceptions.TackerClientException,
+                          self.list_vnflcm_op_occ.take_action,
+                          parsed_args)
+
+    def test_take_action_internal_server_error(self):
+
+        parsed_args = self.check_parser(
+            self.list_vnflcm_op_occ,
+            ["--filter", '(eq,operationState,STARTING)'],
+            [('filter', '(eq,operationState,STARTING)')])
+
+        url = os.path.join(
+            self.url,
+            'vnflcm/v1/vnf_lcm_op_occs?'
+            'filter=(eq,operationState,STARTING)')
+        self.requests_mock.register_uri(
+            'POST', url, headers=self.header, status_code=500, json={})
+
+        self.assertRaises(exceptions.TackerClientException,
+                          self.list_vnflcm_op_occ.take_action,
+                          parsed_args)

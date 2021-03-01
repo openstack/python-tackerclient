@@ -18,9 +18,11 @@ from tackerclient.osc import utils as tacker_osc_utils
 
 _VNF_LCM_OP_OCC_ID = 'vnf_lcm_op_occ_id'
 
-_MIXED_CASE_FIELDS = ('operationState', 'stateEnteredTime', 'startTime',
-                      'vnfInstanceId', 'isAutomaticInvocation',
-                      'isCancelPending')
+_MIXED_CASE_FIELDS = ['operationState', 'stateEnteredTime', 'startTime',
+                      'vnfInstanceId', 'grantId', 'isAutomaticInvocation',
+                      'isCancelPending', 'cancelMode', 'operationParams',
+                      'resourceChanges', 'changedInfo',
+                      'changedExtConnectivity']
 
 _FORMATTERS = {'error': tacker_osc_utils.FormatComplexDataColumn,
                '_links': tacker_osc_utils.FormatComplexDataColumn}
@@ -141,3 +143,105 @@ class RetryVnfLcmOp(command.Command):
         if not result:
             print((_('Retry request for LCM operation %(id)s has been'
                      ' accepted') % {'id': parsed_args.vnf_lcm_op_occ_id}))
+
+
+class ListVnfLcmOp(command.Lister):
+    _description = _("List LCM Operation Occurrences")
+
+    def get_parser(self, program_name):
+        """Add arguments to parser.
+
+        Args:
+            program_name ([type]): program name
+
+        Returns:
+            parser([ArgumentParser]):
+        """
+        parser = super(ListVnfLcmOp, self).get_parser(program_name)
+        parser.add_argument(
+            "--filter",
+            metavar="<filter>",
+            help=_("Attribute-based-filtering parameters"),
+        )
+        fields_exclusive_group = parser.add_mutually_exclusive_group(
+            required=False)
+        fields_exclusive_group.add_argument(
+            "--fields",
+            metavar="<fields>",
+            help=_("Complex attributes to be included into the response"),
+        )
+        fields_exclusive_group.add_argument(
+            "--exclude-fields",
+            metavar="<exclude-fields>",
+            help=_("Complex attributes to be excluded from the response"),
+        )
+        return parser
+
+    def get_attributes(self):
+        """Get attributes.
+
+        Returns:
+            attributes([attributes]): a list of table entry definitions.
+            Each entry should be a tuple consisting of
+            (API attribute name, header name, listing mode).
+        """
+        fields = [
+            {
+                "key": "id",
+                "value": "ID"
+            },
+            {
+                "key": "operationState",
+                "value": "Operation State"
+            },
+            {
+                "key": "vnfInstanceId",
+                "value": "VNF Instance ID"
+            },
+            {
+                "key": "operation",
+                "value": "Operation"
+            }
+        ]
+
+        attributes = []
+        for field in fields:
+            attributes.extend([(field['key'], field['value'],
+                              tacker_osc_utils.LIST_BOTH)])
+
+        return tuple(attributes)
+
+    def take_action(self, parsed_args):
+        """Execute list_vnflcm_op_occs and output response.
+
+        Args:
+            parsed_args ([Namespace]): arguments of CLI.
+        """
+        params = {}
+        exclude_fields = []
+        extra_fields = []
+
+        if parsed_args.filter:
+            params['filter'] = parsed_args.filter
+        if parsed_args.fields:
+            params['fields'] = parsed_args.fields
+            fields = parsed_args.fields.split(',')
+            for field in fields:
+                extra_fields.append(field.split('/')[0])
+        if parsed_args.exclude_fields:
+            params['exclude-fields'] = parsed_args.exclude_fields
+            fields = parsed_args.exclude_fields.split(',')
+            exclude_fields.extend(fields)
+
+        client = self.app.client_manager.tackerclient
+        vnflcm_op_occs = client.list_vnf_lcm_op_occs(**params)
+        headers, columns = tacker_osc_utils.get_column_definitions(
+            self.get_attributes(),
+            long_listing=True)
+
+        dictionary_properties = (utils.get_dict_properties(
+            s, columns, mixed_case_fields=_MIXED_CASE_FIELDS)
+            for s in vnflcm_op_occs
+        )
+
+        return (headers, dictionary_properties)
