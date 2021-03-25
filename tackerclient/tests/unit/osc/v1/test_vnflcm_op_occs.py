@@ -340,19 +340,19 @@ class TestRetryVnfLcmOp(TestVnfLcm):
 
 class TestListVnfLcmOp(TestVnfLcm):
 
-    vnflcm_op_occs_obj = vnflcm_op_occs_fakes.create_vnflcm_op_occs(count=3)
-
     def setUp(self):
         super(TestListVnfLcmOp, self).setUp()
         self.list_vnflcm_op_occ = vnflcm_op_occs.ListVnfLcmOp(
             self.app, self.app_args, cmd_name='vnflcm op list')
 
     def test_take_action(self):
+        vnflcm_op_occs_obj = vnflcm_op_occs_fakes.create_vnflcm_op_occs(
+            count=3)
         parsed_args = self.check_parser(self.list_vnflcm_op_occ, [], [])
         self.requests_mock.register_uri(
             'GET', os.path.join(self.url,
                                 'vnflcm/v1/vnf_lcm_op_occs'),
-            json=self.vnflcm_op_occs_obj, headers=self.header)
+            json=vnflcm_op_occs_obj, headers=self.header)
 
         actual_columns, data = self.list_vnflcm_op_occ.take_action(parsed_args)
 
@@ -360,15 +360,17 @@ class TestListVnfLcmOp(TestVnfLcm):
             self.list_vnflcm_op_occ.get_attributes(), long_listing=True)
 
         expected_data = []
-        for vnflcm_op_occ_obj in self.vnflcm_op_occs_obj:
+        for vnflcm_op_occ_obj_idx in vnflcm_op_occs_obj:
             expected_data.append(vnflcm_op_occs_fakes.get_vnflcm_op_occ_data(
-                vnflcm_op_occ_obj, columns=columns))
+                vnflcm_op_occ_obj_idx, columns=columns))
 
         self.assertItemsEqual(_get_columns_vnflcm_op_occs(action='list'),
                               actual_columns)
         self.assertItemsEqual(expected_data, list(data))
 
     def test_take_action_with_filter(self):
+        vnflcm_op_occs_obj = vnflcm_op_occs_fakes.create_vnflcm_op_occs(
+            count=3)
         parsed_args = self.check_parser(
             self.list_vnflcm_op_occ,
             ["--filter", '(eq,operationState,STARTING)'],
@@ -378,7 +380,7 @@ class TestListVnfLcmOp(TestVnfLcm):
                 self.url,
                 'vnflcm/v1/vnf_lcm_op_occs?'
                 'filter=(eq,operationState,STARTING)'),
-            json=self.vnflcm_op_occs_obj, headers=self.header)
+            json=vnflcm_op_occs_obj, headers=self.header)
 
         actual_columns, data = self.list_vnflcm_op_occ.take_action(parsed_args)
 
@@ -386,9 +388,9 @@ class TestListVnfLcmOp(TestVnfLcm):
             self.list_vnflcm_op_occ.get_attributes(), long_listing=True)
 
         expected_data = []
-        for vnflcm_op_occ_obj in self.vnflcm_op_occs_obj:
+        for vnflcm_op_occ_obj_idx in vnflcm_op_occs_obj:
             expected_data.append(vnflcm_op_occs_fakes.get_vnflcm_op_occ_data(
-                vnflcm_op_occ_obj, columns=columns))
+                vnflcm_op_occ_obj_idx, columns=columns))
 
         self.assertItemsEqual(_get_columns_vnflcm_op_occs(action='list'),
                               actual_columns)
