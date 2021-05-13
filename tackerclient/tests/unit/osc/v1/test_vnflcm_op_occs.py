@@ -364,9 +364,9 @@ class TestListVnfLcmOp(TestVnfLcm):
             expected_data.append(vnflcm_op_occs_fakes.get_vnflcm_op_occ_data(
                 vnflcm_op_occ_obj_idx, columns=columns))
 
-        self.assertItemsEqual(_get_columns_vnflcm_op_occs(action='list'),
+        self.assertCountEqual(_get_columns_vnflcm_op_occs(action='list'),
                               actual_columns)
-        self.assertItemsEqual(expected_data, list(data))
+        self.assertCountEqual(expected_data, list(data))
 
     def test_take_action_with_filter(self):
         vnflcm_op_occs_obj = vnflcm_op_occs_fakes.create_vnflcm_op_occs(
@@ -392,7 +392,7 @@ class TestListVnfLcmOp(TestVnfLcm):
             expected_data.append(vnflcm_op_occs_fakes.get_vnflcm_op_occ_data(
                 vnflcm_op_occ_obj_idx, columns=columns))
 
-        self.assertItemsEqual(_get_columns_vnflcm_op_occs(action='list'),
+        self.assertCountEqual(_get_columns_vnflcm_op_occs(action='list'),
                               actual_columns)
         self.assertListItemsEqual(expected_data, list(data))
 
@@ -459,7 +459,7 @@ class TestShowVnfLcmOp(TestVnfLcm):
 
         columns, data = (self.show_vnf_lcm_op_occs.take_action(parsed_args))
 
-        self.assertItemsEqual(_get_columns_vnflcm_op_occs(),
+        self.assertCountEqual(_get_columns_vnflcm_op_occs(),
                               columns)
 
     def test_take_action_vnf_lcm_op_occ_id_not_found(self):
