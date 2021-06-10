@@ -41,7 +41,9 @@ def vnf_instance_response(attrs=None, instantiation_state='NOT_INSTANTIATED'):
         "vnfdVersion": "1.0",
         "_links": "vnflcm/v1/vnf_instances/" + uuidsentinel.vnf_instance_id +
                   "/instantiate",
-        "instantiationState": instantiation_state}
+        "instantiationState": instantiation_state,
+        "vnfConfigurableProperties": {
+            "test": "test_value"}}
     if instantiation_state == 'INSTANTIATED':
         dummy_vnf_instance.update({
             "vimConnectionInfo": [{

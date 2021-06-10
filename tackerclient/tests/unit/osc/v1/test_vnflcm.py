@@ -46,12 +46,14 @@ class TestVnfLcm(base.FixturedTestCase):
 def _get_columns_vnflcm(action='create'):
     columns = ['ID', 'Instantiation State', 'VNF Instance Description',
                'VNF Instance Name', 'VNF Product Name', 'VNF Provider',
-               'VNF Software Version', 'VNFD ID', 'VNFD Version', 'Links']
+               'VNF Software Version', 'VNFD ID', 'VNFD Version', 'Links',
+               'VNF Configurable Properties']
     if action == 'show':
         columns.extend(['Instantiated Vnf Info', 'VIM Connection Info'])
     if action == 'list':
         columns = [ele for ele in columns if ele not in
-                   ['VNFD Version', 'VNF Instance Description']]
+                   ['VNFD Version', 'VNF Instance Description',
+                    'VNF Configurable Properties']]
         columns.remove('Links')
     return columns
 

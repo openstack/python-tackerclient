@@ -41,7 +41,8 @@ LOG = logging.getLogger(__name__)
 _mixed_case_fields = ('vnfInstanceName', 'vnfInstanceDescription', 'vnfdId',
                       'vnfProvider', 'vnfProductName', 'vnfSoftwareVersion',
                       'vnfdVersion', 'instantiationState',
-                      'vimConnectionInfo', 'instantiatedVnfInfo')
+                      'vimConnectionInfo', 'instantiatedVnfInfo',
+                      'vnfConfigurableProperties')
 
 _VNF_INSTANCE = 'vnf_instance'
 
@@ -68,6 +69,7 @@ def _get_columns(vnflcm_obj, action=None):
         'vnfdVersion': 'VNFD Version',
         'instantiationState': 'Instantiation State',
         '_links': 'Links',
+        'vnfConfigurableProperties': 'VNF Configurable Properties',
     }
     if action == 'show':
         if vnflcm_obj['instantiationState'] == 'INSTANTIATED':
