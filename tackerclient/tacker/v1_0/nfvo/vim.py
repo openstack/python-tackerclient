@@ -117,7 +117,8 @@ class UpdateVIM(tackerV10.UpdateCommand):
             with open(parsed_args.config_file) as f:
                 config_yaml = f.read()
             try:
-                config_param = yaml.load(config_yaml)
+                config_param = yaml.load(config_yaml,
+                                         Loader=yaml.SafeLoader)
             except yaml.YAMLError as e:
                 raise exceptions.InvalidInput(reason=e)
         vim_obj = body[self.resource]
