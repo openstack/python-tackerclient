@@ -17,7 +17,6 @@
 import logging
 
 import testtools
-from testtools import helpers
 
 from tackerclient.tacker import v1_0 as tackerV10
 
@@ -27,7 +26,7 @@ class TestCommandMeta(testtools.TestCase):
         class FakeCommand(tackerV10.TackerCommand):
             pass
 
-        self.assertTrue(helpers.safe_hasattr(FakeCommand, 'log'))
+        self.assertTrue(hasattr(FakeCommand, 'log'))
         self.assertIsInstance(FakeCommand.log, logging.getLoggerClass())
         self.assertEqual(FakeCommand.log.name, __name__ + ".FakeCommand")
 
@@ -35,5 +34,5 @@ class TestCommandMeta(testtools.TestCase):
         class FakeCommand(tackerV10.TackerCommand):
             log = None
 
-        self.assertTrue(helpers.safe_hasattr(FakeCommand, 'log'))
+        self.assertTrue(hasattr(FakeCommand, 'log'))
         self.assertIsNone(FakeCommand.log)
