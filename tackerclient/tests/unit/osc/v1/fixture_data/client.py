@@ -25,7 +25,8 @@ TACKER_URL = 'http://nfv-orchestration'
 
 class ClientFixture(fixtures.Fixture):
 
-    def __init__(self, requests_mock, identity_url=IDENTITY_URL):
+    def __init__(self, requests_mock, identity_url=IDENTITY_URL,
+                 api_version='1'):
         super(ClientFixture, self).__init__()
         self.identity_url = identity_url
         self.client = None
@@ -35,6 +36,7 @@ class ClientFixture(fixtures.Fixture):
         self.discovery = fixture.V2Discovery(href=self.identity_url)
         s = self.token.add_service('nfv-orchestration')
         s.add_endpoint(TACKER_URL)
+        self.api_version = api_version
 
     def setUp(self):
         super(ClientFixture, self).setUp()
@@ -57,4 +59,5 @@ class ClientFixture(fixtures.Fixture):
                                    region_name='RegionOne',
                                    auth_url=self.identity_url,
                                    token=self.token.token_id,
-                                   endpoint_url=TACKER_URL)
+                                   endpoint_url=TACKER_URL,
+                                   api_version=self.api_version)

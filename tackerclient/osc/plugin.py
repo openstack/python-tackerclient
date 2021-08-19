@@ -26,15 +26,17 @@ API_NAME = 'tackerclient'
 API_VERSION_OPTION = 'os_tacker_api_version'
 API_VERSIONS = {
     '1': 'tackerclient.v1_0.client.Client',
+    '2': 'tackerclient.v1_0.client.Client',
 }
 
 
 def make_client(instance):
     """Returns a client to the ClientManager."""
 
+    api_version = instance._api_version[API_NAME]
     tacker_client = utils.get_client_class(
         API_NAME,
-        instance._api_version[API_NAME],
+        api_version,
         API_VERSIONS)
     LOG.debug('Instantiating tacker client: %s', tacker_client)
 
@@ -42,7 +44,8 @@ def make_client(instance):
               'region_name': instance._region_name,
               'endpoint_type': instance._interface,
               'interface': instance._interface,
-              'session': instance.session
+              'session': instance.session,
+              'api_version': api_version
               }
 
     client = tacker_client(**kwargs)

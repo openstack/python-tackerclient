@@ -22,6 +22,7 @@ from cliff import columns as cliff_columns
 
 class FixturedTestCase(testtools.TestCase):
     client_fixture_class = None
+    api_version = '1'
 
     def setUp(self):
         super(FixturedTestCase, self).setUp()
@@ -29,7 +30,8 @@ class FixturedTestCase(testtools.TestCase):
         if self.client_fixture_class:
             self.requests_mock = self.useFixture(requests_mock_fixture.
                                                  Fixture())
-            fix = self.client_fixture_class(self.requests_mock)
+            fix = self.client_fixture_class(self.requests_mock,
+                                            api_version=self.api_version)
             self.cs = self.useFixture(fix).client
 
     def check_parser(self, cmd, args, verify_args):

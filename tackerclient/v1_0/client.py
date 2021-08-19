@@ -229,8 +229,12 @@ class ClientBase(object):
         if body or body == {}:
             body = self.serialize(body)
 
+        if headers is None:
+            # self.httpclient.do_request is not accept 'headers=None'.
+            headers = {}
+
         resp, replybody = self.httpclient.do_request(
-            action, method, body=body,
+            action, method, body=body, headers=headers,
             content_type=self.content_type())
 
         if 'application/zip' == resp.headers.get('Content-Type'):
@@ -355,26 +359,27 @@ class ClientBase(object):
         return self.retry_request("PATCH", action, body=body,
                                   headers=headers, params=params)
 
-    def list(self, collection, path, retrieve_all=True, **params):
+    def list(self, collection, path, retrieve_all=True, headers=None,
+             **params):
         if retrieve_all:
             res = []
-            for r in self._pagination(collection, path, **params):
+            for r in self._pagination(collection, path, headers, **params):
                 if type(r) is list:
                     res.extend(r)
                 else:
                     res.extend(r[collection])
             return {collection: res} if collection else res
         else:
-            return self._pagination(collection, path, **params)
+            return self._pagination(collection, path, headers, **params)
 
-    def _pagination(self, collection, path, **params):
+    def _pagination(self, collection, path, headers, **params):
         if params.get('page_reverse', False):
             linkrel = 'previous'
         else:
             linkrel = 'next'
         next = True
         while next:
-            res = self.get(path, params=params)
+            res = self.get(path, headers=headers, params=params)
             yield res
             next = False
             try:
@@ -874,82 +879,116 @@ class VnfLCMClient(ClientBase):
     APIs.
     """
 
-    vnf_instances_path = '/vnflcm/v1/vnf_instances'
-    vnf_instance_path = '/vnflcm/v1/vnf_instances/%s'
-    vnf_lcm_op_occurrences_path = '/vnflcm/v1/vnf_lcm_op_occs'
-    vnf_lcm_op_occs_path = '/vnflcm/v1/vnf_lcm_op_occs/%s'
+    def __init__(self, api_version, **kwargs):
+        super(VnfLCMClient, self).__init__(**kwargs)
+        self.headers = {'Version': '1.3.0'}
+        sol_api_version = 'v1'
+        if api_version == '2':
+            self.headers = {'Version': '2.0.0'}
+            sol_api_version = 'v2'
+
+        self.vnf_instances_path = (
+            '/vnflcm/{}/vnf_instances'.format(sol_api_version))
+        self.vnf_instance_path = (
+            '/vnflcm/{}/vnf_instances/%s'.format(sol_api_version))
+        self.vnf_lcm_op_occurrences_path = (
+            '/vnflcm/{}/vnf_lcm_op_occs'.format(sol_api_version))
+        self.vnf_lcm_op_occs_path = (
+            '/vnflcm/{}/vnf_lcm_op_occs/%s'.format(sol_api_version))
 
     def build_action(self, action):
         return action
 
     @APIParamsCall
     def create_vnf_instance(self, body):
-        return self.post(self.vnf_instances_path, body=body)
+        return self.post(self.vnf_instances_path, body=body,
+                         headers=self.headers)
 
     @APIParamsCall
     def show_vnf_instance(self, vnf_id, **_params):
-        return self.get(self.vnf_instance_path % vnf_id, params=_params)
+        return self.get(self.vnf_instance_path % vnf_id,
+                        headers=self.headers, params=_params)
 
     @APIParamsCall
     def list_vnf_instances(self, retrieve_all=True, **_params):
         vnf_instances = self.list(None, self.vnf_instances_path,
-                                  retrieve_all, **_params)
+                                  retrieve_all, headers=self.headers,
+                                  **_params)
         return vnf_instances
 
     @APIParamsCall
     def instantiate_vnf_instance(self, vnf_id, body):
         return self.post((self.vnf_instance_path + "/instantiate") % vnf_id,
-                         body=body)
+                         body=body, headers=self.headers)
 
     @APIParamsCall
     def heal_vnf_instance(self, vnf_id, body):
         return self.post((self.vnf_instance_path + "/heal") % vnf_id,
-                         body=body)
+                         body=body, headers=self.headers)
 
     @APIParamsCall
     def terminate_vnf_instance(self, vnf_id, body):
         return self.post((self.vnf_instance_path + "/terminate") % vnf_id,
-                         body=body)
+                         body=body, headers=self.headers)
 
     @APIParamsCall
     def delete_vnf_instance(self, vnf_id):
-        return self.delete(self.vnf_instance_path % vnf_id)
+        return self.delete(self.vnf_instance_path % vnf_id,
+                           headers=self.headers)
 
     @APIParamsCall
     def update_vnf_instance(self, vnf_id, body):
-        return self.patch(self.vnf_instance_path % vnf_id, body=body)
+        return self.patch(self.vnf_instance_path % vnf_id, body=body,
+                          headers=self.headers)
 
     @APIParamsCall
     def scale_vnf_instance(self, vnf_id, body):
         return self.post((self.vnf_instance_path + "/scale") % vnf_id,
-                         body=body)
+                         body=body, headers=self.headers)
 
     @APIParamsCall
     def rollback_vnf_instance(self, occ_id):
-        return self.post((self.vnf_lcm_op_occs_path + "/rollback") % occ_id)
+        return self.post((self.vnf_lcm_op_occs_path + "/rollback") % occ_id,
+                         headers=self.headers)
 
     @APIParamsCall
     def fail_vnf_instance(self, occ_id):
-        return self.post((self.vnf_lcm_op_occs_path + "/fail") % occ_id)
+        return self.post((self.vnf_lcm_op_occs_path + "/fail") % occ_id,
+                         headers=self.headers)
 
     @APIParamsCall
     def change_ext_conn_vnf_instance(self, vnf_id, body):
         return self.post((self.vnf_instance_path + "/change_ext_conn") %
-                         vnf_id, body=body)
+                         vnf_id, body=body, headers=self.headers)
 
     @APIParamsCall
     def retry_vnf_instance(self, occ_id):
-        return self.post((self.vnf_lcm_op_occs_path + "/retry") % occ_id)
+        return self.post((self.vnf_lcm_op_occs_path + "/retry") % occ_id,
+                         headers=self.headers)
 
     @APIParamsCall
     def list_vnf_lcm_op_occs(self, retrieve_all=True, **_params):
         vnf_lcm_op_occs = self.list(None, self.vnf_lcm_op_occurrences_path,
-                                    retrieve_all, **_params)
+                                    retrieve_all, headers=self.headers,
+                                    **_params)
         return vnf_lcm_op_occs
 
     @APIParamsCall
     def show_vnf_lcm_op_occs(self, occ_id):
-        return self.get(self.vnf_lcm_op_occs_path % occ_id)
+        return self.get(self.vnf_lcm_op_occs_path % occ_id,
+                        headers=self.headers)
+
+    @APIParamsCall
+    def show_vnf_lcm_versions(self, major_version):
+        if major_version is None:
+            path = "/vnflcm/api_versions"
+        else:
+            path = "/vnflcm/{}/api_versions".format(major_version)
+        # NOTE: This may be called with any combination of
+        # --os-tacker-api-verson:[1, 2] and major_version:[None, 1, 2].
+        # Specifying "headers={'Version': '2.0.0'}" is most simple to
+        # make all cases OK.
+        return self.get(path, headers={'Version': '2.0.0'})
 
 
 class Client(object):
@@ -972,7 +1011,8 @@ class Client(object):
     """
 
     def __init__(self, **kwargs):
-        self.vnf_lcm_client = VnfLCMClient(**kwargs)
+        api_version = kwargs.pop('api_version', '1')
+        self.vnf_lcm_client = VnfLCMClient(api_version, **kwargs)
         self.vnf_package_client = VnfPackageClient(**kwargs)
         self.legacy_client = LegacyClient(**kwargs)
 
@@ -1263,3 +1303,6 @@ class Client(object):
 
     def show_vnf_lcm_op_occs(self, occ_id):
         return self.vnf_lcm_client.show_vnf_lcm_op_occs(occ_id)
+
+    def show_vnf_lcm_versions(self, major_version):
+        return self.vnf_lcm_client.show_vnf_lcm_versions(major_version)

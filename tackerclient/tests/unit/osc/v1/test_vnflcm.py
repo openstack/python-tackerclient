@@ -848,3 +848,18 @@ class TestChangeExtConnVnfLcm(TestVnfLcm):
 
         expected_msg = "Failed to load parameter file."
         self.assertIn(expected_msg, str(ex))
+
+
+class TestVnfLcmV1(base.FixturedTestCase):
+    client_fixture_class = client.ClientFixture
+    api_version = '1'
+
+    def setUp(self):
+        super(TestVnfLcmV1, self).setUp()
+
+    def test_client_v2(self):
+        self.assertEqual(self.cs.vnf_lcm_client.headers,
+                         {'Version': '1.3.0'})
+        self.assertEqual(self.cs.vnf_lcm_client.vnf_instances_path,
+                         '/vnflcm/v1/vnf_instances')
+        # check of other paths is omitted.
