@@ -101,6 +101,47 @@ class RollbackVnfLcmOp(command.Command):
                      ' accepted') % {'id': parsed_args.vnf_lcm_op_occ_id}))
 
 
+class CancelVnfLcmOp(command.ShowOne):
+    _description = _("Cancel VNF Instance")
+
+    def get_parser(self, prog_name):
+        """Add arguments to parser.
+
+        Args:
+            prog_name ([type]): program name
+
+        Returns:
+            parser([ArgumentParser]):
+        """
+        parser = super(CancelVnfLcmOp, self).get_parser(prog_name)
+        parser.add_argument(
+            _VNF_LCM_OP_OCC_ID,
+            metavar="<vnf-lcm-op-occ-id>",
+            help=_('VNF lifecycle management operation occurrence ID.'))
+        parser.add_argument(
+            "--cancel-mode",
+            default='GRACEFUL',
+            metavar="<cancel-mode>",
+            choices=['GRACEFUL', 'FORCEFUL'],
+            help=_("Cancel mode can be 'GRACEFUL' or 'FORCEFUL'. "
+                   "Default is 'GRACEFUL'"))
+        return parser
+
+    def take_action(self, parsed_args):
+        """Execute cancel_vnf_instance and output comment.
+
+        Args:
+            parsed_args ([Namespace]): arguments of CLI.
+        """
+        client = self.app.client_manager.tackerclient
+        result = client.cancel_vnf_instance(
+            parsed_args.vnf_lcm_op_occ_id,
+            {'cancelMode': parsed_args.cancel_mode})
+        if not result:
+            print((_('Cancel request for LCM operation %(id)s has been'
+                     ' accepted') % {'id': parsed_args.vnf_lcm_op_occ_id}))
+
+
 class FailVnfLcmOp(command.ShowOne):
     _description = _("Fail VNF Instance")
 

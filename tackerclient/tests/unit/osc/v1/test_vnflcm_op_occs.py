@@ -14,6 +14,7 @@ from io import StringIO
 import os
 import sys
 
+import ddt
 from oslo_utils.fixture import uuidsentinel
 from unittest import mock
 
@@ -55,6 +56,70 @@ class TestVnfLcm(base.FixturedTestCase):
         self.app_args = mock.Mock()
         self.client_manager = self.cs
         self.app.client_manager.tackerclient = self.client_manager
+
+
+@ddt.ddt
+class TestCancelVnfLcmOp(TestVnfLcm):
+
+    def setUp(self):
+        super(TestCancelVnfLcmOp, self).setUp()
+        self.cancel_vnf_lcm = vnflcm_op_occs.CancelVnfLcmOp(
+            self.app, self.app_args, cmd_name='vnflcm op cancel')
+
+    @ddt.data('GRACEFUL', 'FORCEFUL')
+    def test_take_action(self, cancel_mode):
+        """take_action normal system test"""
+
+        arglist = ['--cancel-mode', cancel_mode,
+                   uuidsentinel.vnf_lcm_op_occ_id]
+        verifylist = [('cancel_mode', cancel_mode),
+                      ('vnf_lcm_op_occ_id', uuidsentinel.vnf_lcm_op_occ_id)]
+
+        parsed_args = self.check_parser(
+            self.cancel_vnf_lcm, arglist, verifylist)
+        url = os.path.join(
+            self.url,
+            'vnflcm/v1/vnf_lcm_op_occs',
+            uuidsentinel.vnf_lcm_op_occ_id,
+            'cancel')
+        self.requests_mock.register_uri(
+            'POST', url, headers=self.header, json={})
+
+        sys.stdout = buffer = StringIO()
+        self.cancel_vnf_lcm.take_action(parsed_args)
+
+        actual_message = buffer.getvalue().strip()
+
+        expected_message = (
+            'Cancel request for LCM operation ' +
+            uuidsentinel.vnf_lcm_op_occ_id +
+            ' has been accepted')
+
+        self.assertEqual(expected_message, actual_message)
+
+    def test_terminate_no_options(self):
+        self.assertRaises(base.ParserException, self.check_parser,
+                          self.cancel_vnf_lcm, [], [])
+
+    def test_take_action_vnf_lcm_op_occ_id_not_found(self):
+        """take_action abnomaly system test"""
+
+        arglist = [uuidsentinel.vnf_lcm_op_occ_id]
+        verifylist = [('vnf_lcm_op_occ_id', uuidsentinel.vnf_lcm_op_occ_id)]
+
+        parsed_args = self.check_parser(
+            self.cancel_vnf_lcm, arglist, verifylist)
+        url = os.path.join(
+            self.url,
+            'vnflcm/v1/vnf_lcm_op_occs',
+            uuidsentinel.vnf_lcm_op_occ_id,
+            'cancel')
+        self.requests_mock.register_uri(
+            'POST', url, headers=self.header, status_code=404, json={})
+
+        self.assertRaises(exceptions.TackerClientException,
+                          self.cancel_vnf_lcm.take_action,
+                          parsed_args)
 
 
 class TestRollbackVnfLcmOp(TestVnfLcm):
