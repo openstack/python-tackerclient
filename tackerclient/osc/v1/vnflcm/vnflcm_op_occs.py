@@ -242,8 +242,11 @@ class ListVnfLcmOp(command.Lister):
         )
         return parser
 
-    def get_attributes(self):
+    def get_attributes(self, exclude=None):
         """Get attributes.
+
+        Args:
+            exclude([exclude]): a list of fields which needs to exclude.
 
         Returns:
             attributes([attributes]): a list of table entry definitions.
@@ -270,10 +273,13 @@ class ListVnfLcmOp(command.Lister):
         ]
 
         attributes = []
-        for field in fields:
-            attributes.extend([(field['key'], field['value'],
-                              tacker_osc_utils.LIST_BOTH)])
+        if exclude is None:
+            exclude = []
 
+        for field in fields:
+            if field['value'] not in exclude:
+                attributes.extend([(field['key'], field['value'],
+                                  tacker_osc_utils.LIST_BOTH)])
         return tuple(attributes)
 
     def take_action(self, parsed_args):
@@ -301,7 +307,7 @@ class ListVnfLcmOp(command.Lister):
         client = self.app.client_manager.tackerclient
         vnflcm_op_occs = client.list_vnf_lcm_op_occs(**params)
         headers, columns = tacker_osc_utils.get_column_definitions(
-            self.get_attributes(),
+            self.get_attributes(exclude=exclude_fields),
             long_listing=True)
 
         dictionary_properties = (utils.get_dict_properties(

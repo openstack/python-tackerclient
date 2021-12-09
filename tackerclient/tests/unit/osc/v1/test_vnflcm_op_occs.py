@@ -26,7 +26,7 @@ from tackerclient.tests.unit.osc.v1.fixture_data import client
 from tackerclient.tests.unit.osc.v1 import vnflcm_op_occs_fakes
 
 
-def _get_columns_vnflcm_op_occs(action='show'):
+def _get_columns_vnflcm_op_occs(action='show', parameter=None):
 
     if action == 'fail':
         return ['ID', 'Operation State', 'State Entered Time',
@@ -34,8 +34,11 @@ def _get_columns_vnflcm_op_occs(action='show'):
                 'Is Automatic Invocation', 'Is Cancel Pending',
                 'Error', 'Links']
     elif action == 'list':
-        return ['ID', 'Operation State', 'VNF Instance ID',
-                'Operation']
+        if parameter is not None:
+            return ['ID', 'Operation']
+        else:
+            return ['ID', 'Operation State', 'VNF Instance ID',
+                    'Operation']
     else:
         return ['ID', 'Operation State', 'State Entered Time',
                 'Start Time', 'VNF Instance ID', 'Grant ID',
@@ -495,6 +498,36 @@ class TestListVnfLcmOp(TestVnfLcm):
         self.assertRaises(exceptions.TackerClientException,
                           self.list_vnflcm_op_occ.take_action,
                           parsed_args)
+
+    def test_take_action_with_exclude_fields(self):
+
+        vnflcm_op_occs_obj = vnflcm_op_occs_fakes.create_vnflcm_op_occs(
+            count=3)
+        parsed_args = self.check_parser(
+            self.list_vnflcm_op_occ,
+            ["--exclude-fields", 'VNF Instance ID,Operation State'],
+            [('exclude_fields', 'VNF Instance ID,Operation State')])
+        self.requests_mock.register_uri(
+            'GET', os.path.join(
+                self.url,
+                'vnflcm/v1/vnf_lcm_op_occs?'
+                'exclude-fields=VNF Instance ID,Operation State'),
+            json=vnflcm_op_occs_obj, headers=self.header)
+        actual_columns, data = self.list_vnflcm_op_occ.take_action(parsed_args)
+        headers, columns = tacker_osc_utils.get_column_definitions(
+            self.list_vnflcm_op_occ.get_attributes(
+                exclude=['VNF Instance ID', 'Operation State']),
+            long_listing=True)
+        expected_data = []
+        for vnflcm_op_occ_obj_idx in vnflcm_op_occs_obj:
+            expected_data.append(
+                vnflcm_op_occs_fakes.get_vnflcm_op_occ_data(
+                    vnflcm_op_occ_obj_idx, columns=columns))
+
+        self.assertCountEqual(_get_columns_vnflcm_op_occs(
+            action='list', parameter="exclude_fields"),
+            actual_columns)
+        self.assertListItemsEqual(expected_data, list(data))
 
 
 class TestShowVnfLcmOp(TestVnfLcm):
