@@ -952,6 +952,11 @@ class VnfLCMClient(ClientBase):
                          headers=self.headers)
 
     @APIParamsCall
+    def cancel_vnf_instance(self, occ_id, body):
+        return self.post((self.vnf_lcm_op_occs_path + "/cancel") % occ_id,
+                         body=body)
+
+    @APIParamsCall
     def fail_vnf_instance(self, occ_id):
         return self.post((self.vnf_lcm_op_occs_path + "/fail") % occ_id,
                          headers=self.headers)
@@ -1275,6 +1280,9 @@ class Client(object):
 
     def rollback_vnf_instance(self, occ_id):
         return self.vnf_lcm_client.rollback_vnf_instance(occ_id)
+
+    def cancel_vnf_instance(self, occ_id, body):
+        return self.vnf_lcm_client.cancel_vnf_instance(occ_id, body)
 
     def fail_vnf_instance(self, occ_id):
         return self.vnf_lcm_client.fail_vnf_instance(occ_id)
