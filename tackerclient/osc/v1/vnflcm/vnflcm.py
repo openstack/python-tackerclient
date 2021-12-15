@@ -238,6 +238,11 @@ class HealVnfLcm(command.Command):
 
     def get_parser(self, prog_name):
         parser = super(HealVnfLcm, self).get_parser(prog_name)
+        usage_message = ('''%(prog)s [-h] [--cause CAUSE]
+                             [--vnfc-instance <vnfc-instance-id> '''
+                         '''[<vnfc-instance-id> ...]]
+                             -- <vnf-instance>''')
+        parser.usage = usage_message
         parser.add_argument(
             _VNF_INSTANCE,
             metavar="<vnf-instance>",
