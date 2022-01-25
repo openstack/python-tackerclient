@@ -566,3 +566,30 @@ class ChangeExtConnVnfLcm(command.Command):
         if not result:
             print((_('Change External VNF Connectivity for VNF Instance %s '
                      'has been accepted.') % parsed_args.vnf_instance))
+
+
+class ChangeVnfPkgVnfLcm(command.Command):
+    _description = _("Change Current VNF Package")
+
+    def get_parser(self, prog_name):
+        parser = super(ChangeVnfPkgVnfLcm, self).get_parser(prog_name)
+        parser.add_argument(
+            _VNF_INSTANCE,
+            metavar="<vnf-instance>",
+            help=_("VNF instance ID to Change Current VNF Package"))
+        parser.add_argument(
+            'request_file',
+            metavar="<param-file>",
+            help=_("Specify change-vnfpkg request parameters "
+                   "in a json file."))
+
+        return parser
+
+    def take_action(self, parsed_args):
+        client = self.app.client_manager.tackerclient
+        result = client.change_vnfpkg_vnf_instance(
+            parsed_args.vnf_instance, jsonfile2body(
+                parsed_args.request_file))
+        if not result:
+            print((_('Change Current VNF Package for VNF Instance %s '
+                     'has been accepted.') % parsed_args.vnf_instance))
