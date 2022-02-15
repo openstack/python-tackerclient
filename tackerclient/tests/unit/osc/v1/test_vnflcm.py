@@ -288,6 +288,9 @@ class TestHealVnfLcm(TestVnfLcm):
         self.heal_vnf_lcm = vnflcm.HealVnfLcm(
             self.app, self.app_args, cmd_name='vnflcm heal')
 
+    _heal_sample_param_file = ("./tackerclient/osc/v1/vnflcm/samples/"
+                               "heal_vnf_instance_param_sample.json")
+
     @ddt.data((['--cause', 'test-cause', "--vnfc-instance",
                 'vnfc-id-1', 'vnfc-id-2'],
                [('cause', 'test-cause'),
@@ -296,6 +299,8 @@ class TestHealVnfLcm(TestVnfLcm):
                [('cause', 'test-cause')]),
               (["--vnfc-instance", 'vnfc-id-1', 'vnfc-id-2'],
                [('vnfc_instance', ['vnfc-id-1', 'vnfc-id-2'])]),
+              (["--additional-param-file", _heal_sample_param_file],
+               [('additional_param_file', _heal_sample_param_file)]),
               ([], []))
     @ddt.unpack
     def test_take_action(self, arglist, verifylist):
@@ -339,6 +344,25 @@ class TestHealVnfLcm(TestVnfLcm):
         self.assertRaises(exceptions.TackerClientException,
                           self.heal_vnf_lcm.take_action,
                           parsed_args)
+
+    def test_take_action_param_file_not_exists(self):
+        vnf_instance = vnflcm_fakes.vnf_instance_response()
+        sample_param_file = "./not_exists.json"
+        arglist = [vnf_instance['id'],
+                   '--additional-param-file', sample_param_file]
+        verifylist = [('vnf_instance', vnf_instance['id']),
+                      ('additional_param_file', sample_param_file)]
+
+        # command param
+        parsed_args = self.check_parser(self.heal_vnf_lcm, arglist,
+                                        verifylist)
+
+        ex = self.assertRaises(exceptions.InvalidInput,
+                               self.heal_vnf_lcm.take_action, parsed_args)
+
+        expected_msg = ("Invalid input: File %s does not exist "
+                        "or user does not have read privileges to it")
+        self.assertEqual(expected_msg % sample_param_file, str(ex))
 
 
 @ddt.ddt
