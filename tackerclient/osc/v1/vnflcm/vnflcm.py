@@ -241,6 +241,7 @@ class HealVnfLcm(command.Command):
         usage_message = ('''%(prog)s [-h] [--cause CAUSE]
                              [--vnfc-instance <vnfc-instance-id> '''
                          '''[<vnfc-instance-id> ...]]
+                             [--additional-param-file <additional-param-file>]
                              -- <vnf-instance>''')
         parser.usage = usage_message
         parser.add_argument(
@@ -256,6 +257,11 @@ class HealVnfLcm(command.Command):
             nargs="+",
             help=_("List of VNFC instances requiring a healing action.")
         )
+        parser.add_argument(
+            '--additional-param-file',
+            metavar="<additional-param-file>",
+            help=_("Additional parameters passed by the NFVO as input "
+                   "to the healing process."))
         return parser
 
     def args2body(self, parsed_args):
@@ -264,6 +270,8 @@ class HealVnfLcm(command.Command):
             body['cause'] = parsed_args.cause
         if parsed_args.vnfc_instance:
             body['vnfcInstanceId'] = parsed_args.vnfc_instance
+        if parsed_args.additional_param_file:
+            body.update(jsonfile2body(parsed_args.additional_param_file))
 
         return body
 
