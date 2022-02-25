@@ -967,6 +967,15 @@ class VnfLCMClient(ClientBase):
                          vnf_id, body=body, headers=self.headers)
 
     @APIParamsCall
+    def change_vnfpkg_vnf_instance(self, vnf_id, body):
+        # NOTE: it is only supported by V2-API.
+        if self.vnf_instance_path.split('/')[2] == 'v2':
+            return self.post((self.vnf_instance_path + "/change_vnfpkg") %
+                             vnf_id, body=body, headers=self.headers)
+        else:
+            raise exceptions.UnsupportedCommandVersion(version='1')
+
+    @APIParamsCall
     def retry_vnf_instance(self, occ_id):
         return self.post((self.vnf_lcm_op_occs_path + "/retry") % occ_id,
                          headers=self.headers)
@@ -1271,6 +1280,9 @@ class Client(object):
 
     def change_ext_conn_vnf_instance(self, vnf_id, body):
         return self.vnf_lcm_client.change_ext_conn_vnf_instance(vnf_id, body)
+
+    def change_vnfpkg_vnf_instance(self, vnf_id, body):
+        return self.vnf_lcm_client.change_vnfpkg_vnf_instance(vnf_id, body)
 
     def delete_vnf_instance(self, vnf_id):
         return self.vnf_lcm_client.delete_vnf_instance(vnf_id)

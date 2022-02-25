@@ -207,6 +207,10 @@ class InvalidInput(TackerClientException):
     message = _("Invalid input: %(reason)s")
 
 
+class UnsupportedCommandVersion(TackerClientException):
+    message = _("This command is not supported in version %(version)s")
+
+
 # Command line exceptions
 
 class TackerCLIError(TackerException):

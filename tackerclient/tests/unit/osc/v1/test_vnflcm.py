@@ -874,6 +874,40 @@ class TestChangeExtConnVnfLcm(TestVnfLcm):
         self.assertIn(expected_msg, str(ex))
 
 
+class TestChangeVnfPkgVnfLcm(TestVnfLcm):
+
+    def setUp(self):
+        super(TestChangeVnfPkgVnfLcm, self).setUp()
+        self.change_vnfpkg_vnf_lcm = vnflcm.ChangeVnfPkgVnfLcm(
+            self.app, self.app_args,
+            cmd_name='vnflcm change-vnfpkg')
+
+    def test_take_action_with_v1_version(self):
+        vnf_instance = vnflcm_fakes.vnf_instance_response()
+        sample_param_file = ("./tackerclient/osc/v2/vnflcm/samples/"
+                             "change_vnfpkg_vnf_instance_param_sample.json")
+        arglist = [vnf_instance['id'], sample_param_file]
+        verifylist = [('vnf_instance', vnf_instance['id']),
+                      ('request_file', sample_param_file)]
+
+        # command param
+        parsed_args = self.check_parser(self.change_vnfpkg_vnf_lcm,
+                                        arglist,
+                                        verifylist)
+
+        url = os.path.join(self.url, 'vnflcm/v1/vnf_instances',
+                           vnf_instance['id'], 'change_vnfpkg')
+        self.requests_mock.register_uri(
+            'POST', url, headers=self.header, status_code=400, json={})
+
+        ex = self.assertRaises(exceptions.UnsupportedCommandVersion,
+                               self.change_vnfpkg_vnf_lcm.take_action,
+                               parsed_args)
+
+        expected_msg = "This command is not supported in version 1"
+        self.assertEqual(expected_msg, str(ex))
+
+
 class TestVnfLcmV1(base.FixturedTestCase):
     client_fixture_class = client.ClientFixture
     api_version = '1'
