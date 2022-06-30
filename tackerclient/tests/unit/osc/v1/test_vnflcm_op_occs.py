@@ -10,6 +10,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import copy
 from io import StringIO
 import os
 import sys
@@ -528,6 +529,50 @@ class TestListVnfLcmOp(TestVnfLcm):
             action='list', parameter="exclude_fields"),
             actual_columns)
         self.assertListItemsEqual(expected_data, list(data))
+
+    def test_take_action_with_pagination(self):
+        next_links_num = 3
+        vnflcm_op_occs_obj = vnflcm_op_occs_fakes.create_vnflcm_op_occs(
+            count=next_links_num)
+        parsed_args = self.check_parser(self.list_vnflcm_op_occ, [], [])
+        path = os.path.join(self.url, 'vnflcm/v1/vnf_lcm_op_occs')
+
+        links = [0] * next_links_num
+        link_headers = [0] * next_links_num
+
+        for i in range(next_links_num):
+            links[i] = (
+                '{base_url}?nextpage_opaque_marker={vnflcm_op_occ_id}'.format(
+                    base_url=path,
+                    vnflcm_op_occ_id=vnflcm_op_occs_obj[i]['id']))
+            link_headers[i] = copy.deepcopy(self.header)
+            link_headers[i]['Link'] = '<{link_url}>; rel="next"'.format(
+                link_url=links[i])
+
+        self.requests_mock.register_uri(
+            'GET', path, json=[vnflcm_op_occs_obj[0]], headers=link_headers[0])
+        self.requests_mock.register_uri(
+            'GET', links[0], json=[vnflcm_op_occs_obj[1]],
+            headers=link_headers[1])
+        self.requests_mock.register_uri(
+            'GET', links[1], json=[vnflcm_op_occs_obj[2]],
+            headers=link_headers[2])
+        self.requests_mock.register_uri(
+            'GET', links[2], json=[], headers=self.header)
+
+        actual_columns, data = self.list_vnflcm_op_occ.take_action(parsed_args)
+
+        headers, columns = tacker_osc_utils.get_column_definitions(
+            self.list_vnflcm_op_occ.get_attributes(), long_listing=True)
+
+        expected_data = []
+        for vnflcm_op_occ_obj_idx in vnflcm_op_occs_obj:
+            expected_data.append(vnflcm_op_occs_fakes.get_vnflcm_op_occ_data(
+                vnflcm_op_occ_obj_idx, columns=columns))
+
+        self.assertCountEqual(_get_columns_vnflcm_op_occs(action='list'),
+                              actual_columns)
+        self.assertCountEqual(expected_data, list(data))
 
 
 class TestShowVnfLcmOp(TestVnfLcm):

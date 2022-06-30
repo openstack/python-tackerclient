@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import copy
 import os
 import sys
 
@@ -97,6 +98,50 @@ class TestListLccnSubscription(test_vnflcm.TestVnfLcm):
 
         self.assertCountEqual(_get_columns_vnflcm_subsc(action='list'),
                               actual_columns)
+        self.assertCountEqual(expected_data, list(data))
+
+    def test_take_action_with_pagination(self):
+        next_links_num = 3
+        path = os.path.join(self.url, 'vnflcm/v1/subscriptions')
+        parsed_args = self.check_parser(self.list_subscription, [], [])
+
+        links = [0] * next_links_num
+        link_headers = [0] * next_links_num
+
+        for i in range(next_links_num):
+            links[i] = (
+                '{base_url}?nextpage_opaque_marker={subscription_id}'.format(
+                    base_url=path,
+                    subscription_id=self.subscriptions[i]['id']))
+
+            link_headers[i] = copy.deepcopy(self.header)
+            link_headers[i]['Link'] = '<{link_url}>; rel="next"'.format(
+                link_url=links[i])
+
+        self.requests_mock.register_uri(
+            'GET', path, json=[self.subscriptions[0]], headers=link_headers[0])
+        self.requests_mock.register_uri(
+            'GET', links[0], json=[self.subscriptions[1]],
+            headers=link_headers[1])
+        self.requests_mock.register_uri(
+            'GET', links[1], json=[self.subscriptions[2]],
+            headers=link_headers[2])
+        self.requests_mock.register_uri(
+            'GET', links[2], json=[], headers=self.header)
+
+        actual_columns, data = self.list_subscription.take_action(parsed_args)
+
+        headers, columns = tacker_osc_utils.get_column_definitions(
+            self.list_subscription.get_attributes(), long_listing=True)
+
+        expected_data = []
+        for subscription_obj in self.subscriptions:
+            expected_data.append(vnflcm_subsc_fakes.get_subscription_data(
+                subscription_obj, columns=columns, list_action=True))
+
+        self.assertCountEqual(_get_columns_vnflcm_subsc(action='list'),
+                              actual_columns)
+
         self.assertCountEqual(expected_data, list(data))
 
 
