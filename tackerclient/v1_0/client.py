@@ -895,6 +895,10 @@ class VnfLCMClient(ClientBase):
             '/vnflcm/{}/vnf_lcm_op_occs'.format(sol_api_version))
         self.vnf_lcm_op_occs_path = (
             '/vnflcm/{}/vnf_lcm_op_occs/%s'.format(sol_api_version))
+        self.lccn_subscriptions_path = (
+            '/vnflcm/{}/subscriptions'.format(sol_api_version))
+        self.lccn_subscription_path = (
+            '/vnflcm/{}/subscriptions/%s'.format(sol_api_version))
 
     def build_action(self, action):
         return action
@@ -990,6 +994,28 @@ class VnfLCMClient(ClientBase):
     @APIParamsCall
     def show_vnf_lcm_op_occs(self, occ_id):
         return self.get(self.vnf_lcm_op_occs_path % occ_id,
+                        headers=self.headers)
+
+    @APIParamsCall
+    def create_lccn_subscription(self, body):
+        return self.post(self.lccn_subscriptions_path, body=body,
+                         headers=self.headers)
+
+    @APIParamsCall
+    def delete_lccn_subscription(self, subsc_id):
+        return self.delete(self.lccn_subscription_path % subsc_id,
+                           headers=self.headers)
+
+    @APIParamsCall
+    def list_lccn_subscriptions(self, retrieve_all=True, **_params):
+        subscriptions = self.list(None, self.lccn_subscriptions_path,
+                                  retrieve_all, headers=self.headers,
+                                  **_params)
+        return subscriptions
+
+    @APIParamsCall
+    def show_lccn_subscription(self, subsc_id):
+        return self.get(self.lccn_subscription_path % subsc_id,
                         headers=self.headers)
 
     @APIParamsCall
@@ -1323,6 +1349,19 @@ class Client(object):
 
     def show_vnf_lcm_op_occs(self, occ_id):
         return self.vnf_lcm_client.show_vnf_lcm_op_occs(occ_id)
+
+    def create_lccn_subscription(self, body):
+        return self.vnf_lcm_client.create_lccn_subscription(body)
+
+    def delete_lccn_subscription(self, subsc_id):
+        return self.vnf_lcm_client.delete_lccn_subscription(subsc_id)
+
+    def list_lccn_subscriptions(self, retrieve_all=True, **_params):
+        return self.vnf_lcm_client.list_lccn_subscriptions(
+            retrieve_all=retrieve_all, **_params)
+
+    def show_lccn_subscription(self, subsc_id):
+        return self.vnf_lcm_client.show_lccn_subscription(subsc_id)
 
     def show_vnf_lcm_versions(self, major_version):
         return self.vnf_lcm_client.show_vnf_lcm_versions(major_version)

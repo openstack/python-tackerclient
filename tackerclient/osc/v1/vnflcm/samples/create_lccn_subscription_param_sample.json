@@ -1,0 +1,114 @@
+{
+    "filter": {
+        "vnfInstanceSubscriptionFilter": {
+            "vnfdIds": [
+                "dummy-vnfdId-1",
+                "dummy-vnfdId-2"
+            ],
+            "vnfProductsFromProviders": [
+                {
+                    "vnfProvider": "dummy-vnfProvider-1",
+                    "vnfProducts": [
+                        {
+                            "vnfProductName": "dummy-vnfProductName-1-1",
+                            "versions": [
+                                {
+                                    "vnfSoftwareVersion": "1.0",
+                                    "vnfdVersions": ["1.0", "2.0"]
+                                },
+                                {
+                                    "vnfSoftwareVersion": "1.1",
+                                    "vnfdVersions": ["1.1", "2.1"]
+                                }
+                            ]
+                        },
+                        {
+                            "vnfProductName": "dummy-vnfProductName-1-2",
+                            "versions": [
+                                {
+                                    "vnfSoftwareVersion": "1.0",
+                                    "vnfdVersions": ["1.0", "2.0"]
+                                },
+                                {
+                                    "vnfSoftwareVersion": "1.1",
+                                    "vnfdVersions": ["1.1", "2.1"]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "vnfProvider": "dummy-vnfProvider-2",
+                    "vnfProducts": [
+                        {
+                            "vnfProductName": "dummy-vnfProductName-2-1",
+                            "versions": [
+                                {
+                                    "vnfSoftwareVersion": "1.0",
+                                    "vnfdVersions": ["1.0", "2.0"]
+                                },
+                                {
+                                    "vnfSoftwareVersion": "1.1",
+                                    "vnfdVersions": ["1.1", "2.1"]
+                                }
+                            ]
+                        },
+                        {
+                            "vnfProductName": "dummy-vnfProductName-2-2",
+                            "versions": [
+                                {
+                                    "vnfSoftwareVersion": "1.0",
+                                    "vnfdVersions": ["1.0", "2.0"]
+                                },
+                                {
+                                    "vnfSoftwareVersion": "1.1",
+                                    "vnfdVersions": ["1.1", "2.1"]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "vnfInstanceIds": [
+                "dummy-vnfInstanceId-1",
+                "dummy-vnfInstanceId-2"
+            ],
+            "vnfInstanceNames": [
+                "dummy-vnfInstanceName-1",
+                "dummy-vnfInstanceName-2"
+            ]
+        },
+        "notificationTypes": [
+            "VnfLcmOperationOccurrenceNotification",
+            "VnfIdentifierCreationNotification",
+            "VnfIdentifierDeletionNotification"
+        ],
+        "operationTypes": [
+            "INSTANTIATE",
+            "SCALE",
+            "TERMINATE",
+            "HEAL",
+            "MODIFY_INFO",
+            "CHANGE_EXT_CONN"
+        ],
+        "operationStates": [
+            "COMPLETED",
+            "FAILED",
+            "FAILED_TEMP",
+            "PROCESSING",
+            "ROLLING_BACK",
+            "ROLLED_BACK",
+            "STARTING"
+        ]
+    },
+    "callbackUri": "http://localhost:9990/notification/callback/test",
+    "authentication": {
+        "authType": [
+            "BASIC"
+        ],
+        "paramsBasic": {
+            "password": "test_pass",
+            "userName": "test_user"
+        }
+    }
+}

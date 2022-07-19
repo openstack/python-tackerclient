@@ -347,7 +347,7 @@ class TerminateVnfLcm(command.Command):
 
                 result = client.delete_vnf_instance(parsed_args.vnf_instance)
                 if not result:
-                    print(_("VNF Instance '%(id)s' deleted successfully") %
+                    print(_("VNF Instance '%(id)s' is deleted successfully") %
                           {'id': parsed_args.vnf_instance})
 
     def _wait_until_vnf_is_terminated(self, client, vnf_instance_id,
@@ -420,7 +420,7 @@ class DeleteVnfLcm(command.Command):
                 print(_('All specified vnf instances are deleted '
                         'successfully'))
             else:
-                print(_("Vnf instance '%s' deleted "
+                print(_("Vnf instance '%s' is deleted "
                         "successfully") % vnf_instances[0])
 
 

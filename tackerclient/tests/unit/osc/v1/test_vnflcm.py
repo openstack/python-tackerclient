@@ -420,7 +420,7 @@ class TestTerminateVnfLcm(TestVnfLcm):
             self.assertIn(expected_message, actual_message)
 
             if delete_vnf:
-                expected_message = ("VNF Instance '%s' deleted successfully"
+                expected_message = ("VNF Instance '%s' is deleted successfully"
                                     % vnf_instance['id'])
                 self.assertIn(expected_message, actual_message)
 
@@ -536,7 +536,7 @@ class TestDeleteVnfLcm(TestVnfLcm):
         sys.stdout = buffer = StringIO()
         result = self.delete_vnf_instance.take_action(parsed_args)
         self.assertIsNone(result)
-        self.assertEqual(("Vnf instance '%s' deleted successfully")
+        self.assertEqual(("Vnf instance '%s' is deleted successfully")
                          % self.vnf_instances[0]['id'],
                          buffer.getvalue().strip())
 
