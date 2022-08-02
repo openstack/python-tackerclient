@@ -76,6 +76,39 @@ class TestVIMUtils(testtools.TestCase):
         vim_utils.args2body_vim(config_param.copy(), vim)
         self.assertEqual(expected_vim, vim)
 
+    def test_args2body_kubernetes_vim_oidc(self):
+        config_param = {'oidc_token_url': sentinel.oidc_token_url,
+                        'username': sentinel.username,
+                        'password': sentinel.password,
+                        'client_id': sentinel.client_id,
+                        'client_secret': sentinel.client_secret,
+                        'ssl_ca_cert': "None",
+                        'project_name': sentinel.prj_name,
+                        'type': 'kubernetes'}
+        vim = {}
+        auth_cred = config_param.copy()
+        auth_cred.pop('project_name')
+        auth_cred.pop('type')
+        expected_vim = {'auth_cred': auth_cred,
+                        'vim_project':
+                            {'name': sentinel.prj_name},
+                        'type': 'kubernetes'}
+        vim_utils.args2body_vim(config_param.copy(), vim)
+        self.assertEqual(expected_vim, vim)
+
+    def test_args2body_kubernetes_vim_oidc_no_username(self):
+        config_param = {'oidc_token_url': sentinel.oidc_token_url,
+                        'password': sentinel.password,
+                        'client_id': sentinel.client_id,
+                        'client_secret': sentinel.client_secret,
+                        'ssl_ca_cert': "None",
+                        'project_name': sentinel.prj_name,
+                        'type': 'kubernetes'}
+        vim = {}
+        self.assertRaises(exceptions.TackerClientException,
+                          vim_utils.args2body_vim,
+                          config_param, vim)
+
     def test_args2body_vim_no_project(self):
         config_param = {'username': sentinel.usrname1,
                         'password': sentinel.password1,
