@@ -1049,6 +1049,101 @@ class VnfLCMClient(ClientBase):
         return self.get(path, headers={'Version': '2.0.0'})
 
 
+class VnfFMClient(ClientBase):
+    headers = {'Version': '1.3.0'}
+    vnf_fm_alarms_path = '/vnffm/v1/alarms'
+    vnf_fm_alarm_path = '/vnffm/v1/alarms/%s'
+    vnf_fm_subs_path = '/vnffm/v1/subscriptions'
+    vnf_fm_sub_path = '/vnffm/v1/subscriptions/%s'
+
+    def build_action(self, action):
+        return action
+
+    @APIParamsCall
+    def list_vnf_fm_alarms(self, retrieve_all=True, **_params):
+        vnf_fm_alarms = self.list(
+            "vnf_fm_alarms", self.vnf_fm_alarms_path, retrieve_all,
+            headers=self.headers, **_params)
+        return vnf_fm_alarms
+
+    @APIParamsCall
+    def show_vnf_fm_alarm(self, vnf_fm_alarm_id):
+        return self.get(
+            self.vnf_fm_alarm_path % vnf_fm_alarm_id, headers=self.headers)
+
+    @APIParamsCall
+    def update_vnf_fm_alarm(self, vnf_fm_alarm_id, body):
+        return self.patch(
+            self.vnf_fm_alarm_path % vnf_fm_alarm_id, body=body,
+            headers=self.headers)
+
+    @APIParamsCall
+    def create_vnf_fm_sub(self, body):
+        return self.post(
+            self.vnf_fm_subs_path, body=body, headers=self.headers)
+
+    @APIParamsCall
+    def list_vnf_fm_subs(self, retrieve_all=True, **_params):
+        vnf_fm_subs = self.list("vnf_fm_subs", self.vnf_fm_subs_path,
+                                retrieve_all, headers=self.headers, **_params)
+        return vnf_fm_subs
+
+    @APIParamsCall
+    def show_vnf_fm_sub(self, vnf_fm_sub_id):
+        return self.get(
+            self.vnf_fm_sub_path % vnf_fm_sub_id, headers=self.headers)
+
+    @APIParamsCall
+    def delete_vnf_fm_sub(self, vnf_fm_sub_id):
+        return self.delete(
+            self.vnf_fm_sub_path % vnf_fm_sub_id, headers=self.headers)
+
+
+class VnfPMClient(ClientBase):
+    headers = {'Version': '2.1.0'}
+    vnf_pm_jobs_path = '/vnfpm/v2/pm_jobs'
+    vnf_pm_job_path = '/vnfpm/v2/pm_jobs/%s'
+    vnf_pm_reports_path = '/vnfpm/v2/pm_jobs/%(job_id)s/reports/%(report_id)s'
+
+    def build_action(self, action):
+        return action
+
+    @APIParamsCall
+    def create_vnf_pm_job(self, body):
+        return self.post(
+            self.vnf_pm_jobs_path, body=body, headers=self.headers)
+
+    @APIParamsCall
+    def list_vnf_pm_jobs(self, retrieve_all=True, **_params):
+        vnf_pm_jobs = self.list(
+            "vnf_pm_jobs", self.vnf_pm_jobs_path, retrieve_all,
+            headers=self.headers, **_params)
+        return vnf_pm_jobs
+
+    @APIParamsCall
+    def show_vnf_pm_job(self, vnf_pm_job_id):
+        return self.get(
+            self.vnf_pm_job_path % vnf_pm_job_id, headers=self.headers)
+
+    @APIParamsCall
+    def update_vnf_pm_job(self, vnf_pm_job_id, body):
+        return self.patch(
+            self.vnf_pm_job_path % vnf_pm_job_id, body=body,
+            headers=self.headers)
+
+    @APIParamsCall
+    def delete_vnf_pm_job(self, vnf_pm_job_id):
+        return self.delete(
+            self.vnf_pm_job_path % vnf_pm_job_id, headers=self.headers)
+
+    @APIParamsCall
+    def show_vnf_pm_report(self, vnf_pm_job_id, vnf_pm_report_id):
+        return self.get(
+            self.vnf_pm_reports_path % {
+                'job_id': vnf_pm_job_id, 'report_id': vnf_pm_report_id
+            }, headers=self.headers)
+
+
 class Client(object):
     """Unified interface to interact with multiple applications of tacker service.
 
@@ -1071,6 +1166,8 @@ class Client(object):
     def __init__(self, **kwargs):
         api_version = kwargs.pop('api_version', '1')
         self.vnf_lcm_client = VnfLCMClient(api_version, **kwargs)
+        self.vnf_fm_client = VnfFMClient(**kwargs)
+        self.vnf_pm_client = VnfPMClient(**kwargs)
         self.vnf_package_client = VnfPackageClient(**kwargs)
         self.legacy_client = LegacyClient(**kwargs)
 
@@ -1383,3 +1480,50 @@ class Client(object):
 
     def show_vnf_lcm_versions(self, major_version):
         return self.vnf_lcm_client.show_vnf_lcm_versions(major_version)
+
+    # VnfFMClient methods.
+
+    def list_vnf_fm_alarms(self, retrieve_all=True, **_params):
+        return self.vnf_fm_client.list_vnf_fm_alarms(
+            retrieve_all=retrieve_all, **_params)
+
+    def show_vnf_fm_alarm(self, vnf_fm_alarm_id):
+        return self.vnf_fm_client.show_vnf_fm_alarm(vnf_fm_alarm_id)
+
+    def update_vnf_fm_alarm(self, vnf_fm_alarm_id, body):
+        return self.vnf_fm_client.update_vnf_fm_alarm(vnf_fm_alarm_id, body)
+
+    def create_vnf_fm_sub(self, body):
+        return self.vnf_fm_client.create_vnf_fm_sub(body)
+
+    def list_vnf_fm_subs(self, retrieve_all=True, **_params):
+        return self.vnf_fm_client.list_vnf_fm_subs(
+            retrieve_all=retrieve_all, **_params)
+
+    def show_vnf_fm_sub(self, vnf_fm_sub_id):
+        return self.vnf_fm_client.show_vnf_fm_sub(vnf_fm_sub_id)
+
+    def delete_vnf_fm_sub(self, vnf_fm_sub_id):
+        return self.vnf_fm_client.delete_vnf_fm_sub(vnf_fm_sub_id)
+
+    # VnfPMClient methods.
+
+    def create_vnf_pm_job(self, body):
+        return self.vnf_pm_client.create_vnf_pm_job(body)
+
+    def list_vnf_pm_jobs(self, retrieve_all=True, **_params):
+        return self.vnf_pm_client.list_vnf_pm_jobs(
+            retrieve_all=retrieve_all, **_params)
+
+    def show_vnf_pm_job(self, vnf_pm_job_id):
+        return self.vnf_pm_client.show_vnf_pm_job(vnf_pm_job_id)
+
+    def update_vnf_pm_job(self, vnf_pm_job_id, body):
+        return self.vnf_pm_client.update_vnf_pm_job(vnf_pm_job_id, body)
+
+    def delete_vnf_pm_job(self, vnf_pm_job_id):
+        return self.vnf_pm_client.delete_vnf_pm_job(vnf_pm_job_id)
+
+    def show_vnf_pm_report(self, vnf_pm_job_id, vnf_pm_report_id):
+        return self.vnf_pm_client.show_vnf_pm_report(
+            vnf_pm_job_id, vnf_pm_report_id)

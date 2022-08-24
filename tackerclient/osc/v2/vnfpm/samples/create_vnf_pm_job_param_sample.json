@@ -1,0 +1,36 @@
+{
+    "objectType": "VNFC",
+    "objectInstanceIds": [
+        "object-instance-id-1"
+    ],
+    "subObjectInstanceIds": [
+        "sub-object-instance-id-2"
+    ],
+    "criteria": {
+        "performanceMetric": [
+            "VCpuUsageMeanVnf.object-instance-id-1"
+        ],
+        "performanceMetricGroup": [
+            "VirtualisedComputeResource"
+        ],
+        "collectionPeriod": "500",
+        "reportingPeriod": "1000",
+        "reportingBoundary": "2022/07/25 10:43:55"
+    },
+    "callbackUri": "/nfvo/notify/job",
+    "authentication": {
+        "authType": [
+            "BASIC",
+            "OAUTH2_CLIENT_CREDENTIALS"
+        ],
+        "paramsBasic": {
+            "userName": "nfvo",
+            "password": "nfvopwd"
+        },
+        "paramsOauth2ClientCredentials": {
+            "clientId": "auth_user_name",
+            "clientPassword": "auth_password",
+            "tokenEndpoint": "token_endpoint"
+        }
+    }
+}

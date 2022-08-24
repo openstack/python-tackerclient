@@ -1,0 +1,62 @@
+{
+    "filter": {
+        "vnfInstanceSubscriptionFilter": {
+            "vnfdIds": [
+                "dummy-vnfdId-1"
+            ],
+            "vnfProductsFromProviders": [
+                {
+                    "vnfProvider": "dummy-vnfProvider-1",
+                    "vnfProducts": [
+                        {
+                            "vnfProductName": "dummy-vnfProductName-1-1",
+                            "versions": [
+                                {
+                                    "vnfSoftwareVersion": 1.0,
+                                    "vnfdVersions": [1.0, 2.0]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "vnfInstanceIds": [
+                "dummy-vnfInstanceId-1"
+            ],
+            "vnfInstanceNames": [
+                "dummy-vnfInstanceName-1"
+            ]
+        },
+        "notificationTypes": [
+            "AlarmNotification"
+        ],
+        "faultyResourceTypes": [
+            "COMPUTE"
+        ],
+        "perceivedSeverities": [
+            "WARNING"
+        ],
+        "eventTypes": [
+            "EQUIPMENT_ALARM"
+        ],
+        "probableCauses": [
+            "The server cannot be connected."
+        ]
+    },
+    "callbackUri": "/nfvo/notify/alarm",
+    "authentication": {
+        "authType": [
+            "BASIC",
+            "OAUTH2_CLIENT_CREDENTIALS"
+        ],
+        "paramsBasic": {
+            "userName": "nfvo",
+            "password": "nfvopwd"
+        },
+        "paramsOauth2ClientCredentials": {
+            "clientId": "auth_user_name",
+            "clientPassword": "auth_password",
+            "tokenEndpoint": "token_endpoint"
+        }
+    }
+}
