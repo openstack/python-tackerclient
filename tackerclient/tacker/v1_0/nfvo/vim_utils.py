@@ -63,7 +63,25 @@ def args2body_vim(config_param, vim):
                 message='Project name must be specified in Kubernetes VIM,'
                         'it is namespace in Kubernetes environment',
                 status_code=404)
-        if ('username' in config_param) and ('password' in config_param):
+        if 'oidc_token_url' in config_param:
+            if ('username' not in config_param or
+                    'password' not in config_param or
+                    'client_id' not in config_param):
+                # the username, password, client_id are required.
+                # client_secret is not required when client type is public.
+                raise exceptions.TackerClientException(
+                    message='oidc_token_url must be specified with username,'
+                            ' password, client_id, client_secret(optional).',
+                    status_code=404)
+            vim['auth_cred'] = {
+                'oidc_token_url': config_param.pop('oidc_token_url'),
+                'username': config_param.pop('username'),
+                'password': config_param.pop('password'),
+                'client_id': config_param.pop('client_id')}
+            if 'client_secret' in config_param:
+                vim['auth_cred']['client_secret'] = config_param.pop(
+                    'client_secret')
+        elif ('username' in config_param) and ('password' in config_param):
             vim['auth_cred'] = {
                 'username': config_param.pop('username', ''),
                 'password': config_param.pop('password', '')}
