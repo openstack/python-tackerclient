@@ -11,14 +11,6 @@
       License for the specific language governing permissions and limitations
       under the License.
 
-      Convention for heading levels in Neutron devref:
-      =======  Heading 0 (reserved for the title in a document)
-      -------  Heading 1
-      ~~~~~~~  Heading 2
-      +++++++  Heading 3
-      '''''''  Heading 4
-      (Avoid deeper levels because they do not render well.)
-
 =============
 Command List
 =============
@@ -76,10 +68,32 @@ of individual command can be referred by **openstack help <command-name>**.
    openstack nfv event show                        Show event given the event id.
    openstack nfv event list                        List events of resources.
    openstack vnf package create                    Create a new individual VNF package resource.
+   openstack vnf package delete                    Delete given VNF package(s).
    openstack vnf package list                      List all VNF packages.
    openstack vnf package show                      Show package details.
-   openstack vnf package upload                    Upload a VNF package by providing the address information
-                                                   of the VNF package.
-   openstack vnf package delete                    Delete given VNF package(s).
-
-
+   openstack vnf package upload                    Upload a VNF package.
+   openstack vnf package download                  Download a VNF package.
+   openstack vnf package artifact download         Download a VNF package artifact.
+   openstack vnf package update                    Update a state of a VNF package.
+   openstack vnflcm create                         Create a new VNF instance resource.
+   openstack vnflcm instantiate                    Instantiate a VNF instance.
+   openstack vnflcm list                           List VNF instance.
+   openstack vnflcm show                           Show VNF instance.
+   openstack vnflcm terminate                      Terminate a VNF instance.
+   openstack vnflcm delete                         Delete a VNF instance resource.
+   openstack vnflcm heal                           Heal a VNF instance.
+   openstack vnflcm update                         Update information of a VNF instance.
+   openstack vnflcm scale                          Scale a VNF instance.
+   openstack vnflcm change-ext-conn                Change external VNF connectivity.
+   openstack vnflcm change-vnfpkg                  Change current VNF package.
+   openstack vnflcm op rollback                    Rollback a VNF LCM operation occurrence.
+   openstack vnflcm op retry                       Retry a VNF LCM operation occurrence.
+   openstack vnflcm op fail                        Fail a VNF LCM operation occurrence.
+   openstack vnflcm op list                        List VNF LCM operation occurrence.
+   openstack vnflcm op show                        Show VNF LCM operation occurrence.
+   openstack vnflcm op cancel                      Cancel a VNF LCM operation occurrence.
+   openstack vnflcm versions                       Show VNF LCM API versions.
+   openstack vnflcm subsc create                   Create new subscription.
+   openstack vnflcm subsc delete                   Delete subscription.
+   openstack vnflcm subsc list                     List subscription.
+   openstack vnflcm subsc show                     Show subscription.

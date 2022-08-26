@@ -11,19 +11,12 @@
       License for the specific language governing permissions and limitations
       under the License.
 
-      Convention for heading levels in Neutron devref:
-      =======  Heading 0 (reserved for the title in a document)
-      -------  Heading 1
-      ~~~~~~~  Heading 2
-      +++++++  Heading 3
-      '''''''  Heading 4
-      (Avoid deeper levels because they do not render well.)
-
 =================================
 Python-TackerClient Documentation
 =================================
 
-This is a client for OpenStack NFV MANO (Tacker) API. It provides
+Python-TackerClient is a client for OpenStack NFV MANO (Tacker) API.
+It provides
 :doc:`Python API bindings <reference/index>` (the tackerclient module) and
 :doc:`command-line interface (CLI) <cli/index>`.
 
