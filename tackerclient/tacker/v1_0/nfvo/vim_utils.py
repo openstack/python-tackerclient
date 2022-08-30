@@ -96,6 +96,9 @@ def args2body_vim(config_param, vim):
         ssl_ca_cert = config_param.pop('ssl_ca_cert', '')
         if ssl_ca_cert:
             vim['auth_cred']['ssl_ca_cert'] = ssl_ca_cert
+        extra = config_param.pop('extra', {})
+        if extra:
+            vim['extra'] = extra
 
 
 def validate_auth_url(url):

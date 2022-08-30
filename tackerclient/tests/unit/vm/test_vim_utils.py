@@ -96,6 +96,35 @@ class TestVIMUtils(testtools.TestCase):
         vim_utils.args2body_vim(config_param.copy(), vim)
         self.assertEqual(expected_vim, vim)
 
+    def test_args2body_kubernetes_vim_extra(self):
+        extra_param = {
+            'helm_info': {
+                'masternode_ip': [
+                    '192.168.10.110'
+                ],
+                'masternode_username': 'helm_user',
+                'masternode_password': 'helm_pass'
+            }}
+
+        config_param = {'username': sentinel.usrname1,
+                        'password': sentinel.password1,
+                        'ssl_ca_cert': 'abcxyz',
+                        'project_name': sentinel.prj_name,
+                        'type': 'kubernetes',
+                        'extra': extra_param}
+        vim = {}
+        auth_cred = config_param.copy()
+        auth_cred.pop('project_name')
+        auth_cred.pop('type')
+        auth_cred.pop('extra')
+        expected_vim = {'auth_cred': auth_cred,
+                        'vim_project':
+                            {'name': sentinel.prj_name},
+                        'type': 'kubernetes',
+                        'extra': extra_param}
+        vim_utils.args2body_vim(config_param.copy(), vim)
+        self.assertEqual(expected_vim, vim)
+
     def test_args2body_kubernetes_vim_oidc_no_username(self):
         config_param = {'oidc_token_url': sentinel.oidc_token_url,
                         'password': sentinel.password,
