@@ -11,16 +11,9 @@
       License for the specific language governing permissions and limitations
       under the License.
 
-      Convention for heading levels in Neutron devref:
-      =======  Heading 0 (reserved for the title in a document)
-      -------  Heading 1
-      ~~~~~~~  Heading 2
-      +++++++  Heading 3
-      '''''''  Heading 4
-      (Avoid deeper levels because they do not render well.)
-
 =========
 Reference
 =========
 
-(To be updated)
+- `Tacker API reference <https://docs.openstack.org/api-ref/nfv-orchestration/>`_
+- `Tacker CLI reference <https://docs.openstack.org/tacker/latest/cli/>`_
