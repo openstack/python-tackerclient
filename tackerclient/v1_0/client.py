@@ -16,6 +16,7 @@
 #
 
 import logging
+import re
 import time
 
 import requests
@@ -180,6 +181,8 @@ class ClientBase(object):
         self.format = 'json'
         self.action_prefix = "/v%s" % (self.version)
         self.retry_interval = 1
+        self.rel = None
+        self.params = None
 
     def _handle_fault_response(self, status_code, response_body):
         # Create exception with HTTP status code and message
@@ -245,6 +248,19 @@ class ClientBase(object):
             self.format = 'any'
         else:
             self.format = 'json'
+
+        url = None
+        rel = None
+
+        link = resp.headers.get('Link', None)
+        if link is not None:
+            url = re.findall('<(.*)>', link)[0]
+            rel = re.findall('rel="(.*)"', link)[0]
+
+        if rel == 'next':
+            self.rel = 'next'
+            query_str = urlparse.urlparse(url).query
+            self.params = urlparse.parse_qs(query_str)
 
         status_code = resp.status_code
         if status_code in (requests.codes.ok,
@@ -379,21 +395,23 @@ class ClientBase(object):
             linkrel = 'next'
         next = True
         while next:
+            self.rel = None
             res = self.get(path, headers=headers, params=params)
             yield res
             next = False
             try:
-                # TODO(tpatil): Handle pagination for list data type
-                # once it's supported by tacker.
                 if type(res) is list:
-                    break
-
-                for link in res['%s_links' % collection]:
-                    if link['rel'] == linkrel:
-                        query_str = urlparse.urlparse(link['href']).query
-                        params = urlparse.parse_qs(query_str)
+                    if self.rel == 'next':
+                        params = self.params
                         next = True
-                        break
+
+                else:
+                    for link in res['%s_links' % collection]:
+                        if link['rel'] == linkrel:
+                            query_str = urlparse.urlparse(link['href']).query
+                            params = urlparse.parse_qs(query_str)
+                            next = True
+                            break
             except KeyError:
                 break
 
