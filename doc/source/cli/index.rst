@@ -29,6 +29,8 @@ Operations for ETSI NFV-SOL implementation
 
   vnf_package_commands
   vnflcm_commands
+  vnffm_commands
+  vnfpm_commands
 
 Operations for Legacy implementation
 ------------------------------------

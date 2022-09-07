@@ -97,3 +97,16 @@ of individual command can be referred by **openstack help <command-name>**.
    openstack vnflcm subsc delete                   Delete subscription.
    openstack vnflcm subsc list                     List subscription.
    openstack vnflcm subsc show                     Show subscription.
+   openstack vnffm alarm list                      List alarm.
+   openstack vnffm alarm show                      Show alarm.
+   openstack vnffm alarm update                    Update alarm.
+   openstack vnffm sub create                      Create FM subscription.
+   openstack vnffm sub list                        List FM subscription.
+   openstack vnffm sub show                        Show FM subscription.
+   openstack vnffm sub delete                      Delete FM subscription.
+   openstack vnfpm job create                      Create PM job.
+   openstack vnfpm job list                        List PM job.
+   openstack vnfpm job show                        Show PM job.
+   openstack vnfpm job update                      Update PM job.
+   openstack vnfpm job delete                      Delete PM job.
+   openstack vnfpm report show                     Show PM report.
