@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import copy
 import filecmp
 import os
 import shutil
@@ -195,6 +196,51 @@ class TestListVnfPackage(TestVnfPackage):
             self.list_vnf_package.get_attributes(**kwargs), long_listing=True)
 
         for vnf_package_obj in vnf_packages['vnf_packages']:
+            expected_data.append(vnf_package_fakes.get_vnf_package_data(
+                vnf_package_obj, columns=columns, list_action=True, **kwargs))
+
+        self.assertCountEqual(self.get_list_columns(**kwargs), actual_columns)
+        self.assertListItemsEqual(expected_data, list(data))
+
+    def test_take_action_with_pagination(self):
+        next_links_num = 3
+        parsed_args = self.check_parser(self.list_vnf_package, [], [])
+
+        path = os.path.join(self.url, '/vnfpkgm/v1/vnf_packages?')
+
+        links = [0] * next_links_num
+        link_headers = [0] * next_links_num
+
+        for i in range(next_links_num):
+            links[i] = (
+                '{base_url}?nextpage_opaque_marker={vnf_package_id}'.format(
+                    base_url=path,
+                    vnf_package_id=self._vnf_packages
+                    ['vnf_packages'][i]['id']))
+            link_headers[i] = copy.deepcopy(self.header)
+            link_headers[i]['Link'] = '<{link_url}>; rel="next"'.format(
+                link_url=links[i])
+
+        self.requests_mock.register_uri(
+            'GET', path, json=[self._vnf_packages['vnf_packages'][0]],
+            headers=link_headers[0])
+        self.requests_mock.register_uri(
+            'GET', links[0], json=[self._vnf_packages['vnf_packages'][1]],
+            headers=link_headers[1])
+        self.requests_mock.register_uri(
+            'GET', links[1], json=[self._vnf_packages['vnf_packages'][2]],
+            headers=link_headers[2])
+        self.requests_mock.register_uri(
+            'GET', links[2], json=[], headers=self.header)
+
+        actual_columns, data = self.list_vnf_package.take_action(parsed_args)
+
+        kwargs = {}
+        headers, columns = tacker_osc_utils.get_column_definitions(
+            self.list_vnf_package.get_attributes(**kwargs), long_listing=True)
+
+        expected_data = []
+        for vnf_package_obj in self._vnf_packages['vnf_packages']:
             expected_data.append(vnf_package_fakes.get_vnf_package_data(
                 vnf_package_obj, columns=columns, list_action=True, **kwargs))
 
