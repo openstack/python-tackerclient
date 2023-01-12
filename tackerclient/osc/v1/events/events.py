@@ -17,6 +17,7 @@
 from osc_lib.command import command
 from osc_lib import utils
 
+from tackerclient.common import utils as tacker_common_utils
 from tackerclient.i18n import _
 from tackerclient.osc import sdk_utils
 from tackerclient.osc import utils as tacker_osc_utils
@@ -55,6 +56,7 @@ class ShowEvent(command.ShowOne):
         return parser
 
     def take_action(self, parsed_args):
+        tacker_common_utils.deprecate_legacy_warning()
         client = self.app.client_manager.tackerclient
         obj_id = tackerV10.find_resourceid_by_name_or_id(
             client, _EVENT, parsed_args.event)
@@ -93,6 +95,7 @@ class ListEvent(command.Lister):
         return parser
 
     def take_action(self, parsed_args):
+        tacker_common_utils.deprecate_legacy_warning()
         client = self.app.client_manager.tackerclient
         _params = {}
         if parsed_args.id:

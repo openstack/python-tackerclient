@@ -20,6 +20,7 @@ from osc_lib.command import command
 from osc_lib import utils
 
 from tackerclient.common import exceptions
+from tackerclient.common import utils as tacker_common_utils
 from tackerclient.i18n import _
 from tackerclient.osc import sdk_utils
 from tackerclient.osc import utils as tacker_osc_utils
@@ -133,6 +134,7 @@ class CreateNS(command.ShowOne):
         return body
 
     def take_action(self, parsed_args):
+        tacker_common_utils.deprecate_legacy_warning()
         client = self.app.client_manager.tackerclient
         ns = client.create_ns(self.args2body(parsed_args))
         display_columns, columns = _get_columns(ns[_NS])
@@ -174,6 +176,7 @@ class DeleteNS(command.Command):
         return body
 
     def take_action(self, parsed_args):
+        tacker_common_utils.deprecate_legacy_warning()
         client = self.app.client_manager.tackerclient
         failure = False
         deleted_ids = []
@@ -217,6 +220,7 @@ class ListNS(command.Lister):
         return parser
 
     def take_action(self, parsed_args):
+        tacker_common_utils.deprecate_legacy_warning()
         client = self.app.client_manager.tackerclient
         data = client.list_nss()
         headers, columns = tacker_osc_utils.get_column_definitions(
@@ -240,6 +244,7 @@ class ShowNS(command.ShowOne):
         return parser
 
     def take_action(self, parsed_args):
+        tacker_common_utils.deprecate_legacy_warning()
         client = self.app.client_manager.tackerclient
         obj_id = tackerV10.find_resourceid_by_name_or_id(
             client, _NS, parsed_args.ns)

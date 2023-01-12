@@ -20,6 +20,7 @@ from osc_lib.command import command
 from osc_lib import utils
 
 from tackerclient.common import exceptions
+from tackerclient.common import utils as tacker_common_utils
 from tackerclient.i18n import _
 from tackerclient.osc import sdk_utils
 from tackerclient.osc import utils as tacker_osc_utils
@@ -87,6 +88,7 @@ class CreateVNFFGD(command.ShowOne):
         return body
 
     def take_action(self, parsed_args):
+        tacker_common_utils.deprecate_legacy_warning()
         client = self.app.client_manager.tackerclient
         vnffgd = client.create_vnffgd(self.args2body(parsed_args))
         display_columns, columns = _get_columns(vnffgd[_VNFFGD])
@@ -110,6 +112,7 @@ class DeleteVNFFGD(command.Command):
         return parser
 
     def take_action(self, parsed_args):
+        tacker_common_utils.deprecate_legacy_warning()
         client = self.app.client_manager.tackerclient
         failure = False
         deleted_ids = []
@@ -158,6 +161,7 @@ class ListVNFFGD(command.Lister):
         return parser
 
     def take_action(self, parsed_args):
+        tacker_common_utils.deprecate_legacy_warning()
         client = self.app.client_manager.tackerclient
         data = client.list_vnffgds()
         headers, columns = tacker_osc_utils.get_column_definitions(
@@ -181,6 +185,7 @@ class ShowVNFFGD(command.ShowOne):
         return parser
 
     def take_action(self, parsed_args):
+        tacker_common_utils.deprecate_legacy_warning()
         client = self.app.client_manager.tackerclient
         obj_id = tackerV10.find_resourceid_by_name_or_id(
             client, _VNFFGD, parsed_args.vnffgd)
@@ -205,6 +210,7 @@ class ShowTemplateVNFFGD(command.ShowOne):
         return parser
 
     def take_action(self, parsed_args):
+        tacker_common_utils.deprecate_legacy_warning()
         client = self.app.client_manager.tackerclient
         obj_id = tackerV10.find_resourceid_by_name_or_id(
             client, _VNFFGD, parsed_args.vnffgd)

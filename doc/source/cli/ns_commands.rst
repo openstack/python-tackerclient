@@ -11,9 +11,14 @@
       License for the specific language governing permissions and limitations
       under the License.
 
-==============================================
-Network Service Descriptor Management commands
-==============================================
+===================================
+Network Service Management commands
+===================================
+
+.. warning::
+    Network Service Management commands are deprecated
+    and will be removed in the first major release after the Tacker server
+    version 9.0.0 (2023.1 Antelope release).
 
 .. autoprogram-cliff:: openstack.tackerclient.v1
    :command: ns *

@@ -20,6 +20,7 @@ from osc_lib.command import command
 from osc_lib import utils
 
 from tackerclient.common import exceptions
+from tackerclient.common import utils as tacker_common_utils
 from tackerclient.i18n import _
 from tackerclient.osc import sdk_utils
 from tackerclient.osc import utils as tacker_osc_utils
@@ -169,6 +170,7 @@ class CreateVNFFG(command.ShowOne):
         return body
 
     def take_action(self, parsed_args):
+        tacker_common_utils.deprecate_legacy_warning()
         client = self.app.client_manager.tackerclient
         vnffg = client.create_vnffg(self.args2body(parsed_args))
         display_columns, columns = _get_columns(vnffg[_VNFFG])
@@ -206,6 +208,7 @@ class DeleteVNFFG(command.Command):
         return body
 
     def take_action(self, parsed_args):
+        tacker_common_utils.deprecate_legacy_warning()
         client = self.app.client_manager.tackerclient
         failure = False
         deleted_ids = []
@@ -316,6 +319,7 @@ class UpdateVNFFG(command.ShowOne):
         return body
 
     def take_action(self, parsed_args):
+        tacker_common_utils.deprecate_legacy_warning()
         client = self.app.client_manager.tackerclient
         obj_id = tackerV10.find_resourceid_by_name_or_id(
             client, _VNFFG, parsed_args.vnffg)
@@ -341,6 +345,7 @@ class ListVNFFG(command.Lister):
         return parser
 
     def take_action(self, parsed_args):
+        tacker_common_utils.deprecate_legacy_warning()
         client = self.app.client_manager.tackerclient
         data = client.list_vnffgs()
         headers, columns = tacker_osc_utils.get_column_definitions(
@@ -364,6 +369,7 @@ class ShowVNFFG(command.ShowOne):
         return parser
 
     def take_action(self, parsed_args):
+        tacker_common_utils.deprecate_legacy_warning()
         client = self.app.client_manager.tackerclient
         obj_id = tackerV10.find_resourceid_by_name_or_id(
             client, _VNFFG, parsed_args.vnffg)
@@ -387,6 +393,7 @@ class ListNFP(command.Lister):
         return parser
 
     def take_action(self, parsed_args):
+        tacker_common_utils.deprecate_legacy_warning()
         client = self.app.client_manager.tackerclient
         _params = {}
         if parsed_args.vnffg_id:
@@ -423,6 +430,7 @@ class ShowNFP(command.ShowOne):
         return parser
 
     def take_action(self, parsed_args):
+        tacker_common_utils.deprecate_legacy_warning()
         client = self.app.client_manager.tackerclient
         obj_id = tackerV10.find_resourceid_by_name_or_id(
             client, _NFP, parsed_args.nfp)
@@ -448,6 +456,7 @@ class ListFC(command.Lister):
         return parser
 
     def take_action(self, parsed_args):
+        tacker_common_utils.deprecate_legacy_warning()
         client = self.app.client_manager.tackerclient
         _params = {}
         if parsed_args.nfp_id:
@@ -487,6 +496,7 @@ class ShowFC(command.ShowOne):
         return parser
 
     def take_action(self, parsed_args):
+        tacker_common_utils.deprecate_legacy_warning()
         client = self.app.client_manager.tackerclient
         obj_id = tackerV10.find_resourceid_by_name_or_id(
             client, _FC, parsed_args.classifier)
@@ -513,6 +523,7 @@ class ListSFC(command.Lister):
         return parser
 
     def take_action(self, parsed_args):
+        tacker_common_utils.deprecate_legacy_warning()
         client = self.app.client_manager.tackerclient
         _params = {}
         if parsed_args.nfp_id:
@@ -550,6 +561,7 @@ class ShowSFC(command.ShowOne):
         return parser
 
     def take_action(self, parsed_args):
+        tacker_common_utils.deprecate_legacy_warning()
         client = self.app.client_manager.tackerclient
         obj_id = tackerV10.find_resourceid_by_name_or_id(
             client, _SFC, parsed_args.sfc)
