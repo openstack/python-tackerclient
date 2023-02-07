@@ -13,9 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import json
 import logging
-import os
 
 from osc_lib.command import command
 from osc_lib import utils
@@ -56,32 +54,6 @@ def _get_columns(vnffm_sub_obj):
         vnffm_sub_obj, column_map)
 
 
-def jsonfile2body(file_path):
-
-    if file_path is None:
-        msg = _("File %s does not exist")
-        reason = msg % file_path
-        raise exceptions.InvalidInput(reason=reason)
-
-    if os.access(file_path, os.R_OK) is False:
-        msg = _("User does not have read privileges to it")
-        raise exceptions.InvalidInput(reason=msg)
-
-    try:
-        with open(file_path) as f:
-            body = json.load(f)
-    except (IOError, ValueError) as ex:
-        msg = _("Failed to load parameter file. Error: %s")
-        reason = msg % ex
-        raise exceptions.InvalidInput(reason=reason)
-
-    if not body:
-        reason = _('The parameter file is empty')
-        raise exceptions.EmptyInput(reason=reason)
-
-    return body
-
-
 class CreateVnfFmSub(command.ShowOne):
     _description = _("Create a new VNF FM subscription")
 
@@ -97,7 +69,7 @@ class CreateVnfFmSub(command.ShowOne):
     def take_action(self, parsed_args):
         client = self.app.client_manager.tackerclient
         vnf_fm_sub = client.create_vnf_fm_sub(
-            jsonfile2body(parsed_args.request_file))
+            tacker_osc_utils.jsonfile2body(parsed_args.request_file))
         display_columns, columns = _get_columns(vnf_fm_sub)
         data = utils.get_item_properties(
             sdk_utils.DictModel(vnf_fm_sub), columns,

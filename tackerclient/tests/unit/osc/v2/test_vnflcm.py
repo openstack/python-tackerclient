@@ -121,9 +121,9 @@ class TestChangeVnfPkgVnfLcm(test_vnflcm.TestVnfLcm):
             self.change_vnfpkg_vnf_lcm.take_action,
             parsed_args)
 
-        expected_msg = ("Invalid input: File %s does not exist "
-                        "or user does not have read privileges to it")
-        self.assertEqual(expected_msg % sample_param_file, str(ex))
+        expected_msg = ("Invalid input: "
+                        "User does not have read privileges to it")
+        self.assertEqual(expected_msg, str(ex))
 
     @mock.patch("os.open")
     @mock.patch("os.access")
