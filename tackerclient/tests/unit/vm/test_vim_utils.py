@@ -43,6 +43,28 @@ class TestVIMUtils(testtools.TestCase):
         vim_utils.args2body_vim(config_param.copy(), vim)
         self.assertEqual(expected_vim, vim)
 
+    def test_args2body_vim_extra(self):
+        auth_cred = {'username': sentinel.usrname1,
+                     'password': sentinel.password1,
+                     'user_domain_name': sentinel.user_domain.name,
+                     'cert_verify': 'True'}
+        config_param = {'project_name': sentinel.prj_name,
+                        'project_domain_name': sentinel.prj_domain_name1,
+                        'type': 'openstack',
+                        'extra': {'area': 'area_A@region_A'},
+                        **auth_cred}
+        vim = {}
+
+        expected_vim = {'auth_cred': auth_cred,
+                        'vim_project':
+                            {'name': sentinel.prj_name,
+                             'project_domain_name': sentinel.prj_domain_name1},
+                        'type': 'openstack',
+                        'extra': {'area': 'area_A@region_A'}}
+
+        vim_utils.args2body_vim(config_param.copy(), vim)
+        self.assertEqual(expected_vim, vim)
+
     def test_args2body_kubernetes_vim(self):
         config_param = {'username': sentinel.usrname1,
                         'password': sentinel.password1,
