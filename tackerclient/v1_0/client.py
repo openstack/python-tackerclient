@@ -1104,6 +1104,8 @@ class VnfPMClient(ClientBase):
     vnf_pm_jobs_path = '/vnfpm/v2/pm_jobs'
     vnf_pm_job_path = '/vnfpm/v2/pm_jobs/%s'
     vnf_pm_reports_path = '/vnfpm/v2/pm_jobs/%(job_id)s/reports/%(report_id)s'
+    vnf_pm_thresholds_path = '/vnfpm/v2/thresholds'
+    vnf_pm_threshold_path = '/vnfpm/v2/thresholds/%s'
 
     def build_action(self, action):
         return action
@@ -1142,6 +1144,35 @@ class VnfPMClient(ClientBase):
             self.vnf_pm_reports_path % {
                 'job_id': vnf_pm_job_id, 'report_id': vnf_pm_report_id
             }, headers=self.headers)
+
+    @APIParamsCall
+    def create_vnf_pm_threshold(self, body):
+        return self.post(
+            self.vnf_pm_thresholds_path, body=body, headers=self.headers)
+
+    @APIParamsCall
+    def list_vnf_pm_thresholds(self, retrieve_all=True, **_params):
+        return self.list(
+            "vnf_pm_thresholds", self.vnf_pm_thresholds_path, retrieve_all,
+            headers=self.headers, **_params)
+
+    @APIParamsCall
+    def show_vnf_pm_threshold(self, vnf_pm_threshold_id):
+        return self.get(
+            self.vnf_pm_threshold_path % vnf_pm_threshold_id,
+            headers=self.headers)
+
+    @APIParamsCall
+    def update_vnf_pm_threshold(self, vnf_pm_threshold_id, body):
+        return self.patch(
+            self.vnf_pm_threshold_path % vnf_pm_threshold_id, body=body,
+            headers=self.headers)
+
+    @APIParamsCall
+    def delete_vnf_pm_threshold(self, vnf_pm_threshold_id):
+        return self.delete(
+            self.vnf_pm_threshold_path % vnf_pm_threshold_id,
+            headers=self.headers)
 
 
 class Client(object):
@@ -1527,3 +1558,20 @@ class Client(object):
     def show_vnf_pm_report(self, vnf_pm_job_id, vnf_pm_report_id):
         return self.vnf_pm_client.show_vnf_pm_report(
             vnf_pm_job_id, vnf_pm_report_id)
+
+    def create_vnf_pm_threshold(self, body):
+        return self.vnf_pm_client.create_vnf_pm_threshold(body)
+
+    def list_vnf_pm_thresholds(self, retrieve_all=True, **_params):
+        return self.vnf_pm_client.list_vnf_pm_thresholds(
+            retrieve_all=retrieve_all, **_params)
+
+    def show_vnf_pm_threshold(self, vnf_pm_threshold_id):
+        return self.vnf_pm_client.show_vnf_pm_threshold(vnf_pm_threshold_id)
+
+    def update_vnf_pm_threshold(self, vnf_pm_threshold_id, body):
+        return self.vnf_pm_client.update_vnf_pm_threshold(
+            vnf_pm_threshold_id, body)
+
+    def delete_vnf_pm_threshold(self, vnf_pm_threshold_id):
+        return self.vnf_pm_client.delete_vnf_pm_threshold(vnf_pm_threshold_id)

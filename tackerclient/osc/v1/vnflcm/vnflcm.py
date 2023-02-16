@@ -13,9 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import json
 import logging
-import os
 import time
 
 from osc_lib.command import command
@@ -113,7 +111,7 @@ class CreateVnfLcm(command.ShowOne):
         body = {}
 
         if file_path:
-            return jsonfile2body(file_path)
+            return tacker_osc_utils.jsonfile2body(file_path)
 
         body['vnfdId'] = parsed_args.vnfd_id
 
@@ -184,29 +182,6 @@ class ListVnfLcm(command.Lister):
                 ) for s in vnf_instances))
 
 
-def jsonfile2body(file_path):
-
-    if file_path is not None and os.access(file_path, os.R_OK) is False:
-        msg = _("File %s does not exist or user does not have read "
-                "privileges to it")
-        reason = msg % file_path
-        raise exceptions.InvalidInput(reason=reason)
-
-    try:
-        with open(file_path) as f:
-            body = json.load(f)
-    except (IOError, ValueError) as ex:
-        msg = _("Failed to load parameter file. Error: %s")
-        reason = msg % ex
-        raise exceptions.InvalidInput(reason=reason)
-
-    if not body:
-        reason = _('The parameter file is empty')
-        raise exceptions.InvalidInput(reason=reason)
-
-    return body
-
-
 class InstantiateVnfLcm(command.Command):
     _description = _("Instantiate a VNF Instance")
 
@@ -226,7 +201,7 @@ class InstantiateVnfLcm(command.Command):
     def take_action(self, parsed_args):
         client = self.app.client_manager.tackerclient
         result = client.instantiate_vnf_instance(
-            parsed_args.vnf_instance, jsonfile2body(
+            parsed_args.vnf_instance, tacker_osc_utils.jsonfile2body(
                 parsed_args.instantiation_request_file))
         if not result:
             print((_('Instantiate request for VNF Instance %(id)s has been'
@@ -271,7 +246,8 @@ class HealVnfLcm(command.Command):
         if parsed_args.vnfc_instance:
             body['vnfcInstanceId'] = parsed_args.vnfc_instance
         if parsed_args.additional_param_file:
-            body.update(jsonfile2body(parsed_args.additional_param_file))
+            body.update(tacker_osc_utils.jsonfile2body(
+                parsed_args.additional_param_file))
 
         return body
 
@@ -461,7 +437,7 @@ class UpdateVnfLcm(command.Command):
         body = {}
 
         if file_path:
-            return jsonfile2body(file_path)
+            return tacker_osc_utils.jsonfile2body(file_path)
 
         return body
 
@@ -535,7 +511,8 @@ class ScaleVnfLcm(command.Command):
             body['numberOfSteps'] = parsed_args.number_of_steps
 
         if parsed_args.additional_param_file:
-            body.update(jsonfile2body(parsed_args.additional_param_file))
+            body.update(tacker_osc_utils.jsonfile2body(
+                parsed_args.additional_param_file))
 
         return body
 
@@ -574,7 +551,7 @@ class ChangeExtConnVnfLcm(command.Command):
     def take_action(self, parsed_args):
         client = self.app.client_manager.tackerclient
         result = client.change_ext_conn_vnf_instance(
-            parsed_args.vnf_instance, jsonfile2body(
+            parsed_args.vnf_instance, tacker_osc_utils.jsonfile2body(
                 parsed_args.request_file))
         if not result:
             print((_('Change External VNF Connectivity for VNF Instance %s '
@@ -601,7 +578,7 @@ class ChangeVnfPkgVnfLcm(command.Command):
     def take_action(self, parsed_args):
         client = self.app.client_manager.tackerclient
         result = client.change_vnfpkg_vnf_instance(
-            parsed_args.vnf_instance, jsonfile2body(
+            parsed_args.vnf_instance, tacker_osc_utils.jsonfile2body(
                 parsed_args.request_file))
         if not result:
             print((_('Change Current VNF Package for VNF Instance %s '

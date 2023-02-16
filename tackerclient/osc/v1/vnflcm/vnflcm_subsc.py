@@ -13,9 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import json
 import logging
-import os
 
 from osc_lib.command import command
 from osc_lib import utils
@@ -49,29 +47,6 @@ def _get_columns(lccn_subsc_obj):
                                                            column_map)
 
 
-def jsonfile2body(file_path):
-
-    if file_path is not None and os.access(file_path, os.R_OK) is False:
-        msg = _("File %s does not exist or user does not have read "
-                "privileges to it")
-        reason = msg % file_path
-        raise exceptions.InvalidInput(reason=reason)
-
-    try:
-        with open(file_path) as f:
-            body = json.load(f)
-    except (IOError, ValueError) as ex:
-        msg = _("Failed to load parameter file. Error: %s")
-        reason = msg % ex
-        raise exceptions.InvalidInput(reason=reason)
-
-    if not body:
-        reason = _('The parameter file is empty')
-        raise exceptions.InvalidInput(reason=reason)
-
-    return body
-
-
 class CreateLccnSubscription(command.ShowOne):
     _description = _("Create a new Lccn Subscription")
 
@@ -86,7 +61,7 @@ class CreateLccnSubscription(command.ShowOne):
     def take_action(self, parsed_args):
         client = self.app.client_manager.tackerclient
         subsc = client.create_lccn_subscription(
-            jsonfile2body(parsed_args.create_request_file))
+            tacker_osc_utils.jsonfile2body(parsed_args.create_request_file))
         display_columns, columns = _get_columns(subsc)
         data = utils.get_item_properties(sdk_utils.DictModel(subsc),
                                          columns, formatters=_FORMATTERS,

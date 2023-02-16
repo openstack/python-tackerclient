@@ -20,7 +20,9 @@ Stuffs specific to tackerclient OSC plugin should not be added
 to this module. They should go to tackerclient.osc.v1.utils.
 """
 
+import json
 import operator
+import os
 
 from cliff import columns as cliff_columns
 from keystoneclient import exceptions as identity_exc
@@ -29,6 +31,7 @@ from keystoneclient.v3 import projects
 from osc_lib import utils
 from oslo_serialization import jsonutils
 
+from tackerclient.common import exceptions
 from tackerclient.i18n import _
 
 
@@ -212,3 +215,29 @@ class FormatComplexDataColumn(cliff_columns.FormattableColumn):
 
     def human_readable(self):
         return format_dict_with_indention(self._value)
+
+
+def jsonfile2body(file_path):
+
+    if file_path is None:
+        msg = _("File %s does not exist")
+        reason = msg % file_path
+        raise exceptions.InvalidInput(reason=reason)
+
+    if os.access(file_path, os.R_OK) is False:
+        msg = _("User does not have read privileges to it")
+        raise exceptions.InvalidInput(reason=msg)
+
+    try:
+        with open(file_path) as f:
+            body = json.load(f)
+    except (IOError, ValueError) as ex:
+        msg = _("Failed to load parameter file. Error: %s")
+        reason = msg % ex
+        raise exceptions.InvalidInput(reason=reason)
+
+    if not body:
+        reason = _('The parameter file is empty')
+        raise exceptions.EmptyInput(reason=reason)
+
+    return body

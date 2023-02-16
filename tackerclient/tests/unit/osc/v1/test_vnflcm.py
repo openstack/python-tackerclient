@@ -297,9 +297,9 @@ class TestInstantiateVnfLcm(TestVnfLcm):
                                self.instantiate_vnf_lcm.take_action,
                                parsed_args)
 
-        expected_msg = ("Invalid input: File %s does not exist "
-                        "or user does not have read privileges to it")
-        self.assertEqual(expected_msg % sample_param_file, str(ex))
+        expected_msg = ("Invalid input: "
+                        "User does not have read privileges to it")
+        self.assertEqual(expected_msg, str(ex))
 
     @mock.patch("os.open")
     @mock.patch("os.access")
@@ -403,9 +403,9 @@ class TestHealVnfLcm(TestVnfLcm):
         ex = self.assertRaises(exceptions.InvalidInput,
                                self.heal_vnf_lcm.take_action, parsed_args)
 
-        expected_msg = ("Invalid input: File %s does not exist "
-                        "or user does not have read privileges to it")
-        self.assertEqual(expected_msg % sample_param_file, str(ex))
+        expected_msg = ("Invalid input: "
+                        "User does not have read privileges to it")
+        self.assertEqual(expected_msg, str(ex))
 
 
 @ddt.ddt
@@ -774,9 +774,9 @@ class TestScaleVnfLcm(TestVnfLcm):
         ex = self.assertRaises(exceptions.InvalidInput,
                                self.scale_vnf_lcm.take_action, parsed_args)
 
-        expected_msg = ("Invalid input: File %s does not exist "
-                        "or user does not have read privileges to it")
-        self.assertEqual(expected_msg % sample_param_file, str(ex))
+        expected_msg = ("Invalid input: "
+                        "User does not have read privileges to it")
+        self.assertEqual(expected_msg, str(ex))
 
     @ddt.data('SCALE_IN', 'SCALE_OUT')
     def test_take_action_vnf_instance_not_found(self, scale_type):
@@ -888,9 +888,9 @@ class TestChangeExtConnVnfLcm(TestVnfLcm):
             self.change_ext_conn_vnf_lcm.take_action,
             parsed_args)
 
-        expected_msg = ("Invalid input: File %s does not exist "
-                        "or user does not have read privileges to it")
-        self.assertEqual(expected_msg % sample_param_file, str(ex))
+        expected_msg = ("Invalid input: "
+                        "User does not have read privileges to it")
+        self.assertEqual(expected_msg, str(ex))
 
     @mock.patch("os.open")
     @mock.patch("os.access")

@@ -110,3 +110,8 @@ of individual command can be referred by **openstack help <command-name>**.
    openstack vnfpm job update                      Update PM job.
    openstack vnfpm job delete                      Delete PM job.
    openstack vnfpm report show                     Show PM report.
+   openstack vnfpm threshold create                Create PM threshold.
+   openstack vnfpm threshold list                  List PM threshold.
+   openstack vnfpm threshold show                  Show PM threshold.
+   openstack vnfpm threshold update                Update PM threshold.
+   openstack vnfpm threshold delete                Delete PM threshold.
