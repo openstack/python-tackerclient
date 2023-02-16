@@ -157,25 +157,24 @@ class TestShowVnfLcm(TestVnfLcm):
 
 class TestListVnfLcm(TestVnfLcm):
 
-    vnf_instances = vnflcm_fakes.create_vnf_instances(count=3)
-
     def setUp(self):
         super(TestListVnfLcm, self).setUp()
         self.list_vnf_instance = vnflcm.ListVnfLcm(
             self.app, self.app_args, cmd_name='vnflcm list')
 
     def test_take_action(self):
+        vnf_instances = vnflcm_fakes.create_vnf_instances(count=3)
         parsed_args = self.check_parser(self.list_vnf_instance, [], [])
         self.requests_mock.register_uri(
             'GET', os.path.join(self.url, 'vnflcm/v1/vnf_instances'),
-            json=self.vnf_instances, headers=self.header)
+            json=vnf_instances, headers=self.header)
         actual_columns, data = self.list_vnf_instance.take_action(parsed_args)
 
         headers, columns = tacker_osc_utils.get_column_definitions(
             vnflcm._attr_map, long_listing=True)
 
         expected_data = []
-        for vnf_instance_obj in self.vnf_instances:
+        for vnf_instance_obj in vnf_instances:
             expected_data.append(vnflcm_fakes.get_vnflcm_data(
                 vnf_instance_obj, columns=columns, list_action=True))
 
@@ -184,6 +183,7 @@ class TestListVnfLcm(TestVnfLcm):
         self.assertCountEqual(expected_data, list(data))
 
     def test_take_action_with_pagination(self):
+        vnf_instances = vnflcm_fakes.create_vnf_instances(count=3)
         next_links_num = 3
         parsed_args = self.check_parser(self.list_vnf_instance, [], [])
         path = os.path.join(self.url, 'vnflcm/v1/vnf_instances')
@@ -195,18 +195,18 @@ class TestListVnfLcm(TestVnfLcm):
             links[i] = (
                 '{base_url}?nextpage_opaque_marker={vnf_instance_id}'.format(
                     base_url=path,
-                    vnf_instance_id=self.vnf_instances[i]['id']))
+                    vnf_instance_id=vnf_instances[i]['id']))
             link_headers[i] = copy.deepcopy(self.header)
             link_headers[i]['Link'] = '<{link_url}>; rel="next"'.format(
                 link_url=links[i])
 
         self.requests_mock.register_uri(
-            'GET', path, json=[self.vnf_instances[0]], headers=link_headers[0])
+            'GET', path, json=[vnf_instances[0]], headers=link_headers[0])
         self.requests_mock.register_uri(
-            'GET', links[0], json=[self.vnf_instances[1]],
+            'GET', links[0], json=[vnf_instances[1]],
             headers=link_headers[1])
         self.requests_mock.register_uri(
-            'GET', links[1], json=[self.vnf_instances[2]],
+            'GET', links[1], json=[vnf_instances[2]],
             headers=link_headers[2])
         self.requests_mock.register_uri(
             'GET', links[2], json=[], headers=self.header)
@@ -217,7 +217,7 @@ class TestListVnfLcm(TestVnfLcm):
             vnflcm._attr_map, long_listing=True)
 
         expected_data = []
-        for vnf_instance_obj in self.vnf_instances:
+        for vnf_instance_obj in vnf_instances:
             expected_data.append(vnflcm_fakes.get_vnflcm_data(
                 vnf_instance_obj, columns=columns, list_action=True))
 

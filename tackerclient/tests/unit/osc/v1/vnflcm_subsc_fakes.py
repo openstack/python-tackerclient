@@ -154,23 +154,24 @@ def get_subscription_data(subscription, list_action=False, columns=None):
     :return:
         A tuple object sorted based on the name of the columns.
     """
+    subsc = subscription.copy()
     complex_attributes = ['filter', '_links']
     for attribute in complex_attributes:
-        if subscription.get(attribute):
-            subscription.update(
+        if subsc.get(attribute):
+            subsc.update(
                 {attribute: tacker_osc_utils.FormatComplexDataColumn(
-                    subscription[attribute])})
+                    subsc[attribute])})
 
     if list_action:
         for item in ['filter', '_links']:
-            subscription.pop(item)
+            subsc.pop(item)
 
     # return the list of data as per column order
     if columns:
-        return tuple([subscription[key] for key in columns])
+        return tuple([subsc[key] for key in columns])
 
-    return tuple([subscription[key] for key in sorted(
-        subscription.keys())])
+    return tuple([subsc[key] for key in sorted(
+        subsc.keys())])
 
 
 def create_subscriptions(count=2):

@@ -121,23 +121,24 @@ def get_vnflcm_data(vnf_instance, list_action=False, columns=None):
     :return:
         A tuple object sorted based on the name of the columns.
     """
+    vnf = vnf_instance.copy()
     complex_attributes = ['vimConnectionInfo', 'instantiatedVnfInfo', '_links']
     for attribute in complex_attributes:
-        if vnf_instance.get(attribute):
-            vnf_instance.update(
+        if vnf.get(attribute):
+            vnf.update(
                 {attribute: tacker_osc_utils.FormatComplexDataColumn(
-                    vnf_instance[attribute])})
+                    vnf[attribute])})
 
     if list_action:
         for item in ['vnfInstanceDescription', 'vnfdVersion']:
-            vnf_instance.pop(item)
+            vnf.pop(item)
 
     # return the list of data as per column order
     if columns:
-        return tuple([vnf_instance[key] for key in columns])
+        return tuple([vnf[key] for key in columns])
 
-    return tuple([vnf_instance[key] for key in sorted(
-        vnf_instance.keys())])
+    return tuple([vnf[key] for key in sorted(
+        vnf.keys())])
 
 
 def create_vnf_instances(count=2):
