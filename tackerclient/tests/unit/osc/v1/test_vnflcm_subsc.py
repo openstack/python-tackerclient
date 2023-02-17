@@ -74,25 +74,24 @@ class TestCreateLccnSubscription(test_vnflcm.TestVnfLcm):
 
 class TestListLccnSubscription(test_vnflcm.TestVnfLcm):
 
-    subscriptions = vnflcm_subsc_fakes.create_subscriptions(count=3)
-
     def setUp(self):
         super(TestListLccnSubscription, self).setUp()
         self.list_subscription = vnflcm_subsc.ListLccnSubscription(
             self.app, self.app_args, cmd_name='vnflcm subsc list')
 
     def test_take_action(self):
+        subscriptions = vnflcm_subsc_fakes.create_subscriptions(count=3)
         parsed_args = self.check_parser(self.list_subscription, [], [])
         self.requests_mock.register_uri(
             'GET', os.path.join(self.url, 'vnflcm/v1/subscriptions'),
-            json=self.subscriptions, headers=self.header)
+            json=subscriptions, headers=self.header)
         actual_columns, data = self.list_subscription.take_action(parsed_args)
 
         headers, columns = tacker_osc_utils.get_column_definitions(
             self.list_subscription.get_attributes(), long_listing=True)
 
         expected_data = []
-        for subscription_obj in self.subscriptions:
+        for subscription_obj in subscriptions:
             expected_data.append(vnflcm_subsc_fakes.get_subscription_data(
                 subscription_obj, columns=columns, list_action=True))
 
@@ -101,6 +100,7 @@ class TestListLccnSubscription(test_vnflcm.TestVnfLcm):
         self.assertCountEqual(expected_data, list(data))
 
     def test_take_action_with_pagination(self):
+        subscriptions = vnflcm_subsc_fakes.create_subscriptions(count=3)
         next_links_num = 3
         path = os.path.join(self.url, 'vnflcm/v1/subscriptions')
         parsed_args = self.check_parser(self.list_subscription, [], [])
@@ -112,19 +112,19 @@ class TestListLccnSubscription(test_vnflcm.TestVnfLcm):
             links[i] = (
                 '{base_url}?nextpage_opaque_marker={subscription_id}'.format(
                     base_url=path,
-                    subscription_id=self.subscriptions[i]['id']))
+                    subscription_id=subscriptions[i]['id']))
 
             link_headers[i] = copy.deepcopy(self.header)
             link_headers[i]['Link'] = '<{link_url}>; rel="next"'.format(
                 link_url=links[i])
 
         self.requests_mock.register_uri(
-            'GET', path, json=[self.subscriptions[0]], headers=link_headers[0])
+            'GET', path, json=[subscriptions[0]], headers=link_headers[0])
         self.requests_mock.register_uri(
-            'GET', links[0], json=[self.subscriptions[1]],
+            'GET', links[0], json=[subscriptions[1]],
             headers=link_headers[1])
         self.requests_mock.register_uri(
-            'GET', links[1], json=[self.subscriptions[2]],
+            'GET', links[1], json=[subscriptions[2]],
             headers=link_headers[2])
         self.requests_mock.register_uri(
             'GET', links[2], json=[], headers=self.header)
@@ -135,7 +135,7 @@ class TestListLccnSubscription(test_vnflcm.TestVnfLcm):
             self.list_subscription.get_attributes(), long_listing=True)
 
         expected_data = []
-        for subscription_obj in self.subscriptions:
+        for subscription_obj in subscriptions:
             expected_data.append(vnflcm_subsc_fakes.get_subscription_data(
                 subscription_obj, columns=columns, list_action=True))
 
