@@ -48,7 +48,7 @@ def capture_std_streams():
         sys.stdout, sys.stderr = stdout, stderr
 
 
-class FakeStdout(object):
+class FakeStdout(io.IOBase):
 
     def __init__(self):
         self.content = []
