@@ -23,7 +23,6 @@ import requests
 from urllib import parse as urlparse
 
 from tackerclient import client
-from tackerclient.common import constants
 from tackerclient.common import exceptions
 from tackerclient.common import serializer
 from tackerclient.common import utils
@@ -277,7 +276,7 @@ class ClientBase(object):
         return self.httpclient.get_auth_info()
 
     def serialize(self, data):
-        """Serializes a dictionary into either XML or JSON.
+        """Serializes a dictionary JSON.
 
         A dictionary with a single key can be passed and it can contain any
         structure.
@@ -287,34 +286,20 @@ class ClientBase(object):
         elif self.format in ('zip', 'text'):
             return data
         elif type(data) is dict:
-            return serializer.Serializer(
-                self.get_attr_metadata()).serialize(data, self.content_type())
+            return serializer.Serializer().serialize(data, 'application/json')
         else:
             raise Exception(_("Unable to serialize object of type = '%s'") %
                             type(data))
 
     def deserialize(self, data, status_code):
-        """Deserializes an XML or JSON string into a dictionary."""
+        """Deserializes an JSON string into a dictionary."""
         if status_code in (204, 202) or self.format in ('zip', 'text', 'any'):
             return data
-        return serializer.Serializer(self.get_attr_metadata()).deserialize(
-            data, self.content_type())['body']
-
-    def get_attr_metadata(self):
-        if self.format == 'json':
-            return {}
-        old_request_format = self.format
-        self.format = 'json'
-        exts = self.list_extensions()['extensions']
-        self.format = old_request_format
-        ns = dict([(ext['alias'], ext['namespace']) for ext in exts])
-        self.EXTED_PLURALS.update(constants.PLURALS)
-        return {'plurals': self.EXTED_PLURALS,
-                'xmlns': constants.XML_NS_V10,
-                constants.EXT_NS: ns}
+        return serializer.Serializer().deserialize(
+            data, 'application/json')['body']
 
     def content_type(self, _format=None):
-        """Returns the mime-type for either 'xml', 'json, 'text', or 'zip'.
+        """Returns the mime-type for either 'json, 'text', or 'zip'.
 
         Defaults to the currently set format.
         """
@@ -418,128 +403,11 @@ class ClientBase(object):
 
 class LegacyClient(ClientBase):
 
-    extensions_path = "/extensions"
-    extension_path = "/extensions/%s"
-
-    vnfds_path = '/vnfds'
-    vnfd_path = '/vnfds/%s'
-    vnfs_path = '/vnfs'
-    vnf_path = '/vnfs/%s'
-    vnf_scale_path = '/vnfs/%s/actions'
-    vnf_resources_path = '/vnfs/%s/resources'
-
     vims_path = '/vims'
     vim_path = '/vims/%s'
 
-    events_path = '/events'
-    event_path = '/events/%s'
-
-    vnffgds_path = '/vnffgds'
-    vnffgd_path = '/vnffgds/%s'
-
-    vnffgs_path = '/vnffgs'
-    vnffg_path = '/vnffgs/%s'
-
-    nfps_path = '/nfps'
-    nfp_path = '/nfps/%s'
-
-    sfcs_path = '/sfcs'
-    sfc_path = '/sfcs/%s'
-
-    fcs_path = '/classifiers'
-    fc_path = '/classifiers/%s'
-
-    nsds_path = '/nsds'
-    nsd_path = '/nsds/%s'
-
-    nss_path = '/nss'
-    ns_path = '/nss/%s'
-
-    clusters_path = '/clusters'
-    cluster_path = '/clusters/%s'
-    cluster_members_path = '/clustermembers'
-    cluster_member_path = '/clustermembers/%s'
-
     # API has no way to report plurals, so we have to hard code them
     # EXTED_PLURALS = {}
-
-    @APIParamsCall
-    def list_extensions(self, **_params):
-        """Fetch a list of all exts on server side."""
-        return self.get(self.extensions_path, params=_params)
-
-    @APIParamsCall
-    def show_extension(self, ext_alias, **_params):
-        """Fetch a list of all exts on server side."""
-        return self.get(self.extension_path % ext_alias, params=_params)
-
-    _VNFD = "vnfd"
-    _NSD = "nsd"
-
-    @APIParamsCall
-    def list_vnfds(self, retrieve_all=True, **_params):
-        vnfds_dict = self.list(self._VNFD + 's',
-                               self.vnfds_path,
-                               retrieve_all,
-                               **_params)
-        for vnfd in vnfds_dict['vnfds']:
-            if vnfd.get('description'):
-                if len(vnfd['description']) > DEFAULT_DESC_LENGTH:
-                    vnfd['description'] = \
-                        vnfd['description'][:DEFAULT_DESC_LENGTH]
-                    vnfd['description'] += '...'
-        return vnfds_dict
-
-    @APIParamsCall
-    def show_vnfd(self, vnfd, **_params):
-        return self.get(self.vnfd_path % vnfd,
-                        params=_params)
-
-    @APIParamsCall
-    def create_vnfd(self, body):
-        body[self._VNFD]['service_types'] = [{'service_type': 'vnfd'}]
-        return self.post(self.vnfds_path, body)
-
-    @APIParamsCall
-    def delete_vnfd(self, vnfd):
-        return self.delete(self.vnfd_path % vnfd)
-
-    @APIParamsCall
-    def list_vnfs(self, retrieve_all=True, **_params):
-        vnfs = self.list('vnfs', self.vnfs_path, retrieve_all, **_params)
-        for vnf in vnfs['vnfs']:
-            error_reason = vnf.get('error_reason', None)
-            if error_reason and \
-                len(error_reason) > DEFAULT_ERROR_REASON_LENGTH:
-                vnf['error_reason'] = error_reason[
-                    :DEFAULT_ERROR_REASON_LENGTH]
-                vnf['error_reason'] += '...'
-        return vnfs
-
-    @APIParamsCall
-    def show_vnf(self, vnf, **_params):
-        return self.get(self.vnf_path % vnf, params=_params)
-
-    @APIParamsCall
-    def create_vnf(self, body):
-        return self.post(self.vnfs_path, body=body)
-
-    @APIParamsCall
-    def delete_vnf(self, vnf, body=None):
-        return self.delete(self.vnf_path % vnf, body=body)
-
-    @APIParamsCall
-    def update_vnf(self, vnf, body):
-        return self.put(self.vnf_path % vnf, body=body)
-
-    @APIParamsCall
-    def list_vnf_resources(self, vnf, retrieve_all=True, **_params):
-        return self.list('resources', self.vnf_resources_path % vnf,
-                         retrieve_all, **_params)
-
-    @APIParamsCall
-    def scale_vnf(self, vnf, body=None):
-        return self.post(self.vnf_scale_path % vnf, body=body)
 
     @APIParamsCall
     def show_vim(self, vim, **_params):
@@ -562,239 +430,6 @@ class LegacyClient(ClientBase):
     @APIParamsCall
     def list_vims(self, retrieve_all=True, **_params):
         return self.list('vims', self.vims_path, retrieve_all, **_params)
-
-    @APIParamsCall
-    def list_events(self, retrieve_all=True, **_params):
-        events = self.list('events', self.events_path, retrieve_all,
-                           **_params)
-        return events
-
-    @APIParamsCall
-    def list_vnf_events(self, retrieve_all=True, **_params):
-        _params['resource_type'] = 'vnf'
-        events = self.list('events', self.events_path, retrieve_all,
-                           **_params)
-        vnf_events = {}
-        vnf_events['vnf_events'] = events['events']
-        return vnf_events
-
-    @APIParamsCall
-    def list_vnfd_events(self, retrieve_all=True, **_params):
-        _params['resource_type'] = 'vnfd'
-        events = self.list('events', self.events_path, retrieve_all,
-                           **_params)
-        vnfd_events = {}
-        vnfd_events['vnfd_events'] = events['events']
-        return vnfd_events
-
-    @APIParamsCall
-    def list_vim_events(self, retrieve_all=True, **_params):
-        _params['resource_type'] = 'vim'
-        events = self.list('events', self.events_path, retrieve_all,
-                           **_params)
-        vim_events = {}
-        vim_events['vim_events'] = events['events']
-        return vim_events
-
-    @APIParamsCall
-    def show_event(self, event_id, **_params):
-        return self.get(self.event_path % event_id, params=_params)
-
-    _VNFFGD = "vnffgd"
-
-    @APIParamsCall
-    def create_vnffgd(self, body):
-        return self.post(self.vnffgds_path, body)
-
-    @APIParamsCall
-    def list_vnffgds(self, retrieve_all=True, **_params):
-        vnffgds_dict = self.list(self._VNFFGD + 's',
-                                 self.vnffgds_path,
-                                 retrieve_all,
-                                 **_params)
-        for vnffgd in vnffgds_dict['vnffgds']:
-            if 'description' in vnffgd.keys() and \
-                len(vnffgd['description']) > DEFAULT_DESC_LENGTH:
-                vnffgd['description'] = vnffgd['description'][
-                    :DEFAULT_DESC_LENGTH]
-                vnffgd['description'] += '...'
-        return vnffgds_dict
-
-    @APIParamsCall
-    def show_vnffgd(self, vnffgd, **_params):
-        return self.get(self.vnffgd_path % vnffgd, params=_params)
-
-    @APIParamsCall
-    def delete_vnffgd(self, vnffgd):
-        return self.delete(self.vnffgd_path % vnffgd)
-
-    @APIParamsCall
-    def list_vnffgs(self, retrieve_all=True, **_params):
-        vnffgs = self.list('vnffgs', self.vnffgs_path, retrieve_all, **_params)
-        for vnffg in vnffgs['vnffgs']:
-            error_reason = vnffg.get('error_reason', None)
-            if error_reason and \
-                    len(error_reason) > DEFAULT_ERROR_REASON_LENGTH:
-                vnffg['error_reason'] = error_reason[
-                    :DEFAULT_ERROR_REASON_LENGTH]
-                vnffg['error_reason'] += '...'
-        return vnffgs
-
-    @APIParamsCall
-    def show_vnffg(self, vnffg, **_params):
-        return self.get(self.vnffg_path % vnffg, params=_params)
-
-    @APIParamsCall
-    def create_vnffg(self, body):
-        return self.post(self.vnffgs_path, body=body)
-
-    @APIParamsCall
-    def delete_vnffg(self, vnffg, body=None):
-        return self.delete(self.vnffg_path % vnffg, body=body)
-
-    @APIParamsCall
-    def update_vnffg(self, vnffg, body):
-        return self.put(self.vnffg_path % vnffg, body=body)
-
-    @APIParamsCall
-    def list_sfcs(self, retrieve_all=True, **_params):
-        sfcs = self.list('sfcs', self.sfcs_path, retrieve_all, **_params)
-        for chain in sfcs['sfcs']:
-            error_reason = chain.get('error_reason', None)
-            if error_reason and \
-                    len(error_reason) > DEFAULT_ERROR_REASON_LENGTH:
-                chain['error_reason'] = error_reason[
-                    :DEFAULT_ERROR_REASON_LENGTH]
-                chain['error_reason'] += '...'
-        return sfcs
-
-    @APIParamsCall
-    def show_sfc(self, chain, **_params):
-        return self.get(self.sfc_path % chain, params=_params)
-
-    @APIParamsCall
-    def list_nfps(self, retrieve_all=True, **_params):
-        nfps = self.list('nfps', self.nfps_path, retrieve_all, **_params)
-        for nfp in nfps['nfps']:
-            error_reason = nfp.get('error_reason', None)
-            if error_reason and \
-                    len(error_reason) > DEFAULT_ERROR_REASON_LENGTH:
-                nfp['error_reason'] = error_reason[
-                    :DEFAULT_ERROR_REASON_LENGTH]
-                nfp['error_reason'] += '...'
-        return nfps
-
-    @APIParamsCall
-    def show_nfp(self, nfp, **_params):
-        return self.get(self.nfp_path % nfp, params=_params)
-
-    @APIParamsCall
-    def list_classifiers(self, retrieve_all=True, **_params):
-        classifiers = self.list('classifiers', self.fcs_path, retrieve_all,
-                                **_params)
-        for classifier in classifiers['classifiers']:
-            error_reason = classifier.get('error_reason', None)
-            if error_reason and \
-                    len(error_reason) > DEFAULT_ERROR_REASON_LENGTH:
-                classifier['error_reason'] = error_reason[
-                    :DEFAULT_ERROR_REASON_LENGTH]
-                classifier['error_reason'] += '...'
-        return classifiers
-
-    @APIParamsCall
-    def show_classifier(self, classifier, **_params):
-        return self.get(self.fc_path % classifier, params=_params)
-
-    @APIParamsCall
-    def list_nsds(self, retrieve_all=True, **_params):
-        nsds_dict = self.list(self._NSD + 's',
-                              self.nsds_path,
-                              retrieve_all,
-                              **_params)
-        for nsd in nsds_dict['nsds']:
-            if 'description' in nsd.keys() and \
-                len(nsd['description']) > DEFAULT_DESC_LENGTH:
-                nsd['description'] = nsd['description'][:DEFAULT_DESC_LENGTH]
-                nsd['description'] += '...'
-        return nsds_dict
-
-    @APIParamsCall
-    def show_nsd(self, nsd, **_params):
-        return self.get(self.nsd_path % nsd,
-                        params=_params)
-
-    @APIParamsCall
-    def create_nsd(self, body):
-        return self.post(self.nsds_path, body)
-
-    @APIParamsCall
-    def delete_nsd(self, nsd):
-        return self.delete(self.nsd_path % nsd)
-
-    @APIParamsCall
-    def list_nss(self, retrieve_all=True, **_params):
-        nss = self.list('nss', self.nss_path, retrieve_all, **_params)
-        for ns in nss['nss']:
-            error_reason = ns.get('error_reason', None)
-            if error_reason and \
-                len(error_reason) > DEFAULT_ERROR_REASON_LENGTH:
-                ns['error_reason'] = error_reason[
-                    :DEFAULT_ERROR_REASON_LENGTH]
-                ns['error_reason'] += '...'
-        return nss
-
-    @APIParamsCall
-    def show_ns(self, ns, **_params):
-        return self.get(self.ns_path % ns, params=_params)
-
-    @APIParamsCall
-    def create_ns(self, body):
-        return self.post(self.nss_path, body=body)
-
-    @APIParamsCall
-    def delete_ns(self, ns, body=None):
-        return self.delete(self.ns_path % ns, body=body)
-
-    @APIParamsCall
-    def create_cluster(self, body=None):
-        return self.post(self.clusters_path, body)
-
-    @APIParamsCall
-    def list_clusters(self, retrieve_all=True, **_params):
-        clusters = self.list('clusters', self.clusters_path,
-                             retrieve_all, **_params)
-        return clusters
-
-    @APIParamsCall
-    def show_cluster(self, cluster, **_params):
-        member = self.get(self.cluster_path % cluster,
-                          params=_params)
-        return member
-
-    @APIParamsCall
-    def delete_cluster(self, cluster):
-        return self.delete(self.cluster_path % cluster)
-
-    @APIParamsCall
-    def create_clustermember(self, body=None):
-        return self.post(self.cluster_members_path, body)
-
-    @APIParamsCall
-    def list_clustermembers(self, retrieve_all=True, **_params):
-        cluster_members = self.list('clustermembers',
-                                    self.cluster_members_path,
-                                    retrieve_all, **_params)
-        return cluster_members
-
-    @APIParamsCall
-    def show_clustermember(self, clustermember, **_params):
-        member = self.get(self.cluster_member_path % clustermember,
-                          params=_params)
-        return member
-
-    @APIParamsCall
-    def delete_clustermember(self, clustermember):
-        return self.delete(self.cluster_member_path % clustermember)
 
 
 class VnfPackageClient(ClientBase):
@@ -1224,49 +859,6 @@ class Client(object):
         return self.legacy_client.list(collection, path,
                                        retrieve_all=retrieve_all, **params)
 
-    def list_extensions(self, **_params):
-        return self.legacy_client.list_extensions(**_params)
-
-    def show_extension(self, ext_alias, **_params):
-        """Fetch a list of all exts on server side."""
-        return self.legacy_client.show_extension(ext_alias, **_params)
-
-    def list_vnfds(self, retrieve_all=True, **_params):
-        return self.legacy_client.list_vnfds(retrieve_all=retrieve_all,
-                                             **_params)
-
-    def show_vnfd(self, vnfd, **_params):
-        return self.legacy_client.show_vnfd(vnfd, **_params)
-
-    def create_vnfd(self, body):
-        return self.legacy_client.create_vnfd(body)
-
-    def delete_vnfd(self, vnfd):
-        return self.legacy_client.delete_vnfd(vnfd)
-
-    def list_vnfs(self, retrieve_all=True, **_params):
-        return self.legacy_client.list_vnfs(retrieve_all=retrieve_all,
-                                            **_params)
-
-    def show_vnf(self, vnf, **_params):
-        return self.legacy_client.show_vnf(vnf, **_params)
-
-    def create_vnf(self, body):
-        return self.legacy_client.create_vnf(body)
-
-    def delete_vnf(self, vnf, body=None):
-        return self.legacy_client.delete_vnf(vnf, body=body)
-
-    def update_vnf(self, vnf, body):
-        return self.legacy_client.update_vnf(vnf, body)
-
-    def list_vnf_resources(self, vnf, retrieve_all=True, **_params):
-        return self.legacy_client.list_vnf_resources(
-            vnf, retrieve_all=retrieve_all, **_params)
-
-    def scale_vnf(self, vnf, body=None):
-        return self.legacy_client.scale_vnf(vnf, body=body)
-
     def show_vim(self, vim, **_params):
         return self.legacy_client.show_vim(vim, **_params)
 
@@ -1282,128 +874,6 @@ class Client(object):
     def list_vims(self, retrieve_all=True, **_params):
         return self.legacy_client.list_vims(retrieve_all=retrieve_all,
                                             **_params)
-
-    def list_events(self, retrieve_all=True, **_params):
-        return self.legacy_client.list_events(retrieve_all=retrieve_all,
-                                              **_params)
-
-    def list_vnf_events(self, retrieve_all=True, **_params):
-        return self.legacy_client.list_vnf_events(
-            retrieve_all=retrieve_all, **_params)
-
-    def list_vnfd_events(self, retrieve_all=True, **_params):
-        return self.legacy_client.list_vnfd_events(
-            retrieve_all=retrieve_all, **_params)
-
-    def list_vim_events(self, retrieve_all=True, **_params):
-        return self.legacy_client.list_vim_events(
-            retrieve_all=retrieve_all, **_params)
-
-    def show_event(self, event_id, **_params):
-        return self.legacy_client.show_event(event_id, **_params)
-
-    def create_vnffgd(self, body):
-        return self.legacy_client.create_vnffgd(body)
-
-    def list_vnffgds(self, retrieve_all=True, **_params):
-        return self.legacy_client.list_vnffgds(retrieve_all=retrieve_all,
-                                               **_params)
-
-    def show_vnffgd(self, vnffgd, **_params):
-        return self.legacy_client.show_vnffgd(vnffgd, **_params)
-
-    def delete_vnffgd(self, vnffgd):
-        return self.legacy_client.delete_vnffgd(vnffgd)
-
-    def list_vnffgs(self, retrieve_all=True, **_params):
-        return self.legacy_client.list_vnffgs(retrieve_all=retrieve_all,
-                                              **_params)
-
-    def show_vnffg(self, vnffg, **_params):
-        return self.legacy_client.show_vnffg(vnffg, **_params)
-
-    def create_vnffg(self, body):
-        return self.legacy_client.create_vnffg(body)
-
-    def delete_vnffg(self, vnffg):
-        return self.legacy_client.delete_vnffg(vnffg)
-
-    def update_vnffg(self, vnffg, body):
-        return self.legacy_client.update_vnffg(vnffg, body)
-
-    def list_sfcs(self, retrieve_all=True, **_params):
-        return self.legacy_client.list_sfcs(retrieve_all=retrieve_all,
-                                            **_params)
-
-    def show_sfc(self, chain, **_params):
-        return self.legacy_client.show_sfc(chain, **_params)
-
-    def list_nfps(self, retrieve_all=True, **_params):
-        return self.legacy_client.list_nfps(retrieve_all=retrieve_all,
-                                            **_params)
-
-    def show_nfp(self, nfp, **_params):
-        return self.legacy_client.show_nfp(nfp, **_params)
-
-    def list_classifiers(self, retrieve_all=True, **_params):
-        return self.legacy_client.list_classifiers(
-            retrieve_all=retrieve_all, **_params)
-
-    def show_classifier(self, classifier, **_params):
-        return self.legacy_client.show_classifier(classifier, **_params)
-
-    def list_nsds(self, retrieve_all=True, **_params):
-        return self.legacy_client.list_nsds(retrieve_all=retrieve_all,
-                                            **_params)
-
-    def show_nsd(self, nsd, **_params):
-        return self.legacy_client.show_nsd(nsd, **_params)
-
-    def create_nsd(self, body):
-        return self.legacy_client.create_nsd(body)
-
-    def delete_nsd(self, nsd):
-        return self.legacy_client.delete_nsd(nsd)
-
-    def list_nss(self, retrieve_all=True, **_params):
-        return self.legacy_client.list_nss(retrieve_all=retrieve_all,
-                                           **_params)
-
-    def show_ns(self, ns, **_params):
-        return self.legacy_client.show_ns(ns, **_params)
-
-    def create_ns(self, body):
-        return self.legacy_client.create_ns(body)
-
-    def delete_ns(self, ns, body=None):
-        return self.legacy_client.delete_ns(ns, body=body)
-
-    def create_cluster(self, body=None):
-        return self.legacy_client.create_cluster(body=body)
-
-    def list_clusters(self, retrieve_all=True, **_params):
-        return self.legacy_client.list_clusters(retrieve_all=retrieve_all,
-                                                **_params)
-
-    def show_cluster(self, cluster, **_params):
-        return self.legacy_client.show_cluster(cluster, **_params)
-
-    def delete_cluster(self, cluster):
-        return self.legacy_client.delete_cluster(cluster)
-
-    def create_clustermember(self, body=None):
-        return self.legacy_client.create_clustermember(body=body)
-
-    def list_clustermembers(self, retrieve_all=True, **_params):
-        return self.legacy_client.list_clustermembers(
-            retrieve_all=retrieve_all, **_params)
-
-    def show_clustermember(self, clustermember, **_params):
-        return self.legacy_client.show_clustermember(clustermember,
-                                                     **_params)
-
-    def delete_clustermember(self, clustermember):
-        return self.legacy_client.delete_clustermember(clustermember)
 
     # VnfPackageClient methods
 

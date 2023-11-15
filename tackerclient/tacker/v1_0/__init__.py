@@ -374,12 +374,12 @@ class TackerCommand(command.OpenStackCommand, metaclass=TackerCommandMeta):
         parser = super(TackerCommand, self).get_parser(prog_name)
         parser.add_argument(
             '--request-format',
-            help=_('The xml or json request format'),
+            help=_('The json request format'),
             default='json',
-            choices=['json', 'xml', ], )
+            choices=['json', ], )
         parser.add_argument(
             '--request_format',
-            choices=['json', 'xml', ],
+            choices=['json', ],
             help=argparse.SUPPRESS)
 
         return parser

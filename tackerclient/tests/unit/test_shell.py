@@ -94,8 +94,8 @@ class ShellTest(testtools.TestCase):
 
     def test_help_on_subcommand(self):
         required = [
-            '.*?^usage: .* vnfd-list']
-        stdout, stderr = self.shell('help vnfd-list')
+            '.*?^usage: .* vim-list']
+        stdout, stderr = self.shell('help vim-list')
         for r in required:
             self.assertThat(
                 stdout,
@@ -104,7 +104,7 @@ class ShellTest(testtools.TestCase):
 
     def test_help_command(self):
         required = 'usage:'
-        help_text, stderr = self.shell('help vnfd-create')
+        help_text, stderr = self.shell('help vim-create')
         self.assertThat(
             help_text,
             matchers.MatchesRegex(required))
@@ -113,7 +113,7 @@ class ShellTest(testtools.TestCase):
     def test_unknown_auth_strategy(self):
         self.useFixture(fixtures.FakeLogger(level=logging.DEBUG))
         stdout, stderr = self.shell('--os-auth-strategy fake '
-                                    'vnfd-list')
+                                    'vim-list')
         self.assertFalse(stdout)
 
     def test_auth(self):
@@ -130,7 +130,7 @@ class ShellTest(testtools.TestCase):
                        '--os-password test '
                        '--os-tenant-name test '
                        '--os-auth-url http://127.0.0.1:5000/ '
-                       '--os-auth-strategy keystone vnfd-list')
+                       '--os-auth-strategy keystone vim-list')
             shell.authenticate_user()
             shell.run(cmdline.split())
 

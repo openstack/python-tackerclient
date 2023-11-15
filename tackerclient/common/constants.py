@@ -14,24 +14,8 @@
 # limitations under the License.
 
 
-EXT_NS = '_extension_ns'
-XML_NS_V10 = 'http://openstack.org/tacker/api/v1.0'
-XSI_NAMESPACE = "http://www.w3.org/2001/XMLSchema-instance"
-XSI_ATTR = "xsi:nil"
-XSI_NIL_ATTR = "xmlns:xsi"
-TYPE_XMLNS = "xmlns:tacker"
-TYPE_ATTR = "tacker:type"
-VIRTUAL_ROOT_KEY = "_v_root"
-ATOM_NAMESPACE = "http://www.w3.org/2005/Atom"
-ATOM_XMLNS = "xmlns:atom"
-ATOM_LINK_NOTATION = "{%s}link" % ATOM_NAMESPACE
-
 TYPE_BOOL = "bool"
 TYPE_INT = "int"
 TYPE_FLOAT = "float"
 TYPE_LIST = "list"
 TYPE_DICT = "dict"
-
-
-PLURALS = {'templates': 'template',
-           'devices': 'device'}

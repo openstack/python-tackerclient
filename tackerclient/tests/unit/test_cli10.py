@@ -23,7 +23,6 @@ from unittest import mock
 import urllib
 from urllib import parse as urlparse
 
-from tackerclient.common import constants
 from tackerclient.common import exceptions
 from tackerclient import shell
 from tackerclient.tacker import v1_0 as tackerV1_0
@@ -191,12 +190,6 @@ class CLITestV10Base(testtools.TestCase):
     def setUp(self, plurals={}):
         """Prepare the test environment."""
         super(CLITestV10Base, self).setUp()
-        client.LegacyClient.EXTED_PLURALS.update(constants.PLURALS)
-        client.LegacyClient.EXTED_PLURALS.update(plurals)
-        self.metadata = {'plurals': client.LegacyClient.EXTED_PLURALS,
-                         'xmlns': constants.XML_NS_V10,
-                         constants.EXT_NS: {'prefix':
-                                            'http://xxxx.yy.com'}}
         self.endurl = ENDURL
         self.fake_stdout = FakeStdout()
         self.useFixture(fixtures.MonkeyPatch('sys.stdout', self.fake_stdout))
@@ -217,7 +210,7 @@ class CLITestV10Base(testtools.TestCase):
                               tags=None, admin_state_up=True, extra_body=None,
                               **kwargs):
         mock_get.return_value = self.client
-        non_admin_status_resources = ['vnfd', 'vnf', 'vim', 'vnffgd', 'vnffg']
+        non_admin_status_resources = ['vim']
         if (resource in non_admin_status_resources):
             body = {resource: {}, }
         else:
@@ -713,44 +706,6 @@ class CLITestV10ExceptionHandler(CLITestV10Base):
             else:
                 expected_msg = error_msg
         self.assertEqual(expected_msg, e.message)
-
-    def test_exception_handler_v10_ip_address_in_use(self):
-        err_msg = ('Unable to complete operation for network '
-                   'fake-network-uuid. The IP address fake-ip is in use.')
-        self._test_exception_handler_v10(
-            exceptions.IpAddressInUseClient, 409, err_msg,
-            'IpAddressInUse', err_msg, '')
-
-    def test_exception_handler_v10_tacker_known_error(self):
-        known_error_map = [
-            ('NetworkNotFound', exceptions.NetworkNotFoundClient, 404),
-            ('PortNotFound', exceptions.PortNotFoundClient, 404),
-            ('NetworkInUse', exceptions.NetworkInUseClient, 409),
-            ('PortInUse', exceptions.PortInUseClient, 409),
-            ('StateInvalid', exceptions.StateInvalidClient, 400),
-            ('IpAddressInUse', exceptions.IpAddressInUseClient, 409),
-            ('IpAddressGenerationFailure',
-             exceptions.IpAddressGenerationFailureClient, 409),
-            ('ExternalIpAddressExhausted',
-             exceptions.ExternalIpAddressExhaustedClient, 400),
-            ('OverQuota', exceptions.OverQuotaClient, 409),
-        ]
-
-        error_msg = 'dummy exception message'
-        error_detail = 'sample detail'
-        for server_exc, client_exc, status_code in known_error_map:
-            self._test_exception_handler_v10(
-                client_exc, status_code,
-                error_msg + '\n' + error_detail,
-                server_exc, error_msg, error_detail)
-
-    def test_exception_handler_v10_tacker_known_error_without_detail(self):
-        error_msg = 'Network not found'
-        error_detail = ''
-        self._test_exception_handler_v10(
-            exceptions.NetworkNotFoundClient, 404,
-            error_msg,
-            'NetworkNotFound', error_msg, error_detail)
 
     def test_exception_handler_v10_unknown_error_to_per_code_exception(self):
         for status_code, client_exc in exceptions.HTTP_EXCEPTION_MAP.items():

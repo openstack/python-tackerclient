@@ -20,7 +20,6 @@
 import argparse
 import logging
 import os
-import sys
 
 from oslo_log import versionutils
 from oslo_utils import encodeutils
@@ -184,15 +183,3 @@ def deprecate_warning(what, as_of, in_favor_of=None, remove_in=1):
     versionutils.deprecation_warning(as_of=as_of, what=what,
                                      in_favor_of=in_favor_of,
                                      remove_in=remove_in)
-
-
-# TODO(ueha): Remove this along with the deprecated commands in the first major
-# python-tackerclient release after the Tacker server version 9.0.0 (2023.1
-# Antelope release).
-def deprecate_legacy_warning():
-    # NOTE(ueha): versionutils has not support Antelope version yet.
-    msg = _(
-        'The Legacy API interface has been deprecated. This command will be '
-        'removed in the first major release after the Tacker server version '
-        '9.0.0 (2023.1 Antelope release).')
-    print(msg, file=sys.stderr)

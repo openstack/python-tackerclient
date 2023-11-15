@@ -111,55 +111,6 @@ HTTP_EXCEPTION_MAP = {
 }
 
 
-# Exceptions mapped to Tacker server exceptions
-# These are defined if a user of client library needs specific exception.
-# Exception name should be <Tacker Exception Name> + 'Client'
-# e.g., NetworkNotFound -> NetworkNotFoundClient
-
-class NetworkNotFoundClient(NotFound):
-    pass
-
-
-class PortNotFoundClient(NotFound):
-    pass
-
-
-class StateInvalidClient(BadRequest):
-    pass
-
-
-class NetworkInUseClient(Conflict):
-    pass
-
-
-class PortInUseClient(Conflict):
-    pass
-
-
-class IpAddressInUseClient(Conflict):
-    pass
-
-
-class InvalidIpForNetworkClient(BadRequest):
-    pass
-
-
-class OverQuotaClient(Conflict):
-    pass
-
-
-class IpAddressGenerationFailureClient(Conflict):
-    pass
-
-
-class MacAddressInUseClient(Conflict):
-    pass
-
-
-class ExternalIpAddressExhaustedClient(BadRequest):
-    pass
-
-
 # Exceptions from client library
 
 class NoAuthURLProvided(Unauthorized):
@@ -172,11 +123,6 @@ class EndpointNotFound(TackerClientException):
 
 class EndpointTypeNotFound(TackerClientException):
     message = _("Could not find endpoint type %(type_)s in Service Catalog.")
-
-
-class AmbiguousEndpoints(TackerClientException):
-    message = _("Found more than one matching endpoint in Service Catalog: "
-                "%(matching_endpoints)")
 
 
 class RequestURITooLong(TackerClientException):
