@@ -37,14 +37,4 @@ Operations for Legacy implementation
 
 .. toctree::
 
-  vnf_commands
-  vnf_descriptor_commands
   vim_commands
-  ns_commands
-  ns_descriptor_commands
-  vnf_graph_commands
-  vnf_graph_descriptor_commands
-  vnf_chain_commands
-  vnf_classifier_commands
-  vnf_network_forwarding_path_commands
-  nfv_event_commands
