@@ -107,7 +107,8 @@ class CLITestAuthNoAuth(testtools.TestCase):
         mock_request.assert_called_once_with(
             ENDPOINT_URL + '/resource',
             'GET',
-            headers=headers)
+            headers=headers,
+            content_type=None)
         self.assertEqual(self.client.endpoint_url, ENDPOINT_URL)
 
 
@@ -153,7 +154,7 @@ class CLITestAuthKeystone(testtools.TestCase):
         self.client.do_request('/resource', 'GET')
         mock_request.assert_called_with(
             ENDPOINT_URL + '/resource', 'GET',
-            headers=expected_headers)
+            headers=expected_headers, content_type=None)
         self.assertEqual(self.client.endpoint_url, ENDPOINT_URL)
         self.assertEqual(self.client.auth_token, TOKEN)
 
@@ -174,7 +175,7 @@ class CLITestAuthKeystone(testtools.TestCase):
         self.client.do_request('/resource', 'GET')
         mock_request.assert_called_with(
             ENDPOINT_URL + '/resource', 'GET',
-            headers=expected_headers)
+            headers=expected_headers, content_type=None)
 
     @mock.patch('tackerclient.client.HTTPClient.request')
     def test_refresh_token_no_auth_url(self, mock_request):
@@ -192,7 +193,8 @@ class CLITestAuthKeystone(testtools.TestCase):
                           'GET')
         expected_url = ENDPOINT_URL + '/resource'
         mock_request.assert_called_with(expected_url, 'GET',
-                                        headers=expected_headers)
+                                        headers=expected_headers,
+                                        content_type=None)
 
     def test_get_endpoint_url_with_invalid_auth_url(self):
         # Handle the case when auth_url is not provided
@@ -209,14 +211,14 @@ class CLITestAuthKeystone(testtools.TestCase):
         self.client.do_request('/resource', 'GET')
         mock_request.assert_called_with(
             ENDPOINT_URL + '/resource', 'GET',
-            headers=expected_headers)
+            headers=expected_headers, content_type=None)
 
         mock_request.return_value = (resp_200, '')
         self.client.do_request('/resource', 'GET',
                                headers=headers)
         mock_request.assert_called_with(
             ENDPOINT_URL + '/resource', 'GET',
-            headers=headers)
+            headers=headers, content_type=None)
 
     @mock.patch('tackerclient.client.HTTPClient.request')
     def test_use_given_endpoint_url(self, mock_request):
@@ -233,7 +235,7 @@ class CLITestAuthKeystone(testtools.TestCase):
                                headers=headers)
         mock_request.assert_called_with(
             ENDPOINT_OVERRIDE + '/resource', 'GET',
-            headers=headers)
+            headers=headers, content_type=None)
         self.assertEqual(self.client.endpoint_url, ENDPOINT_OVERRIDE)
 
     @mock.patch('tackerclient.client.HTTPClient.request')
@@ -324,7 +326,8 @@ class CLITestAuthKeystone(testtools.TestCase):
         expected_body = ('{"auth": {"tenantId": "testtenant_id",'
                          '"REDACTEDCredentials": {"REDACTED": "REDACTED",'
                          '"userId": "testuser_id"}}}')
-        _headers = {'headers': expected_headers, 'body': expected_body}
+        _headers = {'headers': expected_headers, 'body': expected_body,
+                    'content_type': None}
 
         mock_request.return_value = (resp_200, json.dumps(KS_TOKEN_RESULT))
         self.client.do_request('/resource', 'GET', body=body)

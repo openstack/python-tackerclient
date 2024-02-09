@@ -239,8 +239,10 @@ class CLITestV10Base(testtools.TestCase):
         # MyComparator does not decodes XML string correctly.
         if self.format == 'json':
             _body = MyComparator(body, self.client)
+            _content_type = 'application/json'
         else:
             _body = self.client.serialize(body)
+            _content_type = 'application/zip'
         with mock.patch.object(self.client.httpclient, 'request') as mock_req:
             mock_req.return_value = (MyResp(200), resstr)
             args.extend(['--request-format', self.format])
@@ -249,7 +251,8 @@ class CLITestV10Base(testtools.TestCase):
             mock_req.assert_called_once_with(
                 end_url(path, format=self.format), 'POST',
                 body=_body,
-                headers=test_utils.ContainsKeyValue('X-Auth-Token', TOKEN))
+                headers=test_utils.ContainsKeyValue('X-Auth-Token', TOKEN),
+                content_type=_content_type)
         self.assertEqual(get_client_called_count, mock_get.call_count)
         _str = self.fake_stdout.make_string()
         self.assertIn(myid, _str)
@@ -273,7 +276,8 @@ class CLITestV10Base(testtools.TestCase):
             mock_req.assert_called_once_with(
                 end_url(path, format=self.format), 'GET',
                 body=None,
-                headers=test_utils.ContainsKeyValue('X-Auth-Token', TOKEN))
+                headers=test_utils.ContainsKeyValue('X-Auth-Token', TOKEN),
+                content_type='application/json')
         mock_get.assert_called_once_with()
 
     def _test_list_resources(self, resources, cmd, detail=False, tags=[],
@@ -368,7 +372,8 @@ class CLITestV10Base(testtools.TestCase):
                                     self.client),
                     'GET',
                     body=None,
-                    headers=test_utils.ContainsKeyValue('X-Auth-Token', TOKEN))
+                    headers=test_utils.ContainsKeyValue('X-Auth-Token', TOKEN),
+                    content_type='application/json')
         _str = self.fake_stdout.make_string()
         if response_contents is None:
             self.assertIn('myid1', _str)
@@ -465,7 +470,8 @@ class CLITestV10Base(testtools.TestCase):
             mock_req.assert_called_once_with(
                 comparator, 'GET',
                 body=None,
-                headers=test_utils.ContainsKeyValue('X-Auth-Token', TOKEN))
+                headers=test_utils.ContainsKeyValue('X-Auth-Token', TOKEN),
+                content_type='application/json')
         _str = self.fake_stdout.make_string()
         if response_contents is None:
             self.assertIn('myid1', _str)
@@ -551,8 +557,10 @@ class CLITestV10Base(testtools.TestCase):
         # MyComparator does not decodes XML string correctly.
         if self.format == 'json':
             _body = MyComparator(body, self.client)
+            _content_type = 'application/json'
         else:
             _body = self.client.serialize(body)
+            _content_type = 'application/zip'
         with mock.patch.object(self.client.httpclient, 'request') as mock_req:
             comparator = MyUrlComparator(
                 end_url(path % myid, format=self.format), self.client)
@@ -564,7 +572,8 @@ class CLITestV10Base(testtools.TestCase):
                 comparator,
                 'PUT',
                 body=_body,
-                headers=test_utils.ContainsKeyValue('X-Auth-Token', TOKEN))
+                headers=test_utils.ContainsKeyValue('X-Auth-Token', TOKEN),
+                content_type=_content_type)
 
         self.assertEqual(get_client_called_count, mock_get.call_count)
         _str = self.fake_stdout.make_string()
@@ -589,7 +598,8 @@ class CLITestV10Base(testtools.TestCase):
                 mock_req.assert_called_once_with(
                     end_url(path % myid, query, format=self.format), 'GET',
                     body=None,
-                    headers=test_utils.ContainsKeyValue('X-Auth-Token', TOKEN))
+                    headers=test_utils.ContainsKeyValue('X-Auth-Token', TOKEN),
+                    content_type='application/json')
             _str = self.fake_stdout.make_string()
             mock_get.assert_called_once_with()
             self.assertIn(myid, _str)
@@ -611,12 +621,14 @@ class CLITestV10Base(testtools.TestCase):
                 mock_req.assert_called_once_with(
                     end_url(path % myid, format=self.format), 'DELETE',
                     body=body_str,
-                    headers=test_utils.ContainsKeyValue('X-Auth-Token', TOKEN))
+                    headers=test_utils.ContainsKeyValue('X-Auth-Token', TOKEN),
+                    content_type='application/json')
             else:
                 mock_req.assert_called_once_with(
                     end_url(path % myid, format=self.format), 'DELETE',
                     body=None,
-                    headers=test_utils.ContainsKeyValue('X-Auth-Token', TOKEN))
+                    headers=test_utils.ContainsKeyValue('X-Auth-Token', TOKEN),
+                    content_type='application/json')
         mock_get.assert_called_once_with()
         _str = self.fake_stdout.make_string()
         msg = 'All specified %(resource)s(s) %(msg)s successfully\n' % {
@@ -638,7 +650,8 @@ class CLITestV10Base(testtools.TestCase):
             mock_req.assert_called_once_with(
                 end_url(path % path_action, format=self.format), 'PUT',
                 body=MyComparator(body, self.client),
-                headers=test_utils.ContainsKeyValue('X-Auth-Token', TOKEN))
+                headers=test_utils.ContainsKeyValue('X-Auth-Token', TOKEN),
+                content_type='application/json')
         _str = self.fake_stdout.make_string()
         self.assertIn(myid, _str)
 
@@ -660,7 +673,8 @@ class ClientV1TestJson(CLITestV10Base):
             mock_req.assert_called_with(
                 expected_uri, 'PUT', body=expect_body,
                 headers={'X-Auth-Token': unicode_text,
-                         'User-Agent': 'python-tackerclient'})
+                         'User-Agent': 'python-tackerclient'},
+                content_type='application/json')
         # test response with unicode
         self.assertEqual(res_body, body)
 
