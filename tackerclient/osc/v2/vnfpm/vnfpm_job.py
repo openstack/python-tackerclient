@@ -34,10 +34,6 @@ _FORMATTERS = {
     '_links': tacker_osc_utils.FormatComplexDataColumn
 }
 
-_FORMATTERS_UPDATE = {
-    'authentication': tacker_osc_utils.FormatComplexDataColumn
-}
-
 _MIXED_CASE_FIELDS = (
     'objectType', 'objectInstanceIds', 'subObjectInstanceIds', 'callbackUri'
 )
@@ -52,8 +48,7 @@ _VNF_PM_JOB_ID = 'vnf_pm_job_id'
 def _get_columns(vnfpm_job_obj, action=None):
     if action == 'update':
         column_map = {
-            'callbackUri': 'Callback Uri',
-            'authentication': 'Authentication'
+            'callbackUri': 'Callback Uri'
         }
     else:
         column_map = {
@@ -259,8 +254,7 @@ class UpdateVnfPmJob(command.ShowOne):
             tacker_osc_utils.jsonfile2body(parsed_args.request_file))
         display_columns, columns = _get_columns(updated_values, 'update')
         data = utils.get_item_properties(
-            sdk_utils.DictModel(updated_values),
-            columns, formatters=_FORMATTERS_UPDATE,
+            sdk_utils.DictModel(updated_values), columns,
             mixed_case_fields=_MIXED_CASE_FIELDS_UPDATE)
         return (display_columns, data)
 
