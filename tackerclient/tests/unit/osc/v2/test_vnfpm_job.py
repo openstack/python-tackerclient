@@ -44,7 +44,7 @@ class TestVnfPmJob(base.FixturedTestCase):
 
 def _get_columns_vnfpm_job(action=None):
     if action == 'update':
-        columns = ['Callback Uri', 'Authentication']
+        columns = ['Callback Uri']
     else:
         columns = ['ID', 'Object Type', 'Object Instance Ids',
                    'Sub Object Instance Ids', 'Criteria', 'Callback Uri',

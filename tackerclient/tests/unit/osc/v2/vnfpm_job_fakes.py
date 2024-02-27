@@ -43,22 +43,7 @@ def vnf_pm_job_response(attrs=None, action=None):
     """
     if action == 'update':
         fake_vnf_pm_job = {
-            "callbackUri": "/nfvo/notify/job",
-            "authentication": {
-                "authType": [
-                    "BASIC",
-                    "OAUTH2_CLIENT_CREDENTIALS"
-                ],
-                "paramsBasic": {
-                    "userName": "nfvo",
-                    "password": "nfvopwd"
-                },
-                "paramsOauth2ClientCredentials": {
-                    "clientId": "auth_user_name",
-                    "clientPassword": "auth_password",
-                    "tokenEndpoint": "token_endpoint"
-                }
-            }
+            "callbackUri": "/nfvo/notify/job"
         }
         return fake_vnf_pm_job
 
