@@ -87,6 +87,8 @@ class HTTPClient(object):
 
         if 'body' in kwargs:
             kargs['body'] = kwargs['body']
+        if 'content_type' in kwargs:
+            kargs['content_type'] = kwargs['content_type']
 
         if self.log_credentials:
             log_kargs = kargs
