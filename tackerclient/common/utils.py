@@ -21,7 +21,6 @@ import argparse
 import logging
 import os
 
-from oslo_log import versionutils
 from oslo_utils import encodeutils
 from oslo_utils import importutils
 
@@ -177,9 +176,3 @@ def get_file_path(filename):
     file_path = os.path.abspath(os.path.join(os.path.dirname(__file__),
                                              '../%s' % filename))
     return file_path
-
-
-def deprecate_warning(what, as_of, in_favor_of=None, remove_in=1):
-    versionutils.deprecation_warning(as_of=as_of, what=what,
-                                     in_favor_of=in_favor_of,
-                                     remove_in=remove_in)
