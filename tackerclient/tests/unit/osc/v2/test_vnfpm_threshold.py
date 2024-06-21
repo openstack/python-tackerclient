@@ -21,12 +21,15 @@ from io import StringIO
 from oslo_utils.fixture import uuidsentinel
 from unittest import mock
 
+from tackerclient import client as root_client
 from tackerclient.common import exceptions
 from tackerclient.osc import utils as tacker_osc_utils
 from tackerclient.osc.v2.vnfpm import vnfpm_threshold
 from tackerclient.tests.unit.osc import base
 from tackerclient.tests.unit.osc.v1.fixture_data import client
 from tackerclient.tests.unit.osc.v2 import vnfpm_threshold_fakes
+from tackerclient.tests.unit.test_cli10 import MyResp
+from tackerclient.v1_0 import client as proxy_client
 
 
 class TestVnfPmThreshold(base.FixturedTestCase):
@@ -299,6 +302,38 @@ class TestUpdateVnfPmThreshold(TestVnfPmThreshold):
         expected_data = vnfpm_threshold_fakes.get_vnfpm_threshold_data(
             vnfpm_threshold_obj, columns=columns)
         self.assertEqual(expected_data, data)
+
+    @mock.patch.object(proxy_client.ClientBase, 'deserialize')
+    def test_take_action_check_content_type(self, mock_des):
+        param_file = ('./tackerclient/osc/v2/vnfpm/samples/'
+                      'update_vnf_pm_threshold_param_sample.json')
+        arg_list = [uuidsentinel.vnf_pm_threshold_id, param_file]
+        verify_list = [
+            ('vnf_pm_threshold_id', uuidsentinel.vnf_pm_threshold_id),
+            ('request_file', param_file)
+        ]
+        vnfpm_threshold_obj = vnfpm_threshold_fakes.vnf_pm_threshold_response(
+            None, 'update')
+        mock_des.return_value = {}
+
+        # command param
+        parsed_args = self.check_parser(
+            self.update_vnf_pm_threshold, arg_list, verify_list)
+        url = os.path.join(
+            self.url, 'vnfpm/v2/thresholds',
+            uuidsentinel.vnf_pm_threshold_id)
+        self.requests_mock.register_uri(
+            'PATCH', url, headers=self.header, json=vnfpm_threshold_obj)
+
+        with mock.patch.object(root_client.HTTPClient,
+                               'do_request') as mock_req:
+            headers = {'Content-Type': 'application/json'}
+            mock_req.return_value = (MyResp(200, headers=headers), None)
+            self.update_vnf_pm_threshold.take_action(parsed_args)
+            mock_req.assert_called_once_with(
+                f'/vnfpm/v2/thresholds/{uuidsentinel.vnf_pm_threshold_id}',
+                'PATCH', body=mock.ANY, headers=mock.ANY,
+                content_type='application/merge-patch+json', accept='json')
 
     def test_take_action_vnf_pm_threshold_id_not_found(self):
         param_file = ("./tackerclient/osc/v2/vnfpm/samples/"

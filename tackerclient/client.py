@@ -131,7 +131,11 @@ class HTTPClient(object):
 
         content_type = kwargs.pop('content_type', None) or 'application/json'
         headers = headers or {}
-        headers.setdefault('Accept', content_type)
+        accept = kwargs.pop('accept', None)
+        if accept:
+            headers.setdefault('Accept', f'application/{accept}')
+        else:
+            headers.setdefault('Accept', content_type)
 
         if body:
             headers.setdefault('Content-Type', content_type)
@@ -284,7 +288,11 @@ class SessionClient(adapter.Adapter):
         content_type = kwargs.pop('content_type', None) or 'application/json'
 
         headers = kwargs.setdefault('headers', {})
-        headers.setdefault('Accept', content_type)
+        accept = kwargs.pop('accept', None)
+        if accept:
+            headers.setdefault('Accept', f'application/{accept}')
+        else:
+            headers.setdefault('Accept', content_type)
 
         try:
             kwargs.setdefault('data', kwargs.pop('body'))

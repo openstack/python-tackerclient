@@ -24,12 +24,14 @@ from unittest import mock
 import ddt
 import zipfile
 
+from tackerclient import client as root_client
 from tackerclient.common import exceptions
 from tackerclient.osc import utils as tacker_osc_utils
 from tackerclient.osc.v1.vnfpkgm import vnf_package
 from tackerclient.tests.unit.osc import base
 from tackerclient.tests.unit.osc.v1.fixture_data import client
 from tackerclient.tests.unit.osc.v1 import vnf_package_fakes
+from tackerclient.tests.unit.test_cli10 import MyResp
 from tackerclient.v1_0 import client as proxy_client
 
 
@@ -515,6 +517,32 @@ class TestUploadVnfPackage(TestVnfPackage):
         # check no fault response is received
         self.assertNotCalled(m)
 
+    @ddt.data('path')
+    @mock.patch.object(proxy_client.ClientBase, 'deserialize')
+    def test_upload_vnf_package_check_content_type(self, method, mock_des):
+        path = None
+        if method == 'path':
+            zip_file, temp_dir = _create_zip()
+            path = zip_file
+
+        arglist, verifylist = self._get_arglist_and_verifylist(method, path)
+        parsed_args = self.check_parser(self.upload_vnf_package, arglist,
+                                        verifylist)
+        mock_des.return_value = {}
+        with mock.patch.object(root_client.HTTPClient,
+                               'do_request') as mock_req:
+            headers = {'Content-Type': 'application/json'}
+            mock_req.return_value = (MyResp(202, headers=headers), None)
+            self._mock_request_url_for_upload('PUT')
+            self.upload_vnf_package.take_action(parsed_args)
+            # Delete temporary folder
+            shutil.rmtree(temp_dir)
+            mock_req.assert_called_once_with(
+                f'/vnfpkgm/v1/vnf_packages/{self._vnf_package["id"]}'
+                '/package_content', 'PUT',
+                body=mock.ANY, headers=mock.ANY,
+                content_type='application/zip', accept='json')
+
     def test_upload_vnf_package_with_conflict_error(self):
         # Scenario in which vnf package is already in on-boarded state
         zip_file, temp_dir = _create_zip()
@@ -604,6 +632,37 @@ class TestUpdateVnfPackage(TestVnfPackage):
             vnf_package_obj=fake_response, action='update'), columns)
         self.assertListItemsEqual(
             vnf_package_fakes.get_vnf_package_data(fake_response), data)
+
+    @ddt.data((["--user-data", 'Test_key=Test_value'],
+               [('user_data', {'Test_key': 'Test_value'})]))
+    @ddt.unpack
+    @mock.patch.object(proxy_client.ClientBase, 'deserialize')
+    def test_take_action_check_content_type(
+            self, arglist, verifylist, mock_des):
+        vnf_package_obj = vnf_package_fakes.vnf_package_obj(
+            onboarded_state=True)
+        arglist.append(vnf_package_obj['id'])
+        verifylist.append(('vnf_package', vnf_package_obj['id']))
+        mock_des.return_value = {}
+
+        parsed_args = self.check_parser(self.update_vnf_package, arglist,
+                                        verifylist)
+        url = os.path.join(self.url, 'vnfpkgm/v1/vnf_packages',
+                           vnf_package_obj['id'])
+        fake_response = vnf_package_fakes.get_fake_update_vnf_package_obj(
+            arglist)
+        self.requests_mock.register_uri('PATCH', url, json=fake_response,
+                                        headers=self.header)
+
+        with mock.patch.object(root_client.HTTPClient,
+                               'do_request') as mock_req:
+            headers = {'Content-Type': 'application/json'}
+            mock_req.return_value = (MyResp(200, headers=headers), None)
+            self.update_vnf_package.take_action(parsed_args)
+            mock_req.assert_called_once_with(
+                f'/vnfpkgm/v1/vnf_packages/{vnf_package_obj["id"]}', 'PATCH',
+                body=mock.ANY, headers=mock.ANY,
+                content_type='application/merge-patch+json', accept='json')
 
     def test_update_no_options(self):
         self.assertRaises(base.ParserException, self.check_parser,

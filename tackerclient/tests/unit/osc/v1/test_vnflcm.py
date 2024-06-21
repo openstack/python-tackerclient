@@ -22,12 +22,14 @@ from unittest import mock
 import ddt
 from oslo_utils.fixture import uuidsentinel
 
+from tackerclient import client as root_client
 from tackerclient.common import exceptions
 from tackerclient.osc import utils as tacker_osc_utils
 from tackerclient.osc.v1.vnflcm import vnflcm
 from tackerclient.tests.unit.osc import base
 from tackerclient.tests.unit.osc.v1.fixture_data import client
 from tackerclient.tests.unit.osc.v1 import vnflcm_fakes
+from tackerclient.tests.unit.test_cli10 import MyResp
 from tackerclient.v1_0 import client as proxy_client
 
 
@@ -656,6 +658,45 @@ class TestUpdateVnfLcm(TestVnfLcm):
         actual_message = buffer.getvalue().strip()
 
         expected_message = ('Update vnf:' + vnf_instance['id'])
+
+        self.assertEqual(expected_message, actual_message)
+
+    @mock.patch.object(proxy_client.ClientBase, 'deserialize')
+    def test_take_action_check_content_type(self, mock_des):
+        vnf_instance = vnflcm_fakes.vnf_instance_response()
+        sample_param_file = ('./tackerclient/osc/v1/vnflcm/samples/'
+                             'update_vnf_instance_param_sample.json')
+
+        arglist = [vnf_instance['id'], '--I', sample_param_file]
+        verifylist = [('vnf_instance', vnf_instance['id']),
+                      ('I', sample_param_file)]
+        mock_des.return_value = {}
+
+        # command param
+        parsed_args = self.check_parser(
+            self.update_vnf_lcm, arglist, verifylist)
+        url = os.path.join(self.url, 'vnflcm/v1/vnf_instances',
+                           vnf_instance['id'])
+
+        self.requests_mock.register_uri(
+            'PATCH', url, headers=self.header, json={})
+
+        sys.stdout = buffer = StringIO()
+
+        with mock.patch.object(root_client.HTTPClient,
+                               'do_request') as mock_req:
+            headers = {'Content-Type': 'application/json'}
+            mock_req.return_value = (MyResp(202, headers=headers), None)
+            self.update_vnf_lcm.take_action(parsed_args)
+            # check content_type
+            mock_req.assert_called_once_with(
+                f'/vnflcm/v1/vnf_instances/{vnf_instance["id"]}', 'PATCH',
+                body=mock.ANY, headers=mock.ANY,
+                content_type='application/merge-patch+json', accept='json')
+
+        actual_message = buffer.getvalue().strip()
+
+        expected_message = f'Update vnf:{vnf_instance["id"]}'
 
         self.assertEqual(expected_message, actual_message)
 

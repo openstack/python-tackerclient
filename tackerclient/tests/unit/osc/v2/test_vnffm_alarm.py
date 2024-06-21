@@ -19,12 +19,15 @@ import os
 from oslo_utils.fixture import uuidsentinel
 from unittest import mock
 
+from tackerclient import client as root_client
 from tackerclient.common import exceptions
 from tackerclient.osc import utils as tacker_osc_utils
 from tackerclient.osc.v2.vnffm import vnffm_alarm
 from tackerclient.tests.unit.osc import base
 from tackerclient.tests.unit.osc.v1.fixture_data import client
 from tackerclient.tests.unit.osc.v2 import vnffm_alarm_fakes
+from tackerclient.tests.unit.test_cli10 import MyResp
+from tackerclient.v1_0 import client as proxy_client
 
 
 class TestVnfFmAlarm(base.FixturedTestCase):
@@ -261,6 +264,39 @@ class TestUpdateVnfFmAlarm(TestVnfFmAlarm):
             vnffm_alarm_obj, columns=columns)
 
         self.assertEqual(expected_data, data)
+
+    @ddt.data('ACKNOWLEDGED')
+    @mock.patch.object(proxy_client.ClientBase, 'deserialize')
+    def test_take_action_check_content_type(self, ack_state, mock_des):
+        """Check content type by test of take_action()"""
+
+        vnffm_alarm_obj = vnffm_alarm_fakes.vnf_fm_alarm_response(
+            None, 'update')
+
+        arg_list = ['--ack-state', ack_state, uuidsentinel.vnf_fm_alarm_id]
+        verify_list = [('ack_state', ack_state),
+                       ('vnf_fm_alarm_id', uuidsentinel.vnf_fm_alarm_id)]
+        mock_des.return_value = {}
+
+        # command param
+        parsed_args = self.check_parser(
+            self.update_vnf_fm_alarm, arg_list, verify_list)
+
+        url = os.path.join(
+            self.url, 'vnffm/v1/alarms', uuidsentinel.vnf_fm_alarm_id)
+
+        self.requests_mock.register_uri(
+            'PATCH', url, headers=self.header, json=vnffm_alarm_obj)
+
+        with mock.patch.object(root_client.HTTPClient,
+                               'do_request') as mock_req:
+            headers = {'Content-Type': 'application/json'}
+            mock_req.return_value = (MyResp(200, headers=headers), None)
+            self.update_vnf_fm_alarm.take_action(parsed_args)
+            mock_req.assert_called_once_with(
+                f'/vnffm/v1/alarms/{uuidsentinel.vnf_fm_alarm_id}',
+                'PATCH', body=mock.ANY, headers=mock.ANY,
+                content_type='application/merge-patch+json', accept='json')
 
     @ddt.data('ACKNOWLEDGED')
     def test_take_action_vnf_lcm_op_occ_id_not_found(self, ack_state):

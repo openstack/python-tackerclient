@@ -182,6 +182,7 @@ class ClientBase(object):
         self.retry_interval = 1
         self.rel = None
         self.params = None
+        self.accept = None
 
     def _handle_fault_response(self, status_code, response_body):
         # Create exception with HTTP status code and message
@@ -237,7 +238,7 @@ class ClientBase(object):
 
         resp, replybody = self.httpclient.do_request(
             action, method, body=body, headers=headers,
-            content_type=self.content_type())
+            content_type=self.content_type(), accept=self.accept)
 
         if 'application/zip' == resp.headers.get('Content-Type'):
             self.format = 'zip'
@@ -357,6 +358,8 @@ class ClientBase(object):
                                   headers=headers, params=params)
 
     def patch(self, action, body=None, headers=None, params=None):
+        self.format = 'merge-patch+json'
+        self.accept = 'json'
         return self.retry_request("PATCH", action, body=body,
                                   headers=headers, params=params)
 
@@ -480,6 +483,7 @@ class VnfPackageClient(ClientBase):
                 body=json)
         else:
             self.format = 'zip'
+            self.accept = 'json'
             return self.put('{base_path}/{id}/package_content'.format(
                 id=vnf_package,
                 base_path=self.vnfpackages_path),
