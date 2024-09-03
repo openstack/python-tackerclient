@@ -39,6 +39,7 @@ def vnf_instance_response(attrs=None, instantiation_state='NOT_INSTANTIATED'):
         "vnfProductName": "Sample VNF",
         "vnfSoftwareVersion": "1.0",
         "vnfdVersion": "1.0",
+        "vnfPkgId": uuidsentinel.uuid,
         "_links": "vnflcm/v1/vnf_instances/" + uuidsentinel.vnf_instance_id +
                   "/instantiate",
         "instantiationState": instantiation_state,

@@ -31,7 +31,8 @@ _attr_map = (
     ('vnfProvider', 'VNF Provider', tacker_osc_utils.LIST_BOTH),
     ('vnfSoftwareVersion', 'VNF Software Version', tacker_osc_utils.LIST_BOTH),
     ('vnfProductName', 'VNF Product Name', tacker_osc_utils.LIST_BOTH),
-    ('vnfdId', 'VNFD ID', tacker_osc_utils.LIST_BOTH)
+    ('vnfdId', 'VNFD ID', tacker_osc_utils.LIST_BOTH),
+    ('vnfPkgId', 'VNF Package ID', tacker_osc_utils.LIST_BOTH)
 )
 
 LOG = logging.getLogger(__name__)
@@ -40,7 +41,7 @@ _mixed_case_fields = ('vnfInstanceName', 'vnfInstanceDescription', 'vnfdId',
                       'vnfProvider', 'vnfProductName', 'vnfSoftwareVersion',
                       'vnfdVersion', 'instantiationState',
                       'vimConnectionInfo', 'instantiatedVnfInfo',
-                      'vnfConfigurableProperties')
+                      'vnfConfigurableProperties', 'vnfPkgId')
 
 _VNF_INSTANCE = 'vnf_instance'
 
@@ -68,6 +69,7 @@ def _get_columns(vnflcm_obj, action=None):
         'instantiationState': 'Instantiation State',
         '_links': 'Links',
         'vnfConfigurableProperties': 'VNF Configurable Properties',
+        'vnfPkgId': 'VNF Package ID',
     }
     if action == 'show':
         if vnflcm_obj['instantiationState'] == 'INSTANTIATED':

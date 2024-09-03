@@ -50,7 +50,7 @@ def _get_columns_vnflcm(action='create'):
     columns = ['ID', 'Instantiation State', 'VNF Instance Description',
                'VNF Instance Name', 'VNF Product Name', 'VNF Provider',
                'VNF Software Version', 'VNFD ID', 'VNFD Version', 'Links',
-               'VNF Configurable Properties']
+               'VNF Configurable Properties', 'VNF Package ID']
     if action == 'show':
         columns.extend(['Instantiated Vnf Info', 'VIM Connection Info'])
     if action == 'list':
