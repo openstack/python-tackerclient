@@ -815,7 +815,7 @@ class VnfPMClient(ClientBase):
 
 
 class Client(object):
-    """Unified interface to interact with multiple applications of tacker service.
+    """Unified interface to interact with multiple apps of tacker service.
 
     This class is a single entry point to interact with legacy tacker apis and
     vnf packages apis.
