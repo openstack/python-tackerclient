@@ -31,8 +31,7 @@ _attr_map = (
     ('vnfProvider', 'VNF Provider', tacker_osc_utils.LIST_BOTH),
     ('vnfSoftwareVersion', 'VNF Software Version', tacker_osc_utils.LIST_BOTH),
     ('vnfProductName', 'VNF Product Name', tacker_osc_utils.LIST_BOTH),
-    ('vnfdId', 'VNFD ID', tacker_osc_utils.LIST_BOTH),
-    ('vnfPkgId', 'VNF Package ID', tacker_osc_utils.LIST_BOTH)
+    ('vnfdId', 'VNFD ID', tacker_osc_utils.LIST_BOTH)
 )
 
 LOG = logging.getLogger(__name__)
@@ -68,8 +67,7 @@ def _get_columns(vnflcm_obj, action=None):
         'vnfdVersion': 'VNFD Version',
         'instantiationState': 'Instantiation State',
         '_links': 'Links',
-        'vnfConfigurableProperties': 'VNF Configurable Properties',
-        'vnfPkgId': 'VNF Package ID',
+        'vnfConfigurableProperties': 'VNF Configurable Properties'
     }
     if action == 'show':
         if vnflcm_obj['instantiationState'] == 'INSTANTIATED':
@@ -79,6 +77,12 @@ def _get_columns(vnflcm_obj, action=None):
         column_map.update(
             {'vimConnectionInfo': 'VIM Connection Info',
              '_links': 'Links'}
+        )
+    # Note: To prevent it from appearing in the v2 API output,
+    # the 'VNF Package ID' will be output only if the vnfPkgId exists.
+    if 'vnfPkgId' in vnflcm_obj:
+        column_map.update(
+            {'vnfPkgId': 'VNF Package ID'}
         )
     return sdk_utils.get_osc_show_columns_for_sdk_resource(vnflcm_obj,
                                                            column_map)
