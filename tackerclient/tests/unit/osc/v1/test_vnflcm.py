@@ -56,7 +56,7 @@ def _get_columns_vnflcm(action='create'):
     if action == 'list':
         columns = [ele for ele in columns if ele not in
                    ['VNFD Version', 'VNF Instance Description',
-                    'VNF Configurable Properties']]
+                    'VNF Configurable Properties', 'VNF Package ID']]
         columns.remove('Links')
     return columns
 
