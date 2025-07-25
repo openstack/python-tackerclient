@@ -16,6 +16,7 @@
 
 import yaml
 
+from osc_lib.cli import format_columns
 from osc_lib.command import command
 from osc_lib import utils
 from oslo_utils import strutils
@@ -258,9 +259,9 @@ class UpdateVIM(command.ShowOne):
 
 
 _formatters = {
-    'auth_cred': tacker_osc_utils.format_dict_with_indention,
-    'placement_attr': tacker_osc_utils.format_dict_with_indention,
-    'vim_project': tacker_osc_utils.format_dict_with_indention,
+    'auth_cred': format_columns.DictColumn,
+    'placement_attr': format_columns.DictColumn,
+    'vim_project': format_columns.DictColumn,
 }
 
 
